@@ -1,24 +1,24 @@
 {
-  "name": "casheye-bitcoind-api",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/visionsofparadise/casheye-bitcoind-api.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/visionsofparadise/casheye-bitcoind-api/issues"
-  },
-  "homepage": "https://github.com/visionsofparadise/casheye-bitcoind-api#readme",
-  "dependencies": {
-    "bitcoin-node-api": "^0.1.0",
-    "express": "^4.17.1"
-  }
+	"name": "casheye-bitcoind-api",
+	"version": "1.0.0",
+	"description": "",
+	"main": "app.js",
+	"scripts": {
+		"start": "node app.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/visionsofparadise/casheye-bitcoind-api.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/visionsofparadise/casheye-bitcoind-api/issues"
+	},
+	"homepage": "https://github.com/visionsofparadise/casheye-bitcoind-api#readme",
+	"dependencies": {
+		"bitcoin-node-api": "^0.1.0",
+		"express": "^4.17.1"
+	}
 }
