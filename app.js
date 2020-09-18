@@ -2,6 +2,7 @@ const config = require('./config.json')
 const cors = require('cors')
 const express = require('express');
 const Client = require('bitcoin-core');
+const bodyParser = require('body-parser')
 const app = express();
 
 const rpc = new Client({
@@ -11,9 +12,13 @@ const rpc = new Client({
 })
 
 app.use(cors())
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 app.post('/bitcoind/:method', async function (req, res) {
 	try {
 		console.log(req)
+		console.log(req.body)
 
 		if (req.headers['authorization'] !== config.secret) return res.send('unauthorized')
 	
