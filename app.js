@@ -17,13 +17,14 @@ app.post('/bitcoind/:method', async function (req, res) {
 
 		if (req.headers['authorization'] !== config.secret) return res.send('unauthorized')
 	
-		const data = await rpc[req.params.method](req.body)
+		const data = await rpc[req.params.method](...req.body.params)
+		console.log(data)
 	
 		res.send(data)
 	} catch (err) {
 
 		console.log(err)
-		throw err
+		res.send(err)
 	}
 })
  
