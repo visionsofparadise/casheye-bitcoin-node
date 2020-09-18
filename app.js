@@ -1,9 +1,10 @@
 const config = require('./config.json')
 const cors = require('cors')
 const express = require('express');
+const Client = require('bitcoin-core');
 const app = express();
 
-const rpc = new RpcClient({
+const rpc = new Client({
 	network: config.network,
 	username: config.user,
 	password: config.pass
