@@ -12,7 +12,6 @@ const wallet = {
 
 app.use('/bitcoind', function (req, res, next) {
 	if (req.headers['authorization'] !== config.secret) return res.send('unauthorized')
-	if (req.ip !== config.ip) return res.send('unauthorized')
 
   next()
 })
