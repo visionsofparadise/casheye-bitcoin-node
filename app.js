@@ -11,8 +11,8 @@ const wallet = {
 };
 
 app.use('/bitcoind', function (req, res, next) {
-	if (req.headers['authorization'] !== config.secret) throw res.statusCode('401')
-	if (req.ip !== config.ip) throw res.statusCode('401')
+	if (req.headers['authorization'] !== config.secret) return res.send('unauthorized')
+	if (req.ip !== config.ip) return res.send('unauthorized')
 
   next()
 })
