@@ -5,19 +5,19 @@ const Client = require('bitcoin-core');
 const app = express();
 
 const rpc = new Client({
-	network: config.network,
-	username: config.user,
-	password: config.pass
+	network: config.network || 'regtest',
+	username: config.user || 'test',
+	password: config.pass || 'test'
 })
 
 app.use(cors())
-app.post('/bitcoind', async function (req, res) {
+app.post('/bitcoind/:method', async function (req, res) {
 	try {
 		console.log(req)
 
 		if (req.headers['authorization'] !== config.secret) return res.send('unauthorized')
 	
-		const data = await rpc.command(req.body.command)
+		const data = await rpc[req.params.method](req.body)
 	
 		res.send(data)
 	} catch (err) {
