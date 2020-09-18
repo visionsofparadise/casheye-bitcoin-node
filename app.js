@@ -1,4 +1,5 @@
 const config = require('./config.json')
+const cors = require('cors')
 const express = require('express');
 const app = express();
 
@@ -8,12 +9,21 @@ const rpc = new RpcClient({
 	password: config.pass
 })
 
+app.use(cors())
 app.post('/bitcoind', async function (req, res) {
-	if (req.headers['authorization'] !== config.secret) return res.send('unauthorized')
+	try {
+		console.log(req)
 
-	const data = await rpc.command(req.body.command)
+		if (req.headers['authorization'] !== config.secret) return res.send('unauthorized')
+	
+		const data = await rpc.command(req.body.command)
+	
+		res.send(data)
+	} catch (err) {
 
-  res.send(data)
+		console.log(err)
+		throw err
+	}
 })
  
 app.listen(3000);
