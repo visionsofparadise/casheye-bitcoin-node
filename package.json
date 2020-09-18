@@ -18,7 +18,7 @@
 	},
 	"homepage": "https://github.com/visionsofparadise/casheye-bitcoind-api#readme",
 	"dependencies": {
-		"bitcoin-node-api": "^0.1.0",
+		"bitcoin-core": "^3.0.0",
 		"express": "^4.17.1"
 	}
 }

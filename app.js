@@ -1,25 +1,19 @@
-const bitcoinapi = require('bitcoin-node-api');
 const config = require('./config.json')
 const express = require('express');
 const app = express();
- 
-const wallet = {
-  host: 'localhost',
-  port: config.port,
-  user: config.user,
-  pass: config.pass
-};
 
-app.use('/bitcoind', function (req, res, next) {
-	if (req.headers['authorization'] !== config.secret) return res.send('unauthorized')
-
-  next()
+const rpc = new RpcClient({
+	network: config.network,
+	username: config.user,
+	password: config.pass
 })
 
- 
-bitcoinapi.setWalletDetails(wallet);
-bitcoinapi.setAccess('default-safe');
+app.post('/bitcoind', async function (req, res) {
+	if (req.headers['authorization'] !== config.secret) return res.send('unauthorized')
 
-app.use('/bitcoind', bitcoinapi.app);
+	const data = await rpc.command(req.body.command)
+
+  res.send(data)
+})
  
 app.listen(3000);
