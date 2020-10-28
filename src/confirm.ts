@@ -1,20 +1,21 @@
 import upick from 'upick';
-import { btc } from './bitcoind';
-import { eventHelper } from './helpers';
+import { eventHelper, logger } from './helpers';
 
 type ListTransactionsResponse = Array<{
-	txId: string;
+	txid: string;
 	address: string;
 	confirmations: number;
 }>;
 
-export const confirm = async () => {
+export const confirm = async (btc: any) => {
 	const page = async (pageNumber: number) => {
 		const txs = (await btc.rpc.listTransactions('confirming', 100, pageNumber * 100, true)) as ListTransactionsResponse;
 
+		logger.info({ txs })
+
 		await Promise.all(
 			txs.map(async tx => {
-				const txPruned = upick(tx, ['txId', 'address', 'confirmations']);
+				const txPruned = upick(tx, ['txid', 'address', 'confirmations']);
 
 				if (tx.confirmations > 6) {
 					await btc.rpc.setLabel(tx.address, 'used');

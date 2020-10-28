@@ -2,46 +2,58 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { confirm } from './confirm';
-import { testRPCCommands } from './testRPCCommands';
 import { txDetected } from './txDetected';
-import { watchAddresses } from './watchAddresses';
+import { watchAddress } from './watchAddress';
+import { isProd, logger } from './helpers';
 
-const app = express();
+export const getApis = (btc: any) => {
+	const api = express();
 
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+	api.use(cors());
+	api.use(bodyParser.urlencoded({ extended: true }));
+	api.use(bodyParser.json());
+	
+	const internalApi = api
+	const externalApi = api
+	
+	internalApi.get('/wallet-notify/:txId', async (req, res) => {
+		const { txId } = req.params;
+	
+		await txDetected(txId, btc);
+	
+		return res.sendStatus(204);
+	});
+	
+	internalApi.get('/block-notify/:blockHash', async (_, res) => {
+		await confirm(btc);
+	
+		return res.sendStatus(204);
+	});
+	
+	externalApi.post('/address', async (req, res) => {
+		const { address, duration } = req.body;
+	
+		await watchAddress(address, duration, btc);
+	
+		return res.sendStatus(204);
+	});
+	
+	externalApi.post('/rpc', async (req, res) => {
+		if (isProd) res.sendStatus(401);
+	
+		logger.info(req.body)
+	
+		const { command } = req.body as { command: string };
+	
+		const result = await btc.rpc.command(command);
 
-app.post('/wallet-notify/:txId', async (req, res) => {
-	const { txId } = req.params;
-
-	await txDetected(txId);
-
-	res.sendStatus(200);
+		return res.send(result);
 });
 
-app.post('/block-notify/:blockHash', async (_, res) => {
-	await confirm();
+	return {
+		externalApi,
+		internalApi
+	}
+}
 
-	res.sendStatus(200);
-});
 
-app.listen(3000, async () => {
-	const poll = () =>
-		setTimeout(() => {
-			watchAddresses().then(() => {
-				poll();
-			});
-		}, 100);
-
-	poll();
-
-	const testRPCPoll = () =>
-		setTimeout(() => {
-			testRPCCommands().then(() => {
-				testRPCPoll();
-			});
-		}, 100);
-
-	testRPCPoll();
-});

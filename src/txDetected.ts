@@ -1,19 +1,25 @@
-import { btc } from './bitcoind';
-import { eventHelper } from './helpers';
+import { eventHelper, logger } from './helpers';
 
 interface GetTransactionResponse {
 	confirmations: number;
+	amount: number;
 	details: Array<{
 		address: string;
+		category: string;
+		label: string;
 	}>;
 }
 
-export const txDetected = async (txId: string) => {
+export const txDetected = async (txId: string, btc: any) => {
 	const tx = (await btc.rpc.getTransaction(txId, true)) as GetTransactionResponse;
 
-	if (tx.confirmations !== 0) return;
+	logger.info({tx})
 
-	await btc.rpc.setLabel(tx.details[0].address, 'confirming');
+	const address = tx.details.filter(detail => detail.category === 'receive')[0]
+
+	if (tx.confirmations !== 0 || address.label !== 'watching') return;
+
+	await btc.rpc.setLabel(address.address, 'confirming');
 
 	await eventHelper.send({
 		DetailType: 'btcTxDetected',
