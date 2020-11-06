@@ -52,7 +52,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		});
 
 		const networkLoadBalancer = new NetworkLoadBalancer(this, 'LB', {
-			loadBalancerName: deploymentName + '-loadbalancer',
+			loadBalancerName: deploymentName + '-lb',
 			vpc,
 			internetFacing: false,
 			vpcSubnets: {
