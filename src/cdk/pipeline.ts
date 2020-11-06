@@ -23,6 +23,8 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			branch: 'master'
 		});
 
+		const repoName = `cdk-hnb659fds-container-assets-${this.account}-${this.region}`
+
 		const synthAction = new SimpleSynthAction({
 			sourceArtifact,
 			cloudAssemblyArtifact,
@@ -30,7 +32,11 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			buildCommands: [
 				'npm run compile',
 				'npm i -g parcel',
-				'parcel build ./src/handlers/*.ts -d build --target node --bundle-node-modules --no-source-maps'
+				'parcel build ./src/handlers/*.ts -d build --target node --bundle-node-modules --no-source-maps',
+				`aws ecr get-login-password --region ${this.region} | docker login --username AWS --password-stdin ${this.account}.dkr.ecr.${this.region}.amazonaws.com`,
+				`docker build -t ${repoName} .`,
+				`docker tag ${repoName}:latest ${this.account}.dkr.ecr.${this.region}.amazonaws.com/${repoName}:latest`,
+				`docker push ${this.account}.dkr.ecr.${this.region}.amazonaws.com/${repoName}:latest`
 			],
 			testCommands: ['npm run test'],
 			synthCommand: 'npm run synth'
@@ -44,7 +50,8 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 		});
 
 		const testApp = new CasheyeAddressWatcherStage(this, serviceName + '-test', {
-			STAGE: 'test'
+			STAGE: 'test',
+			REPO_NAME: repoName
 		});
 
 		const testAppStage = pipeline.addApplicationStage(testApp);

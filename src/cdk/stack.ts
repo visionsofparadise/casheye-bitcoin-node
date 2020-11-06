@@ -5,10 +5,10 @@ import { Code } from '@aws-cdk/aws-lambda';
 import { LambdaFunction } from '@aws-cdk/aws-events-targets';
 import path from 'path';
 import { masterFunction } from 'xkore-lambda-helpers/dist/cdk/masterFunction';
-import { DockerImageAsset } from '@aws-cdk/aws-ecr-assets';
-import { Port, Protocol, SubnetType, Vpc } from '@aws-cdk/aws-ec2';
+import { Port, Protocol, Vpc } from '@aws-cdk/aws-ec2';
 import { NetworkLoadBalancedFargateService } from '@aws-cdk/aws-ecs-patterns';
 import { ContainerImage } from '@aws-cdk/aws-ecs';
+import { Repository } from '@aws-cdk/aws-ecr';
 import { NetworkLoadBalancer } from '@aws-cdk/aws-elasticloadbalancingv2';
 import { Cors, LambdaIntegration, RestApi } from '@aws-cdk/aws-apigateway'
 
@@ -19,11 +19,12 @@ const createFunction = masterFunction({
 export class CasheyeAddressWatcherStage extends Stage {
 	public readonly apiUrl?: CfnOutput;
 	
-		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string }) {
+		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string; REPO_NAME: string }) {
 		super(scope, id, props);
 
 		const stack = new CasheyeAddressWatcherStack(this, 'stack', {
-			STAGE: props.STAGE
+			STAGE: props.STAGE,
+			REPO_NAME: props.REPO_NAME
 		});
 
 		this.apiUrl = stack.apiUrl
@@ -33,7 +34,7 @@ export class CasheyeAddressWatcherStage extends Stage {
 export class CasheyeAddressWatcherStack extends Stack {
 	public readonly apiUrl?: CfnOutput;
 
-	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string }) {
+	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string; REPO_NAME: string }) {
 		super(scope, id, props);
 
 		const deploymentName = `${serviceName}-${props.STAGE}`;
@@ -42,28 +43,12 @@ export class CasheyeAddressWatcherStack extends Stack {
 				XLH_LOGS: `${props.STAGE !== 'prod'}`
 		}
 
-		const asset = new DockerImageAsset(this, 'imageAsset', {
-			directory: path.join(__dirname, '../../')
-		});
+		const repo = Repository.fromRepositoryName(this, 'ImageRepository', props.REPO_NAME)
 
 		const vpc = new Vpc(this, 'VPC', {
 			natGateways: 0,
-			cidr: "10.0.0.0/24",
-			maxAzs: 1,
-			subnetConfiguration: [
-				{
-					cidrMask: 16,
-					name: 'Public',
-					subnetType: SubnetType.PUBLIC,
-					reserved: true
-				},
-				{
-					cidrMask: 16,
-					name: 'Isolated',
-					subnetType: SubnetType.ISOLATED,
-					reserved: true
-				},
-			],
+			cidr: "10.0.0.0/16",
+			maxAzs: 1
 		});
 
 		const networkLoadBalancer = new NetworkLoadBalancer(this, 'LB', {
@@ -81,7 +66,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 			vpc,
 			desiredCount: 1,
 			taskImageOptions: {
-				image: ContainerImage.fromDockerImageAsset(asset),
+				image: ContainerImage.fromEcrRepository(repo, 'latest'),
 				environment: baseEnvironment
 			},
 			 loadBalancer: networkLoadBalancer,
