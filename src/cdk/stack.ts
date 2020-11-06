@@ -73,7 +73,9 @@ export class CasheyeAddressWatcherStack extends Stack {
 			 listenerPort: 80
 		});
 
-		loadBalancedFargateService.service.cluster.connections.allowFromAnyIpv4(new Port({ protocol: Protocol.TCP, stringRepresentation: '0–65535' }), 'peering')
+		loadBalancedFargateService.cluster.connections.allowFromAnyIpv4(new Port({ protocol: Protocol.TCP, stringRepresentation: '8333' }), 'peering')
+
+		loadBalancedFargateService.cluster.connections.allowInternally(new Port({ protocol: Protocol.TCP, stringRepresentation: '80' }), 'http')
 
 		const environment = {
 			...baseEnvironment,
