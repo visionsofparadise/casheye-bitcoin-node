@@ -4,6 +4,7 @@ import { CdkPipeline, SimpleSynthAction, ShellScriptAction } from '@aws-cdk/pipe
 import { GitHubSourceAction } from '@aws-cdk/aws-codepipeline-actions';
 import { CasheyeAddressWatcherStage } from './stack';
 import { App } from '@aws-cdk/core';
+import { PolicyStatement } from '@aws-cdk/aws-iam';
 
 export const serviceName = 'casheye-address-watcher';
 
@@ -48,6 +49,11 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			sourceAction,
 			synthAction
 		});
+
+		pipeline.codePipeline.addToRolePolicy(new PolicyStatement({
+			resources: ['*'],
+				actions: ['ecr:GetAuthorizationToken']
+		}))
 
 		const testApp = new CasheyeAddressWatcherStage(this, serviceName + '-test', {
 			STAGE: 'test',
