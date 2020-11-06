@@ -40,7 +40,11 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				`docker push ${this.account}.dkr.ecr.${this.region}.amazonaws.com/${repoName}:latest`
 			],
 			testCommands: ['npm run test'],
-			synthCommand: 'npm run synth'
+			synthCommand: 'npm run synth',
+			rolePolicyStatements: [new PolicyStatement({
+				resources: ['*'],
+					actions: ['ecr:GetAuthorizationToken']
+			})]
 		});
 
 		const pipeline = new CdkPipeline(this, 'pipeline', {
@@ -49,11 +53,6 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			sourceAction,
 			synthAction
 		});
-
-		pipeline.codePipeline.addToRolePolicy(new PolicyStatement({
-			resources: ['*'],
-				actions: ['ecr:GetAuthorizationToken']
-		}))
 
 		const testApp = new CasheyeAddressWatcherStage(this, serviceName + '-test', {
 			STAGE: 'test',
