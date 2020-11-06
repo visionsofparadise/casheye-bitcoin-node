@@ -4,7 +4,6 @@ import { CdkPipeline, SimpleSynthAction, ShellScriptAction } from '@aws-cdk/pipe
 import { GitHubSourceAction } from '@aws-cdk/aws-codepipeline-actions';
 import { CasheyeAddressWatcherStage } from './stack';
 import { App } from '@aws-cdk/core';
-import { PolicyStatement } from '@aws-cdk/aws-iam';
 
 export const serviceName = 'casheye-address-watcher';
 
@@ -34,17 +33,9 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				'npm run compile',
 				'npm i -g parcel',
 				'parcel build ./src/handlers/*.ts -d build --target node --bundle-node-modules --no-source-maps',
-				`aws ecr get-login-password --region ${this.region} | docker login --username AWS --password-stdin ${this.account}.dkr.ecr.${this.region}.amazonaws.com`,
-				`docker build -t ${repoName} .`,
-				`docker tag ${repoName}:latest ${this.account}.dkr.ecr.${this.region}.amazonaws.com/${repoName}:latest`,
-				`docker push ${this.account}.dkr.ecr.${this.region}.amazonaws.com/${repoName}:latest`
 			],
 			testCommands: ['npm run test'],
-			synthCommand: 'npm run synth',
-			rolePolicyStatements: [new PolicyStatement({
-				resources: ['*'],
-					actions: ['ecr:GetAuthorizationToken']
-			})]
+			synthCommand: 'npm run synth'
 		});
 
 		const pipeline = new CdkPipeline(this, 'pipeline', {
