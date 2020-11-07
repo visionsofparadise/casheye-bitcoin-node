@@ -1,39 +1,32 @@
-import { CfnOutput, Construct, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
+import { Construct, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
 import { Rule } from '@aws-cdk/aws-events';
 import { Code } from '@aws-cdk/aws-lambda';
 import { LambdaFunction } from '@aws-cdk/aws-events-targets';
 import path from 'path';
 import { masterFunction } from 'xkore-lambda-helpers/dist/cdk/masterFunction';
-import { Port, Protocol, Vpc } from '@aws-cdk/aws-ec2';
+import { Port, Vpc } from '@aws-cdk/aws-ec2';
 import { NetworkLoadBalancedFargateService } from '@aws-cdk/aws-ecs-patterns';
 import { ContainerImage } from '@aws-cdk/aws-ecs';
 import { Repository } from '@aws-cdk/aws-ecr';
 import { NetworkLoadBalancer } from '@aws-cdk/aws-elasticloadbalancingv2';
-import { Cors, LambdaIntegration, RestApi } from '@aws-cdk/aws-apigateway'
 
 const createFunction = masterFunction({
 	code: Code.fromAsset(path.join(__dirname, '../../build'))
 });
 
-export class CasheyeAddressWatcherStage extends Stage {
-	public readonly apiUrl?: CfnOutput;
-	
+export class CasheyeAddressWatcherStage extends Stage {	
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string; REPO_NAME: string }) {
 		super(scope, id, props);
 
-		const stack = new CasheyeAddressWatcherStack(this, 'stack', {
+		new CasheyeAddressWatcherStack(this, 'stack', {
 			STAGE: props.STAGE,
 			REPO_NAME: props.REPO_NAME
 		});
-
-		this.apiUrl = stack.apiUrl
 	}
 }
 
 export class CasheyeAddressWatcherStack extends Stack {
-	public readonly apiUrl?: CfnOutput;
-
 	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string; REPO_NAME: string }) {
 		super(scope, id, props);
 
@@ -73,9 +66,8 @@ export class CasheyeAddressWatcherStack extends Stack {
 			 listenerPort: 80
 		});
 
-		loadBalancedFargateService.cluster.connections.allowFromAnyIpv4(new Port({ protocol: Protocol.TCP, stringRepresentation: '8333' }), 'peering')
-
-		loadBalancedFargateService.cluster.connections.allowInternally(new Port({ protocol: Protocol.TCP, stringRepresentation: '80' }), 'http')
+		loadBalancedFargateService.cluster.connections.allowFromAnyIpv4(Port.tcp(8333), 'peering')
+		loadBalancedFargateService.cluster.connections.allowInternally(Port.tcp(80), 'http')
 
 		const environment = {
 			...baseEnvironment,
@@ -93,24 +85,6 @@ export class CasheyeAddressWatcherStack extends Stack {
 			targets: [new LambdaFunction(onAddressCreatedHandler)]
 		});
 
-		if (props.STAGE === 'test') {
-			const api = new RestApi(this, 'restApi', {
-				restApiName: deploymentName + '-api',
-				description: deploymentName,
-				defaultCorsPreflightOptions: {
-					allowOrigins: Cors.ALL_ORIGINS
-				}
-			});
-
-			const testRPCHandler = createFunction(this, 'testRPC', { environment, vpcSubnets: {
-				subnets: vpc.isolatedSubnets
-			} });
-			api.root.addResource('rpc').addMethod('POST', new LambdaIntegration(testRPCHandler));
-
-			this.apiUrl = new CfnOutput(this, 'apiUrlOutput', {
-				value: api.url,
-				exportName: deploymentName + '-apiUrl'
-			});
-		}
+		onAddressCreatedHandler.connections.allowToAnyIpv4(Port.tcp(80))
 	}
 }
