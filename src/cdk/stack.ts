@@ -74,8 +74,12 @@ export class CasheyeAddressWatcherStack extends Stack {
 			LOADBALANCER_URL: networkLoadBalancer.loadBalancerDnsName
 		}
 
-		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { environment, vpcSubnets: {
-			subnets: vpc.isolatedSubnets
+		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
+			environment,
+			vpc,  
+			allowAllOutbound: true, 
+			vpcSubnets: {
+				subnets: vpc.isolatedSubnets
 		} });
 		new Rule(this, 'onAddressCreatedRule', {
 			eventPattern: {
@@ -84,7 +88,5 @@ export class CasheyeAddressWatcherStack extends Stack {
 			},
 			targets: [new LambdaFunction(onAddressCreatedHandler)]
 		});
-
-		onAddressCreatedHandler.connections.allowToAnyIpv4(Port.tcp(80))
 	}
 }
