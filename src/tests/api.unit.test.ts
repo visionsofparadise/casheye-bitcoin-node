@@ -32,7 +32,7 @@ afterAll(async () => {
 it('health check', async () => {
 	expect.assertions(1)
 
-	const response = await axios.get(externalURL + 'health-check')
+	const response = await axios.get(externalURL)
 
 	logger.log(response.data);
 

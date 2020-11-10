@@ -61,8 +61,12 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 					'npm ci',
 					'XLH_LOGS=true',
 					`UTILITY_API_URL=${Fn.importValue('casheye-utility-test-apiUrl')}`,
-					`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY')}`
-				]
+					`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY')}`,
+					'npm run integration --passWithNoTests'
+				],
+				useOutputs: {
+					API_URL: pipeline.stackOutput(testApp.apiUrl!)
+				}
 			})
 		);
 

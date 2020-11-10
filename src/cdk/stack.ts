@@ -1,4 +1,4 @@
-import { Construct, Fn, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
+import { CfnOutput, Construct, Fn, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
 import { Rule } from '@aws-cdk/aws-events';
 import { Code } from '@aws-cdk/aws-lambda';
@@ -9,7 +9,7 @@ import { Peer, Port, SecurityGroup, Vpc } from '@aws-cdk/aws-ec2';
 import { NetworkLoadBalancedFargateService } from '@aws-cdk/aws-ecs-patterns';
 import { ContainerImage } from '@aws-cdk/aws-ecs';
 import { Repository } from '@aws-cdk/aws-ecr';
-import { NetworkLoadBalancer, Protocol } from '@aws-cdk/aws-elasticloadbalancingv2';
+import { NetworkLoadBalancer } from '@aws-cdk/aws-elasticloadbalancingv2';
 import { Table } from '@aws-cdk/aws-dynamodb';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
 
@@ -18,17 +18,23 @@ const createFunction = masterFunction({
 });
 
 export class CasheyeAddressWatcherStage extends Stage {	
+	public readonly apiUrl?: CfnOutput;
+
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string; REPO_NAME: string }) {
 		super(scope, id, props);
 
-		new CasheyeAddressWatcherStack(this, 'stack', {
+		const stack = new CasheyeAddressWatcherStack(this, 'stack', {
 			STAGE: props.STAGE,
 			REPO_NAME: props.REPO_NAME
 		});
+
+		this.apiUrl = stack.apiUrl
 	}
 }
 
 export class CasheyeAddressWatcherStack extends Stack {
+	public readonly apiUrl?: CfnOutput;
+
 	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string; REPO_NAME: string }) {
 		super(scope, id, props);
 
@@ -80,14 +86,6 @@ export class CasheyeAddressWatcherStack extends Stack {
 
 		loadBalancedFargateService.cluster.connections.addSecurityGroup(securityGroup)
 
-		loadBalancedFargateService.targetGroup.configureHealthCheck({
-			enabled: true,
-			healthyHttpCodes: '200',
-			protocol: Protocol.HTTP,
-			port: '80',
-			path: '/health-check'
-		})
-
 		const environment = {
 			...baseEnvironment,
 			LOADBALANCER_URL: networkLoadBalancer.loadBalancerDnsName
@@ -132,6 +130,11 @@ export class CasheyeAddressWatcherStack extends Stack {
 				defaultCorsPreflightOptions: {
 					allowOrigins: Cors.ALL_ORIGINS
 				}
+			});
+
+			this.apiUrl = new CfnOutput(this, 'apiUrlOutput', {
+				value: api.url,
+				exportName: deploymentName + '-apiUrl'
 			});
 
 			const testResultsHandler = createFunction(this, 'testResults', { environment });

@@ -50,7 +50,7 @@ export const getApis = (btc: any) => {
 		return res.send(result);
 })
 
-externalApi.get('/health-check', async (_, res) => res.sendStatus(200));
+externalApi.get('/', async (_, res) => res.sendStatus(200));
 
 	return {
 		externalApi,
