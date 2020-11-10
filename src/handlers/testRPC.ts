@@ -1,15 +1,13 @@
-import { lambdaWrap } from 'xkore-lambda-helpers/dist/util/lambdaWrap'
-import { object, string } from 'yup'
+import { EventBridgeEvent } from 'aws-lambda/trigger/eventbridge';
+import { logger } from '../helpers';
 import axios from 'axios'
 
-export const handler = lambdaWrap({
-	validationSchema: object({
-		body: object({
-			command: string().required()
-		})
-	})
-}, async ({ body }) => {
-	const response = await axios.post(process.env.LOADBALANCER_URL! + 'rpc', body)
+export const handler = async (event: EventBridgeEvent<'rpcCommand', { command: string; }>) => {
+	logger.info({ event });
 
-	return response.data
-})
+	await axios.post(process.env.LOADBALANCER_URL! + 'rpc', {
+		command: event.detail.command
+	})
+
+	return;
+};

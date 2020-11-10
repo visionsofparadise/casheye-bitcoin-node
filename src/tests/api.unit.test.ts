@@ -29,6 +29,18 @@ afterAll(async () => {
 	return
 }, 20 * 1000)
 
+it('health check', async () => {
+	expect.assertions(1)
+
+	const response = await axios.get(externalURL + 'health-check')
+
+	logger.log(response.data);
+
+	expect(response.status).toBe(200);
+
+	return;
+}, 10 * 1000);
+
 it('executes rpc command', async () => {
 	expect.assertions(1)
 

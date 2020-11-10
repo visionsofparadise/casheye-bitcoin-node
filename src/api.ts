@@ -48,7 +48,9 @@ export const getApis = (btc: any) => {
 		const result = await btc.rpc.command(command);
 
 		return res.send(result);
-});
+})
+
+externalApi.get('/health-check', async (_, res) => res.sendStatus(200));
 
 	return {
 		externalApi,
