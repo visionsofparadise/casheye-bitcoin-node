@@ -24,7 +24,6 @@
 	},
 	"homepage": "https://github.com/visionsofparadise/casheye-address-watcher#readme",
 	"dependencies": {
-		"aws-cdk": "^1.73.0",
 		"aws-sdk": "^2.778.0",
 		"axios": "^0.21.0",
 		"bitcoind": "^1.2.1",
@@ -55,6 +54,7 @@
 		"@types/nanoid": "^2.1.0",
 		"@types/node": "^14.14.5",
 		"@types/supertest": "^2.0.10",
+		"aws-cdk": "^1.73.0",
 		"bitcore-lib": "^8.23.0",
 		"jest": "^26.6.0",
 		"parcel-bundler": "^1.12.4",
