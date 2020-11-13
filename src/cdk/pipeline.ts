@@ -23,8 +23,6 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			branch: 'master'
 		});
 
-		const repoName = `cdk-hnb659fds-container-assets-${this.account}-${this.region}`
-
 		const synthAction = new SimpleSynthAction({
 			sourceArtifact,
 			cloudAssemblyArtifact,
@@ -46,8 +44,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 		});
 
 		const testApp = new CasheyeAddressWatcherStage(this, serviceName + '-test', {
-			STAGE: 'test',
-			REPO_NAME: repoName
+			STAGE: 'test'
 		});
 
 		const testAppStage = pipeline.addApplicationStage(testApp);
@@ -70,16 +67,25 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			})
 		);
 
-		// const prodApp = new CasheyeAddressWatcherStage(this, serviceName + '-prod', {
-		// 	STAGE: 'prod'
-		// });
+		pipeline.addStage('Approval').addManualApprovalAction({
+			actionName: 'Approval'
+		})
 
-		// pipeline.addApplicationStage(prodApp);
+		const prodApp = new CasheyeAddressWatcherStage(this, serviceName + '-prod', {
+			STAGE: 'prod'
+		});
+
+		pipeline.addApplicationStage(prodApp);
 	}
 }
 
 const app = new App();
 
-new CasheyeAddressWatcherPipelineStack(app, `${serviceName}-pipeline-stack`);
+new CasheyeAddressWatcherPipelineStack(app, `${serviceName}-pipeline-stack`, {
+	env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
 
 app.synth();
