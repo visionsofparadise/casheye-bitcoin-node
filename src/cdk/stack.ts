@@ -69,7 +69,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 			vpc,
 			vpcSubnets: {
 				subnets: vpc.isolatedSubnets
-			},
+			}
 		});
 
 		const listener = loadBalancer.addListener(`Listener`, {
@@ -138,13 +138,15 @@ docker run -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STAGE=
 
 		listener.addTargets('InstanceTargets', {
 			port: 80,
-			targets: instances.map(instance => new InstanceTarget(instance))
+			targets: instances.map(instance => new InstanceTarget(instance)),
+			healthCheck: {
+				enabled: true
+			}
 		})
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
 			environment,
-			vpc,  
-			allowAllOutbound: true, 
+			vpc,
 			vpcSubnets: {
 				subnets: vpc.isolatedSubnets
 		} });
@@ -157,12 +159,12 @@ docker run -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STAGE=
 		});
 
 		loadBalancer.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
+		onAddressCreatedHandler.connections.allowTo(loadBalancer, Port.tcp(80))
 
 		if (props.STAGE !== 'prod') {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
 				environment,
-				vpc,  
-				allowAllOutbound: true, 
+				vpc, 
 				vpcSubnets: {
 					subnets: vpc.isolatedSubnets
 			} });
@@ -175,6 +177,7 @@ docker run -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STAGE=
 			});
 
 			loadBalancer.connections.allowFrom(testRPCHandler, Port.tcp(80))
+			testRPCHandler.connections.allowTo(loadBalancer, Port.tcp(80))
 
 			const db = Table.fromTableArn(this, 'dynamoDB', Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`));
 
