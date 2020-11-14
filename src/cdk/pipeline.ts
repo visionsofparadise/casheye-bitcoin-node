@@ -29,7 +29,6 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			installCommands: ['npm i'],
 			buildCommands: [
 				`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
-				`CDK_DEFAULT_REGION=us-east-1`,
 				'npm run compile',
 				'npm i -g parcel',
 				'parcel build ./src/handlers/*.ts -d build --target node --bundle-node-modules --no-source-maps',
@@ -59,7 +58,6 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				commands: [
 					'XLH_LOGS=true',
 					`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
-					`CDK_DEFAULT_REGION=us-east-1`,
 					`UTILITY_API_URL=${Fn.importValue('casheye-utility-test-apiUrl')}`,
 					`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY')}`,
 					'npm i',
@@ -88,7 +86,7 @@ const app = new App();
 new CasheyeAddressWatcherPipelineStack(app, `${serviceName}-pipeline-stack`, {
 	env: {
 		account: process.env.CDK_DEFAULT_ACCOUNT,
-		region: process.env.CDK_DEFAULT_REGION
+		region: 'us-east-1'
 	}
 });
 

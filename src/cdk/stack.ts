@@ -35,7 +35,7 @@ export class CasheyeAddressWatcherStage extends Stage {
 			STAGE: props.STAGE,
 			env: {
 				account: process.env.CDK_DEFAULT_ACCOUNT,
-				region: process.env.CDK_DEFAULT_REGION
+				region: 'us-east-1'
 			}
 		});
 
