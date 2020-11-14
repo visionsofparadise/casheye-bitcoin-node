@@ -115,7 +115,6 @@ docker run -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STAGE=
 				vpcSubnets: {
 					subnets: vpc.publicSubnets
 				},
-				privateIpAddress: `10.0.0.${i}`,
 				userData: UserData.forLinux({
 					shebang
 				}),
