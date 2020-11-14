@@ -26,7 +26,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 		const synthAction = new SimpleSynthAction({
 			sourceArtifact,
 			cloudAssemblyArtifact,
-			installCommands: ['npm ci'],
+			installCommands: ['npm i'],
 			buildCommands: [
 				'npm run compile',
 				'npm i -g parcel',
