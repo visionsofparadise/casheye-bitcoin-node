@@ -47,7 +47,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 	public readonly apiUrl?: CfnOutput;
 
 	get availabilityZones(): string[] {
-    return ['us-east-1a', 'us-east-1b'];
+    return ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1e', 'us-east-1f'];
   }
 
 	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string }) {
@@ -62,8 +62,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const vpc = new Vpc(this, 'VPC', {
 			natGateways: 0,
 			cidr: "10.0.0.0/16",
-			maxAzs: 1,
-
+			maxAzs: 2
 		});
 
 		const loadBalancer = new ApplicationLoadBalancer(this, 'LoadBalancer', {
