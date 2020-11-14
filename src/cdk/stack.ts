@@ -73,7 +73,8 @@ export class CasheyeAddressWatcherStack extends Stack {
 		});
 
 		const listener = loadBalancer.addListener(`Listener`, {
-			port: 80
+			port: 80,
+			open: false
 		})
 
 		const environment = {
@@ -127,11 +128,11 @@ docker run -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STAGE=
 						deviceName: '/dev/sda1',
 						volume: BlockDeviceVolume.ebs(config.storageSize),
 					},
-				],
+				]
 			})
 
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-			instance.connections.allowFrom(listener, Port.tcp(80))
+			instance.connections.allowFrom(loadBalancer, Port.tcp(80))
 
 			instances.push(instance)
 		}
