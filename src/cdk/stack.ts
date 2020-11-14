@@ -108,8 +108,8 @@ docker run -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STAGE=
 				instanceName: `${deploymentName}-node-${i}`,
 				vpc,
 				instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
-				machineImage: MachineImage.lookup({
-					name: 'ami-0885b1f6bd170450c'
+				machineImage: MachineImage.genericLinux({
+					'us-east-1': 'ami-0885b1f6bd170450c'
 				}),
 				allowAllOutbound: true,
 				vpcSubnets: {
