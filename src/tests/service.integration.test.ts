@@ -16,7 +16,7 @@ it(
 	'adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires',
 	async () => {
 		jest.useRealTimers();
-		expect.assertions(9);
+		expect.assertions(8);
 
 		const generateBlocksInitResponse = await axios.post(process.env.UTILITY_API_URL! + 'events', {
 			event: {
