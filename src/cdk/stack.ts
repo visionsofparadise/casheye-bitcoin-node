@@ -46,6 +46,10 @@ export class CasheyeAddressWatcherStage extends Stage {
 export class CasheyeAddressWatcherStack extends Stack {
 	public readonly apiUrl?: CfnOutput;
 
+	get availabilityZones(): string[] {
+    return ['us-east-1a', 'us-east-1b'];
+  }
+
 	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string }) {
 		super(scope, id, props);
 
@@ -58,7 +62,8 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const vpc = new Vpc(this, 'VPC', {
 			natGateways: 0,
 			cidr: "10.0.0.0/16",
-			maxAzs: 1
+			maxAzs: 1,
+
 		});
 
 		const loadBalancer = new ApplicationLoadBalancer(this, 'LoadBalancer', {
