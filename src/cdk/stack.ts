@@ -10,6 +10,7 @@ import { ApplicationLoadBalancer } from '@aws-cdk/aws-elasticloadbalancingv2';
 import { InstanceTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 import { Table } from '@aws-cdk/aws-dynamodb';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
+import { PolicyStatement } from '@aws-cdk/aws-iam';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -87,25 +88,8 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const config = props.STAGE === 'prod' ? prodEC2Config : testEC2Config
 		const shebang = `#!/bin/bash
 
-# install docker
-apt-get update -y
-apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-apt-get install docker-ce docker-ce-cli containerd.io -y
-
-# install node
-apt install nodejs npm -y
-
-# set up project
-git clone https://github.com/visionsofparadise/${serviceName}.git
-cd ${serviceName}
-npm ci
-npm run compile
-npm run test
-
-# build and run container
-docker build -t ${deploymentName}:1.0 .
+(aws ecr get-login --no-include-email --region ${props.env?.region})
+docker pull cdk-hnb659fds-container-assets-${props.env?.account}-${props.env?.region}/latest
 docker run -d -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STAGE=${environment.STAGE} -e LOADBALANCER_URL=${environment.LOADBALANCER_URL} --reset unless-stopped ${deploymentName}:1.0`
 
 		for (let i = 0; i < instanceCount; i++) {
@@ -114,7 +98,7 @@ docker run -d -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STA
 				vpc,
 				instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
 				machineImage: MachineImage.genericLinux({
-					'us-east-1': 'ami-0885b1f6bd170450c'
+					'us-east-1': 'ami-09bee01cc997a78a6'
 				}),
 				allowAllOutbound: true,
 				vpcSubnets: {
@@ -131,9 +115,14 @@ docker run -d -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STA
 				]
 			})
 
+			instance.addToRolePolicy(new PolicyStatement({
+				actions: ["ecr:*",
+				"cloudtrail:LookupEvents"],
+				resources: ['*']
+			}))
+
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-			if (props.STAGE === 'prod') instance.connections.allowFrom(loadBalancer, Port.tcp(80))
-			if (props.STAGE !== 'prod') instance.connections.allowFromAnyIpv4(Port.tcp(80))
+			instance.connections.allowFrom(loadBalancer, Port.tcp(80))
 
 			instances.push(instance)
 		}
