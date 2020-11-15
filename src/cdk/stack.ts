@@ -132,7 +132,8 @@ docker run -d -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STA
 			})
 
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-			instance.connections.allowFrom(loadBalancer, Port.tcp(80))
+			if (props.STAGE === 'prod') instance.connections.allowFrom(loadBalancer, Port.tcp(80))
+			if (props.STAGE !== 'prod') instance.connections.allowFromAnyIpv4(Port.tcp(80))
 
 			instances.push(instance)
 		}
