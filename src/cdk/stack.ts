@@ -87,6 +87,13 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const config = props.STAGE === 'prod' ? prodEC2Config : testEC2Config
 		const shebang = `#!/bin/bash
 
+# install docker
+apt-get update -y
+apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+apt-get install docker-ce docker-ce-cli containerd.io -y
+
 # install node
 apt install nodejs npm -y
 
@@ -107,7 +114,7 @@ docker run -d -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STA
 				vpc,
 				instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
 				machineImage: MachineImage.genericLinux({
-					'us-east-1': 'ami-09bee01cc997a78a6'
+					'us-east-1': 'ami-0885b1f6bd170450c'
 				}),
 				allowAllOutbound: true,
 				vpcSubnets: {
