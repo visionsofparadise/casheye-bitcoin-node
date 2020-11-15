@@ -108,7 +108,7 @@ npm run start`
 				vpc,
 				instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
 				machineImage: MachineImage.genericLinux({
-					'us-east-1': 'ami-054e49cb26c2fd312'
+					'us-east-1': 'ami-0885b1f6bd170450c'
 				}),
 				allowAllOutbound: true,
 				vpcSubnets: {
