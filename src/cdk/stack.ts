@@ -10,7 +10,6 @@ import { ApplicationLoadBalancer } from '@aws-cdk/aws-elasticloadbalancingv2';
 import { InstanceTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 import { Table } from '@aws-cdk/aws-dynamodb';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
-import { PolicyStatement } from '@aws-cdk/aws-iam';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -88,9 +87,19 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const config = props.STAGE === 'prod' ? prodEC2Config : testEC2Config
 		const shebang = `#!/bin/bash
 
-(aws ecr get-login --no-include-email --region ${props.env?.region})
-docker pull cdk-hnb659fds-container-assets-${props.env?.account}-${props.env?.region}/latest
-docker run -d -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STAGE=${environment.STAGE} -e LOADBALANCER_URL=${environment.LOADBALANCER_URL} --reset unless-stopped ${deploymentName}:1.0`
+# install node
+apt install nodejs npm -y
+
+# set up project
+git clone https://github.com/visionsofparadise/${serviceName}.git
+cd ${serviceName}
+XLH_LOGS=${environment.XLH_LOGS}
+STAGE=${environment.STAGE}
+LOADBALANCER_URL=${environment.LOADBALANCER_URL}
+npm ci
+npm run compile
+npm run test
+npm run start`
 
 		for (let i = 0; i < instanceCount; i++) {
 			const instance = new Instance(this, 'Instance', {
@@ -98,7 +107,7 @@ docker run -d -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STA
 				vpc,
 				instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
 				machineImage: MachineImage.genericLinux({
-					'us-east-1': 'ami-09bee01cc997a78a6'
+					'us-east-1': 'ami-054e49cb26c2fd312'
 				}),
 				allowAllOutbound: true,
 				vpcSubnets: {
@@ -115,20 +124,14 @@ docker run -d -p 80:4000 -p 8333:8333 -e XLH_LOGS=${environment.XLH_LOGS} -e STA
 				]
 			})
 
-			instance.addToRolePolicy(new PolicyStatement({
-				actions: ["ecr:*",
-				"cloudtrail:LookupEvents"],
-				resources: ['*']
-			}))
-
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-			instance.connections.allowFrom(loadBalancer, Port.tcp(80))
+			instance.connections.allowFrom(loadBalancer, Port.tcp(4000))
 
 			instances.push(instance)
 		}
 
 		listener.addTargets('InstanceTargets', {
-			port: 80,
+			port: 4000,
 			targets: instances.map(instance => new InstanceTarget(instance)),
 			healthCheck: {
 				enabled: true
