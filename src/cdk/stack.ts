@@ -6,7 +6,7 @@ import { LambdaFunction } from '@aws-cdk/aws-events-targets';
 import path from 'path';
 import { masterFunction } from 'xkore-lambda-helpers/dist/cdk/masterFunction';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
-import { ApplicationLoadBalancer } from '@aws-cdk/aws-elasticloadbalancingv2';
+import { ApplicationLoadBalancer, ApplicationProtocol } from '@aws-cdk/aws-elasticloadbalancingv2';
 import { InstanceTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 import { Table } from '@aws-cdk/aws-dynamodb';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
@@ -88,6 +88,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const shebang = `#!/bin/bash
 
 # install node
+apt-get update -y
 apt install nodejs npm -y
 
 # set up project
@@ -132,6 +133,7 @@ npm run start`
 
 		listener.addTargets('InstanceTargets', {
 			port: 4000,
+			protocol: ApplicationProtocol.HTTP,
 			targets: instances.map(instance => new InstanceTarget(instance)),
 			healthCheck: {
 				enabled: true
