@@ -79,7 +79,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 
 		const environment = {
 			...baseEnvironment,
-			LOADBALANCER_URL: loadBalancer.loadBalancerDnsName + '/'
+			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + '/'
 		}
 
 		const instanceCount = 1
