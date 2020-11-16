@@ -97,10 +97,10 @@ cd ${serviceName}
 XLH_LOGS=${environment.XLH_LOGS}
 STAGE=${environment.STAGE}
 LOADBALANCER_URL=${environment.LOADBALANCER_URL}
-npm ci
+npm i
 npm run compile
 npm run test
-npm run start`
+npm run startd`
 
 		for (let i = 0; i < instanceCount; i++) {
 			const instance = new Instance(this, 'Instance', {

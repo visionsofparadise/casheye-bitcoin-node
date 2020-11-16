@@ -10,7 +10,8 @@
 		"build": "parcel build ./src/handlers/*.ts -d build --target node --bundle-node-modules --no-source-maps",
 		"synth": "cdk synth",
 		"integration": "jest integration",
-		"start": "node dist/index.js"
+		"start": "node dist/index.js",
+		"startd": "pm2 start dist/index.js"
 	},
 	"repository": {
 		"type": "git",
@@ -60,6 +61,7 @@
 		"jest": "^26.6.0",
 		"parcel-bundler": "^1.12.4",
 		"parcel-plugin-externals": "^0.5.1",
+		"pm2": "^4.5.0",
 		"tree-kill": "^1.2.2",
 		"ts-jest": "^26.4.1",
 		"ts-loader": "^8.0.6",
