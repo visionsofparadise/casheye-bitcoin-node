@@ -136,6 +136,7 @@ npm run startd`
 			protocol: ApplicationProtocol.HTTP,
 			targets: instances.map(instance => new InstanceTarget(instance)),
 			healthCheck: {
+				port: '4000',
 				enabled: true
 			}
 		})
