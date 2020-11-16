@@ -73,13 +73,12 @@ export class CasheyeAddressWatcherStack extends Stack {
 		});
 
 		const listener = loadBalancer.addListener(`Listener`, {
-			port: 80,
-			open: false
+			port: 80
 		})
 
 		const environment = {
 			...baseEnvironment,
-			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + '/'
+			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + ':80/'
 		}
 
 		const instanceCount = 1
@@ -154,8 +153,7 @@ npm run startd`
 			targets: [new LambdaFunction(onAddressCreatedHandler)]
 		});
 
-		loadBalancer.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
-		onAddressCreatedHandler.connections.allowTo(loadBalancer, Port.tcp(80))
+		onAddressCreatedHandler.connections.allowTo(listener, Port.tcp(80))
 
 		if (props.STAGE !== 'prod') {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
@@ -172,8 +170,7 @@ npm run startd`
 				targets: [new LambdaFunction(testRPCHandler)]
 			});
 
-			loadBalancer.connections.allowFrom(testRPCHandler, Port.tcp(80))
-			testRPCHandler.connections.allowTo(loadBalancer, Port.tcp(80))
+			testRPCHandler.connections.allowTo(listener, Port.tcp(80))
 
 			const db = Table.fromTableArn(this, 'dynamoDB', Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`));
 
