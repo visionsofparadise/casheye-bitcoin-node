@@ -19,7 +19,7 @@ const prodEC2Config = {
 
 const testEC2Config = {
 	storageSize: 20,
-	instanceSize: InstanceSize.MICRO
+	instanceSize: InstanceSize.SMALL
 }
 
 const createFunction = masterFunction({
