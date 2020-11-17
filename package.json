@@ -32,7 +32,7 @@
 		"cors": "^2.8.5",
 		"dayjs": "^1.9.4",
 		"express": "^4.17.1",
-		"nanoid": "^3.1.16",
+		"nanoid": "^2.1.11",
 		"upick": "^1.0.0",
 		"xkore-lambda-helpers": "^1.0.31"
 	},
