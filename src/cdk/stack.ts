@@ -127,6 +127,7 @@ npm run startd`
 
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 			instance.connections.allowFrom(listener, Port.tcp(4000))
+			props.STAGE !== 'prod' && instance.connections.allowFromAnyIpv4(Port.tcp(4000))
 
 			instances.push(instance)
 		}
