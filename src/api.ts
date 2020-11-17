@@ -5,6 +5,8 @@ import { confirm } from './confirm';
 import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
 import { isProd, logger } from './helpers';
+import kill from 'tree-kill'
+import udelay from 'udelay'
 
 export const getApis = (btc: any) => {
 	const api = express();
@@ -12,6 +14,20 @@ export const getApis = (btc: any) => {
 	api.use(cors());
 	api.use(bodyParser.urlencoded({ extended: true }));
 	api.use(bodyParser.json());
+
+	api.use(async (_, __, next) => {
+		try {
+			next()
+		} catch (err) {
+			await btc.rpc.command('stop')
+
+			await udelay(3 * 1000)
+
+			kill(btc.pid)
+		
+			throw err
+		}
+	})
 	
 	const internalApi = api
 	const externalApi = api
@@ -48,9 +64,9 @@ export const getApis = (btc: any) => {
 		const result = await btc.rpc.command(command);
 
 		return res.send(result);
-})
+	})
 
-externalApi.get('/', async (_, res) => res.sendStatus(200));
+	externalApi.get('/', async (_, res) => res.sendStatus(200));
 
 	return {
 		externalApi,
