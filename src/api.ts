@@ -16,29 +16,33 @@ export const getApis = (btc: any) => {
 	api.use(bodyParser.json());
 
 	api.use(async (req, res, next) => {
-		const logGroupName = process.env.LOG_GROUP_NAME!
-		const logStreamName = `aws-ec2-casheye-address-watcher-stream-${day().unix()}-${nanoid()}`
+		let cwLogger = undefined
 
-		await cwLogs.createLogStream({
-			logGroupName,
-			logStreamName
-		}).promise()
+		if (process.env.LOG_GROUP_NAME) {
+			const logGroupName = process.env.LOG_GROUP_NAME
+			const logStreamName = `aws-ec2-casheye-address-watcher-stream-${day().unix()}-${nanoid()}`
+	
+			await cwLogs.createLogStream({
+				logGroupName,
+				logStreamName
+			}).promise()
+	
+			cwLogger = async (data: any) => await cwLogs.putLogEvents({
+				logGroupName,
+				logStreamName,
+				logEvents: [{
+					timestamp: day().unix(),
+					message: data
+				}]
+			}).promise()
+		}
 
-		const cwLogger = async (data: any) => await cwLogs.putLogEvents({
-			logGroupName,
-			logStreamName,
-			logEvents: [{
-				timestamp: day().unix(),
-				message: data
-			}]
-		}).promise()
-
-		await cwLogger(req)
+		cwLogger && await cwLogger(req)
 
 		try {
 			return next()
 		} catch (err) {
-			await cwLogger(err)
+			cwLogger && await cwLogger(err)
 		
 			return res.sendStatus(500)
 		}
