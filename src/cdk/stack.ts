@@ -122,9 +122,11 @@ npm run startd`
 						deviceName: '/dev/sda1',
 						volume: BlockDeviceVolume.ebs(config.storageSize),
 					},
-				]
+				],
+				keyName: 'aws_ec2'
 			})
 
+			instance.connections.allowFromAnyIpv4(Port.tcp(22))
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 			instance.connections.allowFrom(listener, Port.tcp(4000))
 
