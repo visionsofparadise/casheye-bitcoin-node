@@ -10,15 +10,16 @@ import { ApplicationLoadBalancer, ApplicationProtocol } from '@aws-cdk/aws-elast
 import { InstanceTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 import { Table } from '@aws-cdk/aws-dynamodb';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
+import { LogGroup, RetentionDays } from '@aws-cdk/aws-logs'
 
 const prodEC2Config = {
 	storageSize: 400,
-	instanceSize: InstanceSize.MEDIUM
+	instanceSize: InstanceSize.SMALL
 }
 
 const testEC2Config = {
 	storageSize: 20,
-	instanceSize: InstanceSize.SMALL
+	instanceSize: InstanceSize.MICRO
 }
 
 const createFunction = masterFunction({
@@ -85,24 +86,30 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const instanceCount = 1
 		const instances: Array<Instance> = []
 		const config = props.STAGE === 'prod' ? prodEC2Config : testEC2Config
-		const shebang = `#!/bin/bash
-
-# install node
-apt-get update -y
-apt install nodejs npm -y
-
-# set up project
-git clone https://github.com/visionsofparadise/${serviceName}.git
-cd ${serviceName}
-XLH_LOGS=${environment.XLH_LOGS}
-STAGE=${environment.STAGE}
-LOADBALANCER_URL=${environment.LOADBALANCER_URL}
-npm i
-npm run compile
-npm run test
-npm run startd`
 
 		for (let i = 0; i < instanceCount; i++) {
+			const ec2LogGroup = new LogGroup(this, 'EC2LogGroup', {
+				retention: RetentionDays.ONE_WEEK,
+			});
+
+			const shebang = `#!/bin/bash
+
+			# install node
+			apt-get update -y
+			apt install nodejs npm -y
+			
+			# set up project
+			git clone https://github.com/visionsofparadise/${serviceName}.git
+			cd ${serviceName}
+			XLH_LOGS=${environment.XLH_LOGS}
+			LOG_GROUP_NAME=${ec2LogGroup.logGroupName}
+			STAGE=${environment.STAGE}
+			LOADBALANCER_URL=${environment.LOADBALANCER_URL}
+			npm i
+			npm run compile
+			npm run test
+			npm run startd`
+
 			const instance = new Instance(this, 'Instance', {
 				instanceName: `${deploymentName}-node-${i}`,
 				vpc,

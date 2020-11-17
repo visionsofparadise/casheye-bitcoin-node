@@ -24,3 +24,7 @@ export const logger = spawnLogger({
 	envKey: 'XLH_LOGS',
 	onValue: 'true'
 });
+
+export const cwLogs = new AWS.CloudWatchLogs({apiVersion: '2014-03-28'});
+
+

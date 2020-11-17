@@ -4,9 +4,9 @@ import bodyParser from 'body-parser';
 import { confirm } from './confirm';
 import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
-import { isProd, logger } from './helpers';
-import kill from 'tree-kill'
-import udelay from 'udelay'
+import { cwLogs, isProd, logger } from './helpers';
+import day from 'dayjs';
+import nanoid from 'nanoid';
 
 export const getApis = (btc: any) => {
 	const api = express();
@@ -15,17 +15,32 @@ export const getApis = (btc: any) => {
 	api.use(bodyParser.urlencoded({ extended: true }));
 	api.use(bodyParser.json());
 
-	api.use(async (_, __, next) => {
+	api.use(async (req, res, next) => {
+		const logGroupName = process.env.LOG_GROUP_NAME!
+		const logStreamName = `aws-ec2-casheye-address-watcher-stream-${day().unix()}-${nanoid()}`
+
+		await cwLogs.createLogStream({
+			logGroupName,
+			logStreamName
+		}).promise()
+
+		const cwLogger = async (data: any) => await cwLogs.putLogEvents({
+			logGroupName,
+			logStreamName,
+			logEvents: [{
+				timestamp: day().unix(),
+				message: data
+			}]
+		}).promise()
+
+		await cwLogger(req)
+
 		try {
-			next()
+			return next()
 		} catch (err) {
-			await btc.rpc.command('stop')
-
-			await udelay(3 * 1000)
-
-			kill(btc.pid)
+			await cwLogger(err)
 		
-			throw err
+			return res.sendStatus(500)
 		}
 	})
 	
