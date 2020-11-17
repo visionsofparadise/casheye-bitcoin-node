@@ -6,7 +6,6 @@ import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
 import { cwLogs, isProd, logger } from './helpers';
 import day from 'dayjs';
-import nanoid from 'nanoid';
 
 export const getApis = (btc: any) => {
 	const api = express();
@@ -20,7 +19,7 @@ export const getApis = (btc: any) => {
 
 		if (process.env.LOG_GROUP_NAME) {
 			const logGroupName = process.env.LOG_GROUP_NAME
-			const logStreamName = `aws-ec2-casheye-address-watcher-stream-${day().unix()}-${nanoid()}`
+			const logStreamName = `${logGroupName}-stream-${day().unix()}`
 	
 			await cwLogs.createLogStream({
 				logGroupName,
@@ -35,9 +34,9 @@ export const getApis = (btc: any) => {
 					message: data
 				}]
 			}).promise()
-		}
 
-		cwLogger && await cwLogger(req)
+			await cwLogger(req)
+		}
 
 		try {
 			return next()
