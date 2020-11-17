@@ -88,7 +88,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const config = props.STAGE === 'prod' ? prodEC2Config : testEC2Config
 
 		for (let i = 0; i < instanceCount; i++) {
-			const ec2LogGroup = new LogGroup(this, 'EC2LogGroup', {
+			const ec2LogGroup = new LogGroup(this, `EC2LogGroup${i}`, {
 				retention: RetentionDays.ONE_WEEK,
 			});
 
@@ -136,6 +136,8 @@ export class CasheyeAddressWatcherStack extends Stack {
 			instance.connections.allowFromAnyIpv4(Port.tcp(22))
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 			instance.connections.allowFrom(listener, Port.tcp(4000))
+
+			ec2LogGroup.grantWrite(instance.grantPrincipal)
 
 			instances.push(instance)
 		}
