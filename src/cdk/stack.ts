@@ -144,9 +144,19 @@ npm run startd`
 			instances.push(instance)
 		}
 
+		listener.addTargets('InstanceTargetsRoot', {
+			port: 4000,
+			protocol: ApplicationProtocol.HTTP,
+			targets: instances.map(instance => new InstanceTarget(instance)),
+			healthCheck: {
+				enabled: true
+			}
+		})
+
 		listener.addTargets('InstanceTargets', {
 			port: 4000,
 			protocol: ApplicationProtocol.HTTP,
+			priority: 1,
 			conditions: [
 				ListenerCondition.pathPatterns(['/address', '/rpc']),
 			],
