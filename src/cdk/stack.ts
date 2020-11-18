@@ -71,14 +71,20 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const loadBalancer = new ApplicationLoadBalancer(this, 'LoadBalancer', {
 			vpc,
 			vpcSubnets: {
-				subnets: vpc.publicSubnets
+				subnets: vpc.isolatedSubnets
 			}
 		});
 
+		const redirect = loadBalancer.addRedirect({
+			sourcePort: 80,
+			sourceProtocol: ApplicationProtocol.HTTP,
+			targetPort: 4000,
+			targetProtocol: ApplicationProtocol.HTTP
+		});
+
 		const listener = loadBalancer.addListener('Listener', {
-			port: 80,
-			protocol: ApplicationProtocol.HTTP,
-			open: false
+			port: 4000,
+			protocol: ApplicationProtocol.HTTP
 		});
 
 		const environment = {
@@ -138,7 +144,7 @@ npm run startd`
 			instances.push(instance)
 		}
 
-		listener.addTargets('ListenerTargets', {
+		const targets = listener.addTargets('ListenerTargets', {
 			port: 4000,
 			protocol: ApplicationProtocol.HTTP,
 			targets: instances.map(instance => new InstanceTarget(instance)),
@@ -152,9 +158,7 @@ npm run startd`
 			conditions: [
 				ListenerCondition.pathPatterns(['/address', '/rpc']),
 			],
-			action: ListenerAction.redirect({
-				port: '4000'
-			})
+			action: ListenerAction.forward([targets])
 		})
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
@@ -171,8 +175,8 @@ npm run startd`
 			targets: [new LambdaFunction(onAddressCreatedHandler)]
 		});
 
-		listener.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
-		onAddressCreatedHandler.connections.allowTo(listener, Port.tcp(80))
+		redirect.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
+		onAddressCreatedHandler.connections.allowTo(redirect, Port.tcp(80))
 
 		if (props.STAGE !== 'prod') {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
@@ -189,8 +193,8 @@ npm run startd`
 				targets: [new LambdaFunction(testRPCHandler)]
 			});
 
-			listener.connections.allowFrom(testRPCHandler, Port.tcp(80))
-			testRPCHandler.connections.allowTo(listener, Port.tcp(80))
+			redirect.connections.allowFrom(testRPCHandler, Port.tcp(80))
+			testRPCHandler.connections.allowTo(redirect, Port.tcp(80))
 
 			const db = Table.fromTableArn(this, 'dynamoDB', Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`));
 
