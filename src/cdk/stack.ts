@@ -1,4 +1,4 @@
-import { CfnOutput, Construct, Fn, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
+import { CfnOutput, Construct, Duration, Fn, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
 import { Rule } from '@aws-cdk/aws-events';
 import { Code } from '@aws-cdk/aws-lambda';
@@ -77,6 +77,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 
 		const listener = loadBalancer.addListener(`Listener`, {
 			port: 80,
+			protocol: ApplicationProtocol.HTTP,
 			open: false
 		})
 
@@ -147,6 +148,7 @@ npm run startd`
 		})
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
+			timeout: Duration.seconds(20),
 			environment,
 			vpc,
 			vpcSubnets: {
@@ -165,6 +167,7 @@ npm run startd`
 
 		if (props.STAGE !== 'prod') {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
+				timeout: Duration.seconds(20),
 				environment,
 				vpc, 
 				vpcSubnets: {
