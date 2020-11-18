@@ -153,7 +153,7 @@ npm run startd`
 		listener.addTargets('InstanceTargets', {
 			port: 4000,
 			protocol: ApplicationProtocol.HTTP,
-			priority: 0,
+			priority: 1,
 			conditions: [
 				ListenerCondition.pathPatterns(['/address', '/rpc']),
 			],
