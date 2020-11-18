@@ -4,8 +4,7 @@ import bodyParser from 'body-parser';
 import { confirm } from './confirm';
 import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
-import { cwLogs, isProd, logger } from './helpers';
-import day from 'dayjs';
+import { isProd, logger } from './helpers';
 
 export const getApis = (btc: any) => {
 	const api = express();
@@ -14,34 +13,11 @@ export const getApis = (btc: any) => {
 	api.use(bodyParser.urlencoded({ extended: true }));
 	api.use(bodyParser.json());
 
-	api.use(async (req, res, next) => {
-		let cwLogger = undefined
-
-		if (process.env.LOG_GROUP_NAME) {
-			const logGroupName = process.env.LOG_GROUP_NAME
-			const logStreamName = `${logGroupName}-stream-${day().unix()}`
-	
-			await cwLogs.createLogStream({
-				logGroupName,
-				logStreamName
-			}).promise()
-	
-			cwLogger = async (data: any) => await cwLogs.putLogEvents({
-				logGroupName,
-				logStreamName,
-				logEvents: [{
-					timestamp: day().unix(),
-					message: data
-				}]
-			}).promise()
-
-			await cwLogger(req)
-		}
-
+	api.use((_, res, next) => {
 		try {
 			return next()
 		} catch (err) {
-			cwLogger && await cwLogger(err)
+			logger.error(err)
 		
 			return res.sendStatus(500)
 		}

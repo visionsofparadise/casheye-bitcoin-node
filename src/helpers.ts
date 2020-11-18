@@ -25,6 +25,4 @@ export const logger = spawnLogger({
 	onValue: 'true'
 });
 
-export const cwLogs = new AWS.CloudWatchLogs({apiVersion: '2014-03-28'});
-
 
