@@ -75,17 +75,16 @@ export class CasheyeAddressWatcherStack extends Stack {
 			}
 		});
 
-		const listener = loadBalancer.addListener(`Listener`, {
-			port: 80,
-			protocol: ApplicationProtocol.HTTP
-		})
+		// const listener = loadBalancer.addListener(`Listener`, {
+		// 	port: 80,
+		// 	protocol: ApplicationProtocol.HTTP
+		// })
 
-		loadBalancer.addRedirect({
+		const listener = loadBalancer.addRedirect({
 			sourceProtocol: ApplicationProtocol.HTTP,
 			sourcePort: 80,
 			targetProtocol: ApplicationProtocol.HTTP,
-			targetPort: 4000,
-
+			targetPort: 4000
 		});
 
 		const environment = {
