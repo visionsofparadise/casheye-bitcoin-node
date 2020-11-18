@@ -77,6 +77,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 
 		const listener = loadBalancer.addListener('Listener', {
 			port: 4000,
+			protocol: ApplicationProtocol.HTTP,
 			open: false
 		});
 
