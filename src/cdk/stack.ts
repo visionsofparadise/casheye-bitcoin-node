@@ -71,7 +71,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const loadBalancer = new ApplicationLoadBalancer(this, 'LoadBalancer', {
 			vpc,
 			vpcSubnets: {
-				subnets: vpc.isolatedSubnets
+				subnets: vpc.publicSubnets
 			}
 		});
 
