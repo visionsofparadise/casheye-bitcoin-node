@@ -75,16 +75,14 @@ export class CasheyeAddressWatcherStack extends Stack {
 			}
 		});
 
-		const listener = loadBalancer.addRedirect({
-			sourceProtocol: ApplicationProtocol.HTTP,
-			sourcePort: 80,
-			targetProtocol: ApplicationProtocol.HTTP,
-			targetPort: 4000
+		const listener = loadBalancer.addListener('Listener', {
+			port: 4000,
+			open: false
 		});
 
 		const environment = {
 			...baseEnvironment,
-			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + '/'
+			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + ':4000/'
 		}
 
 		const instances: Array<Instance> = []
@@ -174,8 +172,8 @@ npm run startd`
 			targets: [new LambdaFunction(onAddressCreatedHandler)]
 		});
 
-		listener.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
-		onAddressCreatedHandler.connections.allowTo(listener, Port.tcp(80))
+		listener.connections.allowFrom(onAddressCreatedHandler, Port.tcp(4000))
+		onAddressCreatedHandler.connections.allowTo(listener, Port.tcp(4000))
 
 		if (props.STAGE !== 'prod') {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
@@ -192,8 +190,8 @@ npm run startd`
 				targets: [new LambdaFunction(testRPCHandler)]
 			});
 
-			listener.connections.allowFrom(testRPCHandler, Port.tcp(80))
-			testRPCHandler.connections.allowTo(listener, Port.tcp(80))
+			listener.connections.allowFrom(testRPCHandler, Port.tcp(4000))
+			testRPCHandler.connections.allowTo(listener, Port.tcp(4000))
 
 			const db = Table.fromTableArn(this, 'dynamoDB', Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`));
 
