@@ -80,6 +80,13 @@ export class CasheyeAddressWatcherStack extends Stack {
 			protocol: ApplicationProtocol.HTTP
 		})
 
+		loadBalancer.addRedirect({
+			sourceProtocol: ApplicationProtocol.HTTPS,
+			sourcePort: 80,
+			targetProtocol: ApplicationProtocol.HTTP,
+			targetPort: 4000,
+		});
+
 		const environment = {
 			...baseEnvironment,
 			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + '/'
