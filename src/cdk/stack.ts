@@ -6,7 +6,7 @@ import { LambdaFunction } from '@aws-cdk/aws-events-targets';
 import path from 'path';
 import { masterFunction } from 'xkore-lambda-helpers/dist/cdk/masterFunction';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
-import { ApplicationLoadBalancer, ApplicationProtocol, ListenerCondition } from '@aws-cdk/aws-elasticloadbalancingv2';
+import { ApplicationLoadBalancer, ApplicationProtocol, ListenerAction, ListenerCondition } from '@aws-cdk/aws-elasticloadbalancingv2';
 import { InstanceTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 import { Table } from '@aws-cdk/aws-dynamodb';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
@@ -75,17 +75,12 @@ export class CasheyeAddressWatcherStack extends Stack {
 			}
 		});
 
-		const listener = loadBalancer.addListener(`Listener`, {
-			port: 80,
-			protocol: ApplicationProtocol.HTTP
-		})
-
-		// const listener = loadBalancer.addRedirect({
-		// 	sourceProtocol: ApplicationProtocol.HTTP,
-		// 	sourcePort: 80,
-		// 	targetProtocol: ApplicationProtocol.HTTP,
-		// 	targetPort: 4000
-		// });
+		const listener = loadBalancer.addRedirect({
+			sourceProtocol: ApplicationProtocol.HTTP,
+			sourcePort: 80,
+			targetProtocol: ApplicationProtocol.HTTP,
+			targetPort: 4000
+		});
 
 		const environment = {
 			...baseEnvironment,
@@ -144,23 +139,25 @@ npm run startd`
 			instances.push(instance)
 		}
 
-		listener.addTargets('InstanceTargetsDefault', {
+		const targets = listener.addTargets('InstanceTargets', {
 			port: 4000,
 			protocol: ApplicationProtocol.HTTP,
-			targets: instances.map(instance => new InstanceTarget(instance)),
-		})
-
-		listener.addTargets('InstanceTargets', {
-			port: 4000,
-			protocol: ApplicationProtocol.HTTP,
-			priority: 1,
-			conditions: [
-				ListenerCondition.pathPatterns(['/address', '/rpc']),
-			],
 			targets: instances.map(instance => new InstanceTarget(instance)),
 			healthCheck: {
 				enabled: true
 			}
+		})
+
+		listener.addAction('Default', {
+			action: ListenerAction.fixedResponse(200)
+		})
+
+		listener.addAction('Forward', {
+			action: ListenerAction.forward([targets]),
+			priority: 1,
+			conditions: [
+				ListenerCondition.pathPatterns(['/address', '/rpc']),
+			],
 		})
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
