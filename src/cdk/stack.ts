@@ -146,11 +146,9 @@ npm run startd`
 
 		listener.addTargets('InstanceTargetsRoot', {
 			port: 4000,
+			priority: 10,
 			protocol: ApplicationProtocol.HTTP,
 			targets: instances.map(instance => new InstanceTarget(instance)),
-			healthCheck: {
-				enabled: true
-			}
 		})
 
 		listener.addTargets('InstanceTargets', {
