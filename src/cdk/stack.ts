@@ -75,17 +75,17 @@ export class CasheyeAddressWatcherStack extends Stack {
 			}
 		});
 
-		// const listener = loadBalancer.addListener(`Listener`, {
-		// 	port: 80,
-		// 	protocol: ApplicationProtocol.HTTP
-		// })
+		const listener = loadBalancer.addListener(`Listener`, {
+			port: 80,
+			protocol: ApplicationProtocol.HTTP
+		})
 
-		const listener = loadBalancer.addRedirect({
-			sourceProtocol: ApplicationProtocol.HTTP,
-			sourcePort: 80,
-			targetProtocol: ApplicationProtocol.HTTP,
-			targetPort: 4000
-		});
+		// const listener = loadBalancer.addRedirect({
+		// 	sourceProtocol: ApplicationProtocol.HTTP,
+		// 	sourcePort: 80,
+		// 	targetProtocol: ApplicationProtocol.HTTP,
+		// 	targetPort: 4000
+		// });
 
 		const environment = {
 			...baseEnvironment,
@@ -144,9 +144,8 @@ npm run startd`
 			instances.push(instance)
 		}
 
-		listener.addTargets('InstanceTargetsRoot', {
+		listener.addTargets('InstanceTargetsDefault', {
 			port: 4000,
-			priority: 10,
 			protocol: ApplicationProtocol.HTTP,
 			targets: instances.map(instance => new InstanceTarget(instance)),
 		})
@@ -154,7 +153,7 @@ npm run startd`
 		listener.addTargets('InstanceTargets', {
 			port: 4000,
 			protocol: ApplicationProtocol.HTTP,
-			priority: 1,
+			priority: 0,
 			conditions: [
 				ListenerCondition.pathPatterns(['/address', '/rpc']),
 			],
