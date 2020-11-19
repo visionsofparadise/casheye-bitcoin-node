@@ -5,9 +5,11 @@ import axios from 'axios'
 export const handler = async (event: EventBridgeEvent<'rpcCommand', { command: string; }>) => {
 	logger.info({ event });
 
-	await axios.post(process.env.LOADBALANCER_URL! + 'rpc', {
+	const response = await axios.post(process.env.LOADBALANCER_URL! + 'rpc', {
 		command: event.detail.command
 	})
+
+	logger.info({ response })
 
 	return;
 };

@@ -5,7 +5,7 @@ import day from 'dayjs';
 export const handler = async (event: EventBridgeEvent<'btcTxDetected' | 'btcAddressWatching' | 'btcAddressExpired' | 'btcAddressUsed' | 'btcConfirmation', any>) => {
 	logger.info({ event });
 
-	await db.put({
+	const response = await db.put({
 		Item: {
 			pk: 'TestEvent',
 			sk: day().unix(),
@@ -13,6 +13,8 @@ export const handler = async (event: EventBridgeEvent<'btcTxDetected' | 'btcAddr
 			...event.detail
 		}
 	})
+
+	logger.info({ response })
 
 	return;
 };

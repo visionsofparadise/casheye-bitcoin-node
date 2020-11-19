@@ -1,5 +1,5 @@
 import { lambdaWrap } from 'xkore-lambda-helpers/dist/util/lambdaWrap'
-import { db } from '../helpers'
+import { db, logger } from '../helpers'
 
 export const handler = lambdaWrap({
 }, async ({ }) => {
@@ -9,6 +9,8 @@ export const handler = lambdaWrap({
 			":pk": 'TestEvent'
 		}
 	})
+
+	logger.info({ testData })
 
 	return testData
 })
