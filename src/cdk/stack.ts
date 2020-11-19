@@ -6,7 +6,7 @@ import { LambdaFunction } from '@aws-cdk/aws-events-targets';
 import path from 'path';
 import { masterFunction } from 'xkore-lambda-helpers/dist/cdk/masterFunction';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
-import { NetworkLoadBalancer } from '@aws-cdk/aws-elasticloadbalancingv2';
+import { ApplicationLoadBalancer, ApplicationProtocol } from '@aws-cdk/aws-elasticloadbalancingv2';
 import { InstanceTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 import { Table } from '@aws-cdk/aws-dynamodb';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
@@ -64,14 +64,15 @@ export class CasheyeAddressWatcherStack extends Stack {
 		}
 
 		const vpc = new Vpc(this, 'VPC', {
-			natGateways: 0,
 			cidr: "10.0.0.0/16",
 			maxAzs: 2
 		});
 
-		const loadBalancer = new NetworkLoadBalancer(this, 'LoadBalancer', {
+		const loadBalancer = new ApplicationLoadBalancer(this, 'LoadBalancer', {
 			vpc
 		});
+
+		loadBalancer.connections.allowFromAnyIpv4(Port.tcp(80))
 
 		const environment = {
 			...baseEnvironment,
@@ -125,7 +126,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 
 			instance.connections.allowFromAnyIpv4(Port.tcp(22))
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-			instance.connections.allowInternally(Port.tcp(80))
+			instance.connections.allowFrom(loadBalancer, Port.tcp(80))
 
 			EventBus.grantPutEvents(instance.grantPrincipal)
 
@@ -138,6 +139,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 
 		listener.addTargets('Targets', {
 			port: 80,
+			protocol: ApplicationProtocol.HTTP,
 			targets: instances.map(instance => new InstanceTarget(instance)),
 			healthCheck: {
 				enabled: true
