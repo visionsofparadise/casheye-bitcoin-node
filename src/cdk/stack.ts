@@ -6,7 +6,7 @@ import { LambdaFunction } from '@aws-cdk/aws-events-targets';
 import path from 'path';
 import { masterFunction } from 'xkore-lambda-helpers/dist/cdk/masterFunction';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
-import { ApplicationLoadBalancer, ApplicationProtocol } from '@aws-cdk/aws-elasticloadbalancingv2';
+import { ApplicationLoadBalancer, ApplicationProtocol, ListenerAction, ListenerCondition } from '@aws-cdk/aws-elasticloadbalancingv2';
 import { InstanceTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 import { Table } from '@aws-cdk/aws-dynamodb';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
@@ -64,6 +64,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		}
 
 		const vpc = new Vpc(this, 'VPC', {
+			natGateways: 0,
 			cidr: "10.0.0.0/16",
 			maxAzs: 2
 		});
@@ -72,11 +73,9 @@ export class CasheyeAddressWatcherStack extends Stack {
 			vpc
 		});
 
-		loadBalancer.connections.allowFromAnyIpv4(Port.tcp(80))
-
 		const environment = {
 			...baseEnvironment,
-			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + ':80/'
+			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + '/'
 		}
 
 		const instances: Array<Instance> = []
@@ -124,7 +123,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 				keyName: 'aws_ec2'
 			})
 
-			instance.connections.allowFromAnyIpv4(Port.tcp(22))
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 			instance.connections.allowFrom(loadBalancer, Port.tcp(80))
 
@@ -137,7 +135,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			port: 80
 		});
 
-		listener.addTargets('Targets', {
+		const targets = listener.addTargets('Targets', {
 			port: 80,
 			protocol: ApplicationProtocol.HTTP,
 			targets: instances.map(instance => new InstanceTarget(instance)),
@@ -146,7 +144,14 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			}
 		})
 
+		listener.addAction('Routing', {
+			action: ListenerAction.forward([targets]),
+			priority: 1,
+			conditions: [ListenerCondition.pathPatterns(['/rpc', '/address'])]
+		})
+
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
+			allowAllOutbound: false,
 			environment,
 			vpc });
 		new Rule(this, 'onAddressCreatedRule', {
@@ -157,8 +162,12 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			targets: [new LambdaFunction(onAddressCreatedHandler)]
 		});
 
+		loadBalancer.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
+		onAddressCreatedHandler.connections.allowTo(loadBalancer, Port.tcp(80))
+
 		if (!isProd) {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
+				allowAllOutbound: false,
 				environment,
 				vpc });
 			new Rule(this, 'testRPCRule', {
@@ -168,6 +177,9 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 				},
 				targets: [new LambdaFunction(testRPCHandler)]
 			});
+
+			loadBalancer.connections.allowFrom(testRPCHandler, Port.tcp(80))
+			testRPCHandler.connections.allowTo(loadBalancer, Port.tcp(80))
 
 			const db = Table.fromTableArn(this, 'dynamoDB', Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`));
 
