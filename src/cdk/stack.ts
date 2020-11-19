@@ -136,6 +136,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 		}
 
 		const targetGroup = new ApplicationTargetGroup(this, 'InstanceTargetGroup', {
+			vpc,
 			port: 80,
 			protocol: ApplicationProtocol.HTTP,
 			targets: instances.map(instance => new InstanceTarget(instance)),
@@ -146,7 +147,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 
 		loadBalancer.addListener('Listener', {
 			port: 80,
-			defaultTargetGroups: [targetGroup],
 			defaultAction: ListenerAction.forward([targetGroup])
 		});
 
