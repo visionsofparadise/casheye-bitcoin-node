@@ -6,7 +6,7 @@ import { LambdaFunction } from '@aws-cdk/aws-events-targets';
 import path from 'path';
 import { masterFunction } from 'xkore-lambda-helpers/dist/cdk/masterFunction';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
-import { ApplicationLoadBalancer, ApplicationProtocol, ListenerAction, ListenerCondition } from '@aws-cdk/aws-elasticloadbalancingv2';
+import { ApplicationLoadBalancer, ApplicationProtocol, ApplicationTargetGroup, ListenerAction } from '@aws-cdk/aws-elasticloadbalancingv2';
 import { InstanceTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 import { Table } from '@aws-cdk/aws-dynamodb';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
@@ -76,11 +76,6 @@ export class CasheyeAddressWatcherStack extends Stack {
 			}
 		});
 
-		const listener = loadBalancer.addListener('Listener', {
-			port: 80,
-			open: false
-		});
-
 		const environment = {
 			...baseEnvironment,
 			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + '/'
@@ -140,7 +135,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			instances.push(instance)
 		}
 
-		const targets = listener.addTargets('ListenerTargets', {
+		const targetGroup = new ApplicationTargetGroup(this, 'InstanceTargetGroup', {
 			port: 80,
 			protocol: ApplicationProtocol.HTTP,
 			targets: instances.map(instance => new InstanceTarget(instance)),
@@ -149,13 +144,11 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			}
 		})
 
-		listener.addAction('ListenerAction', {
-			priority: 1,
-			conditions: [
-				ListenerCondition.pathPatterns(['/address', '/rpc']),
-			],
-			action: ListenerAction.forward([targets])
-		})
+		loadBalancer.addListener('Listener', {
+			port: 80,
+			defaultTargetGroups: [targetGroup],
+			defaultAction: ListenerAction.forward([targetGroup])
+		});
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
 			allowAllOutbound: false,
