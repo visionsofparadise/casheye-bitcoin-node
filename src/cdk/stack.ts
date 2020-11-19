@@ -158,6 +158,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 		})
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
+			allowAllOutbound: false,
 			environment,
 			vpc,
 			vpcSubnets: {
@@ -177,6 +178,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 		if (!isProd) {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
 				environment,
+				allowAllOutbound: false,
 				vpc, 
 				vpcSubnets: {
 					subnets: vpc.isolatedSubnets
