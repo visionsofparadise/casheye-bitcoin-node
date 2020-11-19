@@ -1,7 +1,7 @@
 import { CfnOutput, Construct, Fn, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
 import { Rule } from '@aws-cdk/aws-events';
-import { Code } from '@aws-cdk/aws-lambda';
+import { Code, Tracing } from '@aws-cdk/aws-lambda';
 import { LambdaFunction } from '@aws-cdk/aws-events-targets';
 import path from 'path';
 import { masterFunction } from 'xkore-lambda-helpers/dist/cdk/masterFunction';
@@ -77,7 +77,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 
 		const environment = {
 			...baseEnvironment,
-			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + '/'
+			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + ':80/'
 		}
 
 		const instances: Array<Instance> = []
@@ -149,6 +149,8 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
 			environment,
+			tracing: Tracing.ACTIVE,
+			allowPublicSubnet: true,
 			vpc,
 			vpcSubnets: {
 				subnets: vpc.isolatedSubnets
@@ -164,6 +166,8 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 		if (!isProd) {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
 				environment,
+				tracing: Tracing.ACTIVE,
+				allowPublicSubnet: true,
 				vpc, 
 				vpcSubnets: {
 					subnets: vpc.isolatedSubnets
