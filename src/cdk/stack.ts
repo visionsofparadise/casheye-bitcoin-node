@@ -70,10 +70,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		});
 
 		const loadBalancer = new ApplicationLoadBalancer(this, 'LoadBalancer', {
-			vpc,
-			vpcSubnets: {
-				subnets: vpc.isolatedSubnets
-			}
+			vpc
 		});
 
 		const environment = {
@@ -135,8 +132,11 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			instances.push(instance)
 		}
 
-		const targetGroup = new ApplicationTargetGroup(this, 'InstanceTargetGroup', {
-			vpc,
+		const listener = loadBalancer.addListener('Listener', {
+			port: 80
+		});
+
+		listener.addTargets('Targets', {
 			port: 80,
 			protocol: ApplicationProtocol.HTTP,
 			targets: instances.map(instance => new InstanceTarget(instance)),
@@ -144,11 +144,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 				enabled: true
 			}
 		})
-
-		loadBalancer.addListener('Listener', {
-			port: 80,
-			defaultAction: ListenerAction.forward([targetGroup])
-		});
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
 			allowAllOutbound: false,
