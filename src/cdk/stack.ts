@@ -73,6 +73,8 @@ export class CasheyeAddressWatcherStack extends Stack {
 			vpc
 		});
 
+		loadBalancer.connections.allowFromAnyIpv4(Port.tcp(80))
+
 		const environment = {
 			...baseEnvironment,
 			LOADBALANCER_URL: 'http://' + loadBalancer.loadBalancerDnsName + '/'
@@ -146,7 +148,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 		})
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
-			allowAllOutbound: false,
 			environment,
 			vpc,
 			vpcSubnets: {
@@ -160,13 +161,9 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			targets: [new LambdaFunction(onAddressCreatedHandler)]
 		});
 
-		loadBalancer.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
-		onAddressCreatedHandler.connections.allowTo(loadBalancer, Port.tcp(80))
-
 		if (!isProd) {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
 				environment,
-				allowAllOutbound: false,
 				vpc, 
 				vpcSubnets: {
 					subnets: vpc.isolatedSubnets
@@ -178,9 +175,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 				},
 				targets: [new LambdaFunction(testRPCHandler)]
 			});
-
-			loadBalancer.connections.allowFrom(testRPCHandler, Port.tcp(80))
-			testRPCHandler.connections.allowTo(loadBalancer, Port.tcp(80))
 
 			const db = Table.fromTableArn(this, 'dynamoDB', Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`));
 
