@@ -148,10 +148,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
 			environment,
-			vpc,
-			vpcSubnets: {
-				subnets: vpc.isolatedSubnets
-		} });
+			vpc });
 		new Rule(this, 'onAddressCreatedRule', {
 			eventPattern: {
 				source: [`casheye-${props.STAGE}`],
@@ -163,10 +160,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 		if (!isProd) {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
 				environment,
-				vpc, 
-				vpcSubnets: {
-					subnets: vpc.isolatedSubnets
-			} });
+				vpc });
 			new Rule(this, 'testRPCRule', {
 				eventPattern: {
 					source: [`casheye-${props.STAGE}`],
