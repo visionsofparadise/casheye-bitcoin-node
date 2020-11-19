@@ -6,7 +6,7 @@ import day from 'dayjs'
 export const handler = async (event: EventBridgeEvent<'addressCreated', { address: string; expiresAt: number }>) => {
 	logger.info({ event });
 
-	const response = await axios.post(process.env.LOADBALANCER_URL! + 'address', {
+	const response = await axios.post(process.env.INSTANCE_URL! + 'address', {
 		address: event.detail.address,
 		duration: event.detail.expiresAt - day().unix()
 	})
