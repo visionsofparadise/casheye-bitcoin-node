@@ -57,9 +57,10 @@ export class CasheyeAddressWatcherStack extends Stack {
 		super(scope, id, props);
 
 		const deploymentName = `${serviceName}-${props.STAGE}`;
+		const isProd = (props.STAGE === 'prod')
 		const baseEnvironment = {
 				STAGE: props.STAGE,
-				XLH_LOGS: `${props.STAGE !== 'prod'}`
+				XLH_LOGS: `${!isProd}`
 		}
 
 		const vpc = new Vpc(this, 'VPC', {
@@ -71,7 +72,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const loadBalancer = new ApplicationLoadBalancer(this, 'LoadBalancer', {
 			vpc,
 			vpcSubnets: {
-				subnets: vpc.isolatedSubnets
+				subnets: isProd ? vpc.isolatedSubnets : vpc.publicSubnets
 			}
 		});
 
@@ -86,7 +87,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		}
 
 		const instances: Array<Instance> = []
-		const config = props.STAGE === 'prod' ? prodEC2Config : testEC2Config
+		const config = isProd ? prodEC2Config : testEC2Config
 		const shebang = `#!/bin/bash
 
 # installation
@@ -173,7 +174,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 		listener.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
 		onAddressCreatedHandler.connections.allowTo(listener, Port.tcp(80))
 
-		if (props.STAGE !== 'prod') {
+		if (!isProd) {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
 				environment,
 				vpc, 
