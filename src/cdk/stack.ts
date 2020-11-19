@@ -72,7 +72,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const loadBalancer = new ApplicationLoadBalancer(this, 'LoadBalancer', {
 			vpc,
 			vpcSubnets: {
-				subnets: isProd ? vpc.isolatedSubnets : vpc.publicSubnets
+				subnets: vpc.isolatedSubnets
 			}
 		});
 
@@ -133,7 +133,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 
 			instance.connections.allowFromAnyIpv4(Port.tcp(22))
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-			instance.connections.allowFrom(listener, Port.tcp(80))
+			instance.connections.allowFrom(loadBalancer, Port.tcp(80))
 
 			EventBus.grantPutEvents(instance.grantPrincipal)
 
@@ -171,8 +171,8 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			targets: [new LambdaFunction(onAddressCreatedHandler)]
 		});
 
-		listener.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
-		onAddressCreatedHandler.connections.allowTo(listener, Port.tcp(80))
+		loadBalancer.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
+		onAddressCreatedHandler.connections.allowTo(loadBalancer, Port.tcp(80))
 
 		if (!isProd) {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
@@ -189,8 +189,8 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 				targets: [new LambdaFunction(testRPCHandler)]
 			});
 
-			listener.connections.allowFrom(testRPCHandler, Port.tcp(80))
-			testRPCHandler.connections.allowTo(listener, Port.tcp(80))
+			loadBalancer.connections.allowFrom(testRPCHandler, Port.tcp(80))
+			testRPCHandler.connections.allowTo(loadBalancer, Port.tcp(80))
 
 			const db = Table.fromTableArn(this, 'dynamoDB', Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`));
 
