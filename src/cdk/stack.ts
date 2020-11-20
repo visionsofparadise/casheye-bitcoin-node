@@ -112,7 +112,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 
 		const environment = {
 			...baseEnvironment,
-			INSTANCE_URL: 'http://' + instance.instancePrivateDnsName + '/'
+			INSTANCE_URL: 'http://' + instance.instancePrivateIp + ':80/'
 		}
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
