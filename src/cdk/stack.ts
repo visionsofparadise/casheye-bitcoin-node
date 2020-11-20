@@ -64,16 +64,15 @@ export class CasheyeAddressWatcherStack extends Stack {
 		}
 
 		const vpc = new Vpc(this, 'VPC', {
-			natGateways: 0,
 			cidr: "10.0.0.0/16",
-			maxAzs: 2
+			maxAzs: 2,
+			enableDnsSupport: true,
+			enableDnsHostnames: true
 		});
 
 		const loadBalancer = new ApplicationLoadBalancer(this, 'LoadBalancer', {
 			vpc
 		});
-
-		loadBalancer.connections.allowFromAnyIpv4(Port.tcp(80))
 
 		const environment = {
 			...baseEnvironment,
@@ -110,9 +109,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 					'us-east-1': 'ami-0885b1f6bd170450c'
 				}),
 				allowAllOutbound: true,
-				vpcSubnets: {
-					subnets: vpc.publicSubnets
-				},
 				userData: UserData.forLinux({
 					shebang
 				}),
@@ -147,12 +143,10 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 		})
 
 		const onAddressCreatedHandler = createFunction(this, 'onAddressCreated', { 
+			allowAllOutbound: false,
 			timeout: Duration.minutes(5),
 			environment,
-			vpc,
-			vpcSubnets: {
-				subnets: vpc.isolatedSubnets
-		} });
+			vpc });
 		new Rule(this, 'onAddressCreatedRule', {
 			eventPattern: {
 				source: [`casheye-${props.STAGE}`],
@@ -161,14 +155,15 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			targets: [new LambdaFunction(onAddressCreatedHandler)]
 		});
 
+		onAddressCreatedHandler.connections.allowTo(loadBalancer, Port.tcp(80))
+		loadBalancer.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
+
 		if (!isProd) {
 			const testRPCHandler = createFunction(this, 'testRPC', { 
+				allowAllOutbound: false,
 				timeout: Duration.minutes(5),
 				environment,
-				vpc, 
-				vpcSubnets: {
-					subnets: vpc.isolatedSubnets
-			} });
+				vpc });
 			new Rule(this, 'testRPCRule', {
 				eventPattern: {
 					source: [`casheye-${props.STAGE}`],
@@ -176,6 +171,9 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 				},
 				targets: [new LambdaFunction(testRPCHandler)]
 			});
+
+			testRPCHandler.connections.allowTo(loadBalancer, Port.tcp(80))
+			loadBalancer.connections.allowFrom(testRPCHandler, Port.tcp(80))
 
 			const db = Table.fromTableArn(this, 'dynamoDB', Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`));
 
