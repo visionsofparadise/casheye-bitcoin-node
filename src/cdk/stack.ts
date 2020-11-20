@@ -108,6 +108,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 		})
 
 		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
+		instance.connections.allowFromAnyIpv4(Port.tcp(80))
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
 		const environment = {
@@ -127,7 +128,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			targets: [new LambdaFunction(onAddressCreatedHandler)]
 		});
 
-		instance.connections.allowFrom(onAddressCreatedHandler, Port.tcp(80))
 		onAddressCreatedHandler.connections.allowTo(instance, Port.tcp(80))
 
 		if (!isProd) {
@@ -143,7 +143,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 				targets: [new LambdaFunction(testRPCHandler)]
 			});
 
-			instance.connections.allowFrom(testRPCHandler, Port.tcp(80))
 			testRPCHandler.connections.allowTo(instance, Port.tcp(80))
 
 			const db = Table.fromTableArn(this, 'dynamoDB', Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`));
