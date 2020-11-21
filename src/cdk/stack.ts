@@ -1,6 +1,6 @@
 import { CfnOutput, Construct, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
-import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, Vpc } from '@aws-cdk/aws-ec2';
+import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { EventBus } from '@aws-cdk/aws-events';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
 import {nanoid} from 'nanoid'
@@ -58,6 +58,32 @@ export class CasheyeAddressWatcherStack extends Stack {
 		});
 
 		const config = isProd ? prodEC2Config : testEC2Config
+		const shebang = `#!/bin/bash
+
+# installation
+apt-get update -y
+apt-get install software-properties-common -y
+add-apt-repository universe -y
+add-apt-repository ppa:certbot/certbot -y
+apt-get update -y
+apt install nodejs npm -y
+apt-get install certbot -y
+
+# ssl certificate
+INSTANCE_DNS_NAME=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
+certbot certonly --standalone -w "/var/www/$INSTANCE_DNS_NAME" -d $INSTANCE_DNS_NAME
+
+# set up project
+git clone https://github.com/visionsofparadise/${serviceName}.git
+cd ${serviceName}
+XLH_LOGS=${!isProd}
+STAGE=${props.STAGE}
+npm i
+npm run compile
+npm run test
+npm run startd
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4000`
 
 		const instance = new Instance(this, 'Instance', {
 			instanceName: `${deploymentName}-node`,
@@ -73,46 +99,17 @@ export class CasheyeAddressWatcherStack extends Stack {
 					volume: BlockDeviceVolume.ebs(config.storageSize),
 				},
 			],
-			keyName: 'aws_ec2'
+			userData: UserData.forLinux({
+				shebang
+			})
 		})
-
-		const instanceUrl = 'https://' + instance.instancePublicDnsName + '/'
-		const shebang = `#!/bin/bash
-
-# installation
-apt-get update -y
-apt-get install software-properties-common -y
-add-apt-repository universe -y
-add-apt-repository ppa:certbot/certbot -y
-apt-get update -y
-apt install nodejs npm -y
-apt-get install certbot -y
-
-# ssl certificate
-certbot certonly --standalone -w /var/www/${instance.instancePublicDnsName} -d ${instance.instancePublicDnsName}
-
-# set up project
-git clone https://github.com/visionsofparadise/${serviceName}.git
-cd ${serviceName}
-XLH_LOGS=${!isProd}
-STAGE=${props.STAGE}
-INSTANCE_URL=${instanceUrl}
-INSTANCE_DNS_NAME=${instance.instancePublicDnsName}
-npm i
-npm run compile
-npm run test
-npm run startd
-
-iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4000`
-
-		instance.addUserData(shebang)
 
 		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 		instance.connections.allowFromAnyIpv4(Port.tcp(443))
 
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
-		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', instanceUrl);
+		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'https://' + instance.instancePublicDnsName + '/');
 		this.secret = createOutput(this, deploymentName, 'secret', nanoid());
 	}
 }
