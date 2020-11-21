@@ -88,6 +88,9 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 		const instance = new Instance(this, 'Instance', {
 			instanceName: `${deploymentName}-node`,
 			vpc,
+			vpcSubnets: {
+				subnets: vpc.publicSubnets
+			},
 			instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
 			machineImage: MachineImage.genericLinux({
 				'us-east-1': 'ami-0885b1f6bd170450c'
