@@ -7,6 +7,14 @@ import kill from 'tree-kill'
 
 const { internalApi, externalApi } = getApis(btc)
 
+process.env.SECRET = 'test'
+
+const client = axios.create({
+	headers: {
+		authorization: process.env.SECRET
+	}
+})
+
 beforeAll(async () => {
 	externalApi.listen(4000, () => console.log('Internal API listening on port 4000'))
 
@@ -18,7 +26,7 @@ beforeAll(async () => {
 const externalURL = 'http://127.0.0.1:4000/'
 
 afterAll(async () => {
-	await axios.post(externalURL + 'rpc', {
+	await client.post(externalURL + 'rpc', {
 		command: 'stop'
 	})
 
@@ -44,13 +52,23 @@ it('health check', async () => {
 it('executes rpc command', async () => {
 	expect.assertions(1)
 
-	const response = await axios.post(externalURL + 'rpc', {
+	const response = await client.post(externalURL + 'rpc', {
 		command: 'getblockchaininfo'
 	})
 
 	logger.log(response.data);
 
 	expect(response.data).toBeDefined();
+
+	return;
+}, 60 * 1000);
+
+it('rejects unauthorized', async () => {
+	expect.assertions(1)
+
+	await axios.post(externalURL + 'rpc', {
+		command: 'getblockchaininfo'
+	}).catch(error => expect(error).toBeDefined())
 
 	return;
 }, 60 * 1000);
@@ -66,7 +84,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	const address = 'mwfjApeUk2uwAWuikWmjqnixW7Lg1mHNHE'
 
-	const addAddressResponse = await axios.post(externalURL + 'address', {
+	const addAddressResponse = await client.post(externalURL + 'address', {
 		address,
 		duration: 5 * 60 * 1000
 	})
@@ -107,7 +125,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	const address2 = 'mz4JoMe93Bof3SJAN6iN2yGMGtMiZab2YW'
 
-	const addAddress2Response = await axios.post(externalURL + 'address', {
+	const addAddress2Response = await client.post(externalURL + 'address', {
 		address: address2,
 		duration: 1 * 1000
 	})

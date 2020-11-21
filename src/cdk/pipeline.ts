@@ -30,8 +30,6 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			buildCommands: [
 				`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
 				'npm run compile',
-				'npm i -g parcel',
-				'parcel build ./src/handlers/*.ts -d build --target node --bundle-node-modules --no-source-maps',
 			],
 			testCommands: ['npm run test'],
 			synthCommand: 'npm run synth'
@@ -65,7 +63,8 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 					'npm run integration --passWithNoTests'
 				],
 				useOutputs: {
-					API_URL: pipeline.stackOutput(testApp.apiUrl!)
+					INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl),
+					SECRET: pipeline.stackOutput(testApp.secret)
 				}
 			})
 		);

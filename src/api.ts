@@ -39,6 +39,14 @@ export const getApis = (btc: any) => {
 	
 		return res.sendStatus(204);
 	});
+
+	externalApi.get('/', async (_, res) => res.sendStatus(200));
+	
+	externalApi.use(async (req, res, next) => {
+		if (req.headers.authorization !== process.env.SECRET) return res.sendStatus(401)
+
+		return next()
+	})
 	
 	externalApi.post('/address', async (req, res) => {
 		const { address, duration } = req.body;
@@ -59,8 +67,6 @@ export const getApis = (btc: any) => {
 
 		return res.send(result);
 	})
-
-	externalApi.get('/', async (_, res) => res.sendStatus(200));
 
 	return {
 		externalApi,

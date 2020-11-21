@@ -1,8 +1,13 @@
 import { logger } from '../helpers';
 import axios from 'axios';
-import uDelay from 'udelay';
+import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
-import day from 'dayjs';
+
+const client = axios.create({
+	headers: {
+		authorization: process.env.SECRET
+	}
+})
 
 beforeAll(async () => {
 	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
@@ -12,113 +17,101 @@ afterAll(async () => {
 	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
 });
 
-it(
-	'adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires',
-	async () => {
-		jest.useRealTimers();
-		expect.assertions(8);
+const instanceUrl = process.env.INSTANCE_URL!
 
-		const generateBlocksInitResponse = await axios.post(process.env.UTILITY_API_URL! + 'events', {
-			event: {
-				DetailType: 'rpcCommand',
-				Detail: {
-					command: 'generate 101'
-				}
-			}
-		});
+it('health check', async () => {
+	expect.assertions(1)
 
-		logger.info(generateBlocksInitResponse.data);
+	const response = await axios.get(instanceUrl)
 
-		await uDelay(5 * 1000);
+	logger.log(response.data);
 
-		const address = testAddressGenerator()
+	expect(response.status).toBe(200);
 
-		const addAddressResponse = await axios.post(process.env.UTILITY_API_URL! + 'events', {
-			event: {
-				DetailType: 'addressCreated',
-				Detail: {
-					address,
-					expiresAt: day().add(5, 'minute').unix()
-				}
-			}
-		});
+	return;
+}, 10 * 1000);
 
-		logger.info(addAddressResponse.data);
+it('executes rpc command', async () => {
+	expect.assertions(1)
 
-		await uDelay(3 * 1000);
+	const response = await client.post(instanceUrl + 'rpc', {
+		command: 'getblockchaininfo'
+	})
 
-		const sendToAddressResponse = await axios.post(process.env.UTILITY_API_URL! + 'events', {
-			event: {
-				DetailType: 'rpcCommand',
-				Detail: {
-					command: `sendtoaddress ${address} 1`
-				}
-			}
-		});
+	logger.log(response.data);
 
-		logger.info(sendToAddressResponse);
+	expect(response.data).toBeDefined();
 
-		await uDelay(1 * 1000)
+	return;
+}, 60 * 1000);
 
-		const testResults1Response = await axios.get<{ Items: Array<{ detailType: string }> }>(
-			process.env.API_URL! + 'test-results'
-		);
+it('rejects unauthorized', async () => {
+	expect.assertions(1)
 
-		logger.info(testResults1Response);
+	await axios.post(instanceUrl + 'rpc', {
+		command: 'getblockchaininfo'
+	}).catch(error => expect(error).toBeDefined())
 
-		const btcAddressWatchingEvents = testResults1Response.data.Items.filter(event => event.detailType === 'btcAddressWatching')
-		const btcTxDetectedEvents = testResults1Response.data.Items.filter(event => event.detailType === 'btcTxDetected')
+	return;
+}, 60 * 1000);
 
-		expect(btcAddressWatchingEvents.length).toBe(1);
-		expect(btcTxDetectedEvents.length).toBe(1);
+it('adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires', async () => {
+	expect.assertions(7)
 
-		const generateBlocks6Response = await axios.post(process.env.UTILITY_API_URL! + 'events', {
-			event: {
-				DetailType: 'rpcCommand',
-				Detail: {
-					command: 'generate 6'
-				}
-			}
-		});
+	await client.post(instanceUrl + 'rpc', {
+		command: 'generate 101'
+	})
 
-		logger.info(generateBlocks6Response);
+	await udelay(5 * 1000)
 
-		await uDelay(1 * 1000)
+	const address = testAddressGenerator()
 
-		const testResults2Response = await axios.get<{ Items: Array<{ detailType: string }> }>(
-			process.env.API_URL! + 'test-results'
-		);
+	const addAddressResponse = await client.post(instanceUrl + 'address', {
+		address,
+		duration: 5 * 60 * 1000
+	})
 
-		logger.info(testResults2Response);
+	logger.log(addAddressResponse.data);
 
-		const btcConfirmationEvents = testResults2Response.data.Items.filter(event => event.detailType === 'btcConfirmation')
+	expect(addAddressResponse.status).toBe(204);
 
-		expect(btcConfirmationEvents.length).toBe(6);
+	const sendToAddressResponse = await client.post(instanceUrl + 'rpc', {
+		command: `sendtoaddress ${address} 1`
+	})
 
-		const generateBlocks1Response = await axios.post(process.env.UTILITY_API_URL! + 'events', {
-			event: {
-				DetailType: 'rpcCommand',
-				Detail: {
-					command: 'generate 1'
-				}
-			}
-		});
+	logger.info(sendToAddressResponse)
 
-		logger.info(generateBlocks1Response);
+	await udelay(1 * 1000)
 
-		await uDelay(1 * 1000)
+	const getAddress1 = await client.post(instanceUrl + 'rpc', {
+		command: `getaddressinfo ${address}`
+	})
 
-		const testResults3Response = await axios.get<{ Items: Array<{ detailType: string }> }>(
-			process.env.API_URL! + 'test-results'
-		);
+	expect(getAddress1.data.label).toBe('confirming')
 
-		logger.info(testResults3Response);
+	await client.post(instanceUrl + 'rpc', {
+		command: 'generate 6'
+	})
 
-		const btcConfirmationEvents2 = testResults3Response.data.Items.filter(event => event.detailType === 'btcConfirmation')
-		const btcAddressUsedEvents = testResults3Response.data.Items.filter(event => event.detailType === 'btcAddressUsed')
+	await udelay(1 * 1000)
 
-		expect(btcConfirmationEvents2.length).toBe(7);
-		expect(btcAddressUsedEvents.length).toBe(1);
+	const getAddress2 = await client.post(instanceUrl + 'rpc', {
+		command: `getaddressinfo ${address}`
+	})
+
+	expect(getAddress2.data.label).toBe('confirming')
+
+	await client.post(instanceUrl + 'rpc', {
+		command: 'generate 1'
+	})
+
+	await udelay(1 * 1000)
+
+	const getAddress3 = await client.post(instanceUrl + 'rpc', {
+		command: `getaddressinfo ${address}`
+	})
+
+	expect(getAddress3.data.label).toBe('used')
 
 	/**
 	 *  ADDRESS EXPIRATION
@@ -126,56 +119,34 @@ it(
 
 	const address2 = testAddressGenerator()
 
-	const addAddress2Response = await axios.post(process.env.UTILITY_API_URL! + 'events', {
-		event: {
-			DetailType: 'addressCreated',
-			Detail: {
-				address: address2,
-				expiresAt: day().add(10, 'second').unix()
-			}
-		}
-	});
+	const addAddress2Response = await client.post(instanceUrl + 'address', {
+		address: address2,
+		duration: 1 * 1000
+	})
 
-	logger.info(addAddress2Response.data);
+	logger.log(addAddress2Response.data);
 
-	await uDelay(15 * 1000);
+	expect(addAddress2Response.status).toBe(204);
 
-	const testResults4Response = await axios.get<{ Items: Array<{ detailType: string }> }>(
-		process.env.API_URL! + 'test-results'
-	);
+	await udelay(5 * 1000)
 
-	logger.info(testResults4Response);
+	const getAddress4 = await client.post(instanceUrl + 'rpc', {
+		command: `getaddressinfo ${address2}`
+	})
 
-	const btcAddressWatching2 = testResults4Response.data.Items.filter(event => event.detailType === 'btcAddressWatching')
-	const btcAddressExpired = testResults4Response.data.Items.filter(event => event.detailType === 'btcAddressExpired')
+	expect(getAddress4.data.label).toBe('expired')
 
-	expect(btcAddressWatching2.length).toBe(2);
-	expect(btcAddressExpired.length).toBe(1);
+	await client.post(instanceUrl + 'rpc', {
+		command: `sendtoaddress ${address2} 1`
+	})
 
-	const sendToAddress2Response = await axios.post(process.env.UTILITY_API_URL! + 'events', {
-		event: {
-			DetailType: 'rpcCommand',
-			Detail: {
-				command: `sendtoaddress ${address2} 1`
-			}
-		}
-	});
+	await udelay(1 * 1000)
 
-	logger.info(sendToAddress2Response);
+	const getAddress5 = await client.post(instanceUrl + 'rpc', {
+		command: `getaddressinfo ${address2}`
+	})
 
-		await uDelay(1 * 1000)
-
-		const testResults5Response = await axios.get<{ Items: Array<{ detailType: string }> }>(
-			process.env.API_URL! + 'test-results'
-		);
-	
-		logger.info(testResults5Response);
-
-		const btcTxDetected2 = testResults5Response.data.Items.filter(event => event.detailType === 'btcTxDetected')
-	
-		expect(btcTxDetected2.length).toBe(1);
+	expect(getAddress5.data.label).toBe('expired')
 
 	return;
-	},
-	5 * 60 * 1000
-);
+}, 5 * 60 * 1000);
