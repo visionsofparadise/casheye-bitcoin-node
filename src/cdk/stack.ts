@@ -60,7 +60,8 @@ export class CasheyeAddressWatcherStack extends Stack {
 		
 		const config = isProd ? prodEC2Config : testEC2Config
 
-		const dnsName = deploymentName + '-node.casheye.io'
+		const nodeName = deploymentName + '-node'
+		const dnsName = nodeName + '.casheye.io'
 		const shebang = `#!/bin/bash
 
 # installation
@@ -88,7 +89,7 @@ npm run startd
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4000`
 
 		const instance = new Instance(this, 'Instance', {
-			instanceName: `${deploymentName}-node`,
+			instanceName: nodeName,
 			vpc,
 			vpcSubnets: {
 				subnets: vpc.publicSubnets
@@ -116,12 +117,13 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
 		const hostedZone = new PublicHostedZone(this, 'HostedZone', {
-			zoneName: dnsName
+			zoneName: 'casheye.io'
 		});
 
 		new ARecord(this, 'ARecord', {
 			zone: hostedZone,
-			target: RecordTarget.fromIpAddresses(instance.instancePublicIp)
+			target: RecordTarget.fromIpAddresses(instance.instancePublicIp),
+			recordName: nodeName
 		});
 
 		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'https://' + dnsName + '/');
