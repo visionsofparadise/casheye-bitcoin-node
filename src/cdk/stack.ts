@@ -4,6 +4,7 @@ import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType,
 import { EventBus } from '@aws-cdk/aws-events';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
 import {nanoid} from 'nanoid'
+import { ARecord, PublicHostedZone, RecordTarget } from '@aws-cdk/aws-route53';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -56,22 +57,23 @@ export class CasheyeAddressWatcherStack extends Stack {
 			cidr: "10.0.0.0/16",
 			maxAzs: 2
 		});
-
+		
 		const config = isProd ? prodEC2Config : testEC2Config
+
+		const dnsName = deploymentName + '-node.casheye.io'
 		const shebang = `#!/bin/bash
 
 # installation
 apt-get update -y
-apt-get install software-properties-common -y
-add-apt-repository universe -y
 add-apt-repository ppa:certbot/certbot -y
 apt-get update -y
 apt install nodejs npm -y
 apt-get install certbot -y
 
 # ssl certificate
-INSTANCE_DNS_NAME=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
-certbot certonly --standalone -w "/var/www/$INSTANCE_DNS_NAME" -d $INSTANCE_DNS_NAME
+INSTANCE_DNS_NAME=${dnsName}
+certbot certonly --standalone --preferred-challenges tls-sni -d $INSTANCE_DNS_NAME -n
+certbot renew --dry-run
 
 # set up project
 git clone https://github.com/visionsofparadise/${serviceName}.git
@@ -107,12 +109,22 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 			})
 		})
 
-		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
+		instance.connections.allowFromAnyIpv4(Port.tcp(80))
 		instance.connections.allowFromAnyIpv4(Port.tcp(443))
-
+		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
+	
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
-		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'https://' + instance.instancePublicDnsName + '/');
+		const hostedZone = new PublicHostedZone(this, 'HostedZone', {
+			zoneName: dnsName
+		});
+
+		new ARecord(this, 'ARecord', {
+			zone: hostedZone,
+			target: RecordTarget.fromIpAddresses(instance.instancePublicDnsName)
+		});
+
+		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'https://' + dnsName + '/');
 		this.secret = createOutput(this, deploymentName, 'secret', nanoid());
 	}
 }
