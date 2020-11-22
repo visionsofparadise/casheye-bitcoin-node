@@ -121,7 +121,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 
 		new ARecord(this, 'ARecord', {
 			zone: hostedZone,
-			target: RecordTarget.fromIpAddresses(instance.instancePublicDnsName)
+			target: RecordTarget.fromIpAddresses(instance.instancePublicIp)
 		});
 
 		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'https://' + dnsName + '/');
