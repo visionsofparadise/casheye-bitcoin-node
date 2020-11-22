@@ -1,4 +1,4 @@
-import { CfnOutput, Construct, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
+import { CfnOutput, Construct, SecretValue, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { EventBus } from '@aws-cdk/aws-events';
@@ -116,9 +116,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 	
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
-		const hostedZone = PublicHostedZone.fromLookup(this, 'HostedZone', {
-			domainName: 'casheye.io'
-		});
+		const hostedZone = PublicHostedZone.fromHostedZoneId(this, 'HostedZone', SecretValue.secretsManager('TEST_XPUBKEY').toString());
 
 		new ARecord(this, 'ARecord', {
 			zone: hostedZone,
