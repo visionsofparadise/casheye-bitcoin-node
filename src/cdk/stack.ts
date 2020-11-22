@@ -116,7 +116,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 	
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
-		const hostedZone = PublicHostedZone.fromHostedZoneId(this, 'HostedZone', SecretValue.secretsManager('TEST_XPUBKEY').toString());
+		const hostedZone = PublicHostedZone.fromHostedZoneId(this, 'HostedZone', SecretValue.secretsManager('CASHEYE_HOSTED_ZONE_ID').toString());
 
 		new ARecord(this, 'ARecord', {
 			zone: hostedZone,
