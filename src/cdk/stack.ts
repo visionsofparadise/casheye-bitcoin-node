@@ -116,8 +116,8 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 	
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
-		const hostedZone = new PublicHostedZone(this, 'HostedZone', {
-			zoneName: 'casheye.io'
+		const hostedZone = PublicHostedZone.fromLookup(this, 'HostedZone', {
+			domainName: 'casheye.io'
 		});
 
 		new ARecord(this, 'ARecord', {
