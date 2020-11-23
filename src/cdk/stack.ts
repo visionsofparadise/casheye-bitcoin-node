@@ -5,6 +5,10 @@ import { EventBus } from '@aws-cdk/aws-events';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
 import {nanoid} from 'nanoid'
 import { ARecord, PublicHostedZone, RecordTarget } from '@aws-cdk/aws-route53';
+import { LoadBalancerTarget } from '@aws-cdk/aws-route53-targets';
+import { Certificate } from '@aws-cdk/aws-certificatemanager';
+import { ApplicationLoadBalancer, ApplicationProtocol } from '@aws-cdk/aws-elasticloadbalancingv2';
+import { InstanceTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -19,7 +23,7 @@ const testEC2Config = {
 }
 
 export class CasheyeAddressWatcherStage extends Stage {	
-	public readonly instanceUrl: CfnOutput;
+	public readonly loadBalancerUrl: CfnOutput;
 	public readonly secret: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string }) {
@@ -33,13 +37,13 @@ export class CasheyeAddressWatcherStage extends Stage {
 			}
 		});
 
-		this.instanceUrl = stack.instanceUrl
+		this.loadBalancerUrl = stack.loadBalancerUrl
 		this.secret = stack.secret
 	}
 }
 
 export class CasheyeAddressWatcherStack extends Stack {
-	public readonly instanceUrl: CfnOutput;
+	public readonly loadBalancerUrl: CfnOutput;
 	public readonly secret: CfnOutput;
 
 	get availabilityZones(): string[] {
@@ -57,67 +61,85 @@ export class CasheyeAddressWatcherStack extends Stack {
 			cidr: "10.0.0.0/16",
 			maxAzs: 2
 		});
+
+		const loadBalancer = new ApplicationLoadBalancer(this, 'LB', {
+			internetFacing: true,
+			vpc,
+			vpcSubnets: {
+				subnets: vpc.publicSubnets
+			}
+		});
+
+		const certificate = Certificate.fromCertificateArn(this, 'Certificate', SecretValue.secretsManager('DOMAIN_CERTIFICATE_ARN').toString());
 		
+		const listener = loadBalancer.addListener('Listener', {
+			port: 443,
+			protocol: ApplicationProtocol.HTTPS,
+			certificates: [certificate]
+		});
+
+		const instances: Array<Instance> = []
 		const config = isProd ? prodEC2Config : testEC2Config
 		const secret = nanoid()
-
-		const nodeName = deploymentName + '-node'
-		const dnsName = nodeName + '.casheye.io'
 		const shebang = `#!/bin/bash
 
 # installation
-add-apt-repository ppa:certbot/certbot -y
 apt-get update -y
 apt install nodejs npm -y
-apt-get install certbot -y
-
-# ssl certificate
-INSTANCE_DNS_NAME=${dnsName}
-certbot certonly --standalone -d $INSTANCE_DNS_NAME -n --agree-tos --email admin@casheye.io
-certbot renew --dry-run
 
 # set up project
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
-cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" .
-cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" .
-export INSTANCE_DNS_NAME=${dnsName}
 export XLH_LOGS=${!isProd}
 export STAGE=${props.STAGE}
 export SECRET=${secret}
 npm i
 npm run compile
 npm run test
-npm run startd
+npm run startd`
 
-iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4000`
-
-		const instance = new Instance(this, 'Instance', {
-			instanceName: nodeName,
-			vpc,
-			vpcSubnets: {
-				subnets: vpc.publicSubnets
-			},
-			instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
-			machineImage: MachineImage.genericLinux({
-				'us-east-1': 'ami-0885b1f6bd170450c'
-			}),
-			allowAllOutbound: true,
-			blockDevices: [
-				{
-					deviceName: '/dev/sda1',
-					volume: BlockDeviceVolume.ebs(config.storageSize),
+		for (let i = 0; i < config.instanceCount; i++) {
+			const nodeName = deploymentName + '-node-' + i
+			
+			const instance = new Instance(this, 'Instance', {
+				instanceName: nodeName,
+				vpc,
+				vpcSubnets: {
+					subnets: vpc.publicSubnets
 				},
-			],
-			userData: UserData.forLinux({
-				shebang
+				instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
+				machineImage: MachineImage.genericLinux({
+					'us-east-1': 'ami-0885b1f6bd170450c'
+				}),
+				allowAllOutbound: true,
+				blockDevices: [
+					{
+						deviceName: '/dev/sda1',
+						volume: BlockDeviceVolume.ebs(config.storageSize),
+					},
+				],
+				userData: UserData.forLinux({
+					shebang
+				})
 			})
-		})
 
-		instance.connections.allowFromAnyIpv4(Port.tcp(443))
-		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-	
-		EventBus.grantPutEvents(instance.grantPrincipal)
+			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
+		
+			EventBus.grantPutEvents(instance.grantPrincipal)
+
+			instances.push(instance)
+		}
+
+		listener.addTargets('ApplicationFleet', {
+			port: 4000,
+			protocol: ApplicationProtocol.HTTP,
+			targets: instances.map(instance => new InstanceTarget(instance)),
+			healthCheck: {
+				enabled: true
+			}
+		});
+
+		const lbHostName = deploymentName + '-lb'
 
 		const hostedZone = PublicHostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
 			zoneName: 'casheye.io',
@@ -126,11 +148,11 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 
 		new ARecord(this, 'ARecord', {
 			zone: hostedZone,
-			target: RecordTarget.fromIpAddresses(instance.instancePublicIp),
-			recordName: nodeName
+			target: RecordTarget.fromAlias(new LoadBalancerTarget(loadBalancer)),
+			recordName: lbHostName
 		});
 
-		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'https://' + dnsName + '/');
+		this.loadBalancerUrl = createOutput(this, deploymentName, 'loadBalancerUrl', 'https://' + lbHostName + '/');
 		this.secret = createOutput(this, deploymentName, 'secret', secret);
 	}
 }

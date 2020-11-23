@@ -63,7 +63,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 					'npm run integration --passWithNoTests'
 				],
 				useOutputs: {
-					INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl),
+					LOADBALANCER_URL: pipeline.stackOutput(testApp.loadBalancerUrl),
 					SECRET: pipeline.stackOutput(testApp.secret)
 				}
 			})
