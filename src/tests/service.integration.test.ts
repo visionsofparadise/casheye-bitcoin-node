@@ -7,7 +7,7 @@ const client = axios.create({
 	headers: {
 		authorization: process.env.SECRET
 	},
-	timeout: 10 * 60
+	timeout: 10 * 60 * 1000
 })
 
 beforeAll(async () => {
