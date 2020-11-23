@@ -114,8 +114,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 			})
 		})
 
-		instance.connections.allowFromAnyIpv4(Port.tcp(22))
-		instance.connections.allowFromAnyIpv4(Port.tcp(80))
 		instance.connections.allowFromAnyIpv4(Port.tcp(443))
 		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 	

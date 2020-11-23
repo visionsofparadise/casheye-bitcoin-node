@@ -63,7 +63,7 @@ export const getApis = (btc: any) => {
 	
 		const result = await btc.rpc.command(command);
 
-		return res.send(result);
+		return res.status(200).json(result);
 	})
 
 	return {
