@@ -59,13 +59,13 @@ export class CasheyeAddressWatcherStack extends Stack {
 		});
 		
 		const config = isProd ? prodEC2Config : testEC2Config
+		const secret = nanoid()
 
 		const nodeName = deploymentName + '-node'
 		const dnsName = nodeName + '.casheye.io'
 		const shebang = `#!/bin/bash
 
 # installation
-apt-get update -y
 add-apt-repository ppa:certbot/certbot -y
 apt-get update -y
 apt install nodejs npm -y
@@ -73,14 +73,17 @@ apt-get install certbot -y
 
 # ssl certificate
 INSTANCE_DNS_NAME=${dnsName}
-certbot certonly --standalone --preferred-challenges tls-sni -d $INSTANCE_DNS_NAME -n
+certbot certonly --standalone -d $INSTANCE_DNS_NAME -n --agree-tos --email admin@casheye.io
 certbot renew --dry-run
 
 # set up project
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
+cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" .
+cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" .
 XLH_LOGS=${!isProd}
 STAGE=${props.STAGE}
+SECRET=${secret}
 npm i
 npm run compile
 npm run test
@@ -110,6 +113,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 			})
 		})
 
+		instance.connections.allowFromAnyIpv4(Port.tcp(22))
 		instance.connections.allowFromAnyIpv4(Port.tcp(80))
 		instance.connections.allowFromAnyIpv4(Port.tcp(443))
 		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
@@ -128,6 +132,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 		});
 
 		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'https://' + dnsName + '/');
-		this.secret = createOutput(this, deploymentName, 'secret', nanoid());
+		this.secret = createOutput(this, deploymentName, 'secret', secret);
 	}
 }

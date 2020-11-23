@@ -3,3 +3,5 @@ build
 node_modules
 .cache
 cdk.out  
+privkey.pem
+fullchain.pem
