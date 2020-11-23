@@ -81,9 +81,10 @@ git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
 cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" .
 cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" .
-XLH_LOGS=${!isProd}
-STAGE=${props.STAGE}
-SECRET=${secret}
+export INSTANCE_DNS_NAME=${dnsName}
+export XLH_LOGS=${!isProd}
+export STAGE=${props.STAGE}
+export SECRET=${secret}
 npm i
 npm run compile
 npm run test
