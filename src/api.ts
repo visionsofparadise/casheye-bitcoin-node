@@ -56,9 +56,7 @@ export const getApis = (btc: any) => {
 		return res.sendStatus(204);
 	});
 	
-	externalApi.post('/rpc', async (req, res) => {
-		if (isProd) res.sendStatus(401);
-	
+	!isProd && externalApi.post('/rpc', async (req, res) => {	
 		logger.info(req.body)
 	
 		const { command } = req.body as { command: string };
