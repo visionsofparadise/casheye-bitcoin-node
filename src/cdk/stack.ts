@@ -96,7 +96,9 @@ export SECRET=${secret}
 npm i
 npm run compile
 npm run test
-npm run startd`
+npm run startd
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 4000`
 
 		for (let i = 0; i < config.instanceCount; i++) {
 			const nodeName = deploymentName + '-node-' + i
@@ -124,15 +126,14 @@ npm run startd`
 			})
 
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-			instance.connections.allowFromAnyIpv4(Port.tcp(4000))		
+			instance.connections.allowFromAnyIpv4(Port.tcp(80))		
 			EventBus.grantPutEvents(instance.grantPrincipal)
 
 			instances.push(instance)
 		}
 
 		listener.addTargets('ApplicationFleet', {
-			port: 4000,
-			protocol: ApplicationProtocol.HTTP,
+			port: 80,
 			targets: instances.map(instance => new InstanceTarget(instance)),
 			healthCheck: {
 				enabled: true
