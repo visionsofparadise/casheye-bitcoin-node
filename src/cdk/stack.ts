@@ -152,7 +152,7 @@ npm run startd`
 			recordName: lbHostName
 		});
 
-		this.loadBalancerUrl = createOutput(this, deploymentName, 'loadBalancerUrl', 'https://' + lbHostName + '/');
+		this.loadBalancerUrl = createOutput(this, deploymentName, 'loadBalancerUrl', 'https://' + lbHostName + '.casheye.io/');
 		this.secret = createOutput(this, deploymentName, 'secret', secret);
 	}
 }
