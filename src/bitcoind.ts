@@ -3,7 +3,6 @@ import { ChildProcess } from 'child_process';
 import { isProd } from './helpers';
 
 const prodConfig = {
-	daemon: true,
 	blocknotify: 'curl http://127.0.0.1:3000/block-notify/%s',
 	prune: true,
 	rpcbind: '127.0.0.1',
@@ -13,7 +12,6 @@ const prodConfig = {
 
 const testConfig = {
 	regtest: true,
-	daemon: true,
 	blocknotify: 'curl http://127.0.0.1:3000/block-notify/%s',
 	prune: true,
 	rpcbind: '127.0.0.1',
