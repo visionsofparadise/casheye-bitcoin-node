@@ -124,7 +124,7 @@ npm run startd`
 			})
 
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-			instance.connections.allowFrom(loadBalancer, Port.tcp(4000))		
+			instance.connections.allowFromAnyIpv4(Port.tcp(4000))		
 			EventBus.grantPutEvents(instance.grantPrincipal)
 
 			instances.push(instance)
