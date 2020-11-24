@@ -15,11 +15,11 @@ export const getApis = (btc: any) => {
 
 	api.use((_, res, next) => {
 		try {
-			return next()
+			next()
 		} catch (err) {
 			logger.error(err)
 		
-			return res.sendStatus(500)
+			res.sendStatus(500)
 		}
 	})
 	
@@ -31,21 +31,21 @@ export const getApis = (btc: any) => {
 	
 		await txDetected(txId, btc);
 	
-		return res.sendStatus(204);
+		res.sendStatus(204);
 	});
 	
 	internalApi.get('/block-notify/:blockHash', async (_, res) => {
 		await confirm(btc);
 	
-		return res.sendStatus(204);
+		res.sendStatus(204);
 	});
 
 	externalApi.get('/', async (_, res) => res.sendStatus(200));
 	
 	externalApi.use(async (req, res, next) => {
-		if (req.headers.authorization !== process.env.SECRET) return res.sendStatus(401)
+		if (req.headers.authorization !== process.env.SECRET) res.sendStatus(401)
 
-		return next()
+		next()
 	})
 	
 	externalApi.post('/address', async (req, res) => {
@@ -53,8 +53,11 @@ export const getApis = (btc: any) => {
 	
 		await watchAddress(address, duration, btc);
 	
-		return res.sendStatus(204);
+		res.sendStatus(204);
 	});
+
+	externalApi.request.setTimeout(10 * 60 * 1000)
+	externalApi.response.setTimeout(10 * 60 * 1000)
 	
 	!isProd && externalApi.post('/rpc', async (req, res) => {	
 		logger.info(req.body)
@@ -63,7 +66,7 @@ export const getApis = (btc: any) => {
 	
 		const result = await btc.rpc.command(command);
 
-		return res.status(200).json(result);
+		result ? res.status(200).json(result) : res.sendStatus(204)
 	})
 
 	return {
