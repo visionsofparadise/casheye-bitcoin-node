@@ -3,8 +3,10 @@ import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { EventBus } from '@aws-cdk/aws-events';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
-import {nanoid} from 'nanoid'
+import { customAlphabet, urlAlphabet } from 'nanoid'
 import { ARecord, PublicHostedZone, RecordTarget } from '@aws-cdk/aws-route53';
+
+const nanoid = customAlphabet(urlAlphabet, 6)
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -69,12 +71,12 @@ apt install nodejs npm -y
 # set up project
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
-export XLH_LOGS=${!isProd}
-export STAGE=${props.STAGE}
-export SECRET=${secret}
 npm i
 npm run compile
 npm run test
+export XLH_LOGS=${!isProd}
+export STAGE=${props.STAGE}
+export SECRET=${secret}
 npm run startd
 
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 4000`
@@ -105,6 +107,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 	
 		EventBus.grantPutEvents(instance.grantPrincipal)
+
 		const hostedZone = PublicHostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
 			zoneName: 'casheye.io',
 			hostedZoneId: SecretValue.secretsManager('CASHEYE_HOSTED_ZONE_ID').toString()
