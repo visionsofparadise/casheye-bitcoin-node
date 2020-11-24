@@ -97,9 +97,11 @@ STAGE=${props.STAGE} SECRET=${secret} pm2 start dist/index.js`
 			],
 			userData: UserData.forLinux({
 				shebang
-			})
+			}),
+			keyName: 'aws_ec2'
 		})
 
+		instance.connections.allowFromAnyIpv4(Port.tcp(22))
 		instance.connections.allowFromAnyIpv4(Port.tcp(4000))
 		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 	
