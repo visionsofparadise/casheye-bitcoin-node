@@ -71,7 +71,7 @@ apt-get install certbot -y
 
 # ssl certificate
 INSTANCE_DNS_NAME=${dnsName}
-certbot certonly --standalone -d $INSTANCE_DNS_NAME -n --agree-tos --email admin@casheye.io
+certbot certonly --standalone -d $INSTANCE_DNS_NAME -n --agree-tos --email certificates@casheye.io
 certbot renew --dry-run
 
 # set up project
@@ -112,6 +112,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 			})
 		})
 
+		instance.connections.allowFromAnyIpv4(Port.tcp(80))
 		instance.connections.allowFromAnyIpv4(Port.tcp(443))
 		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 	
