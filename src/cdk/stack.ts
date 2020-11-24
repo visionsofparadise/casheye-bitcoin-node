@@ -125,8 +125,9 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 				})
 			})
 
+			loadBalancer.connections.allowTo(instance, Port.tcp(80))
+			instance.connections.allowFromAnyIpv4(Port.tcp(80))	
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-			instance.connections.allowFromAnyIpv4(Port.tcp(80))		
 			EventBus.grantPutEvents(instance.grantPrincipal)
 
 			instances.push(instance)
@@ -136,6 +137,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			port: 80,
 			targets: instances.map(instance => new InstanceTarget(instance)),
 			healthCheck: {
+				port: '80',
 				enabled: true
 			}
 		});
