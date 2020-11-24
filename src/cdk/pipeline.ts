@@ -26,7 +26,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 		const synthAction = new SimpleSynthAction({
 			sourceArtifact,
 			cloudAssemblyArtifact,
-			installCommands: ['npm i --production'],
+			installCommands: ['npm i'],
 			buildCommands: [
 				`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
 				'npm run compile',
