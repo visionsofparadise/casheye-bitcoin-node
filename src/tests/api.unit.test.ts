@@ -53,7 +53,7 @@ it('executes rpc command', async () => {
 	expect.assertions(1)
 
 	const response = await client.post(externalURL + 'rpc', {
-		command: 'getblockchaininfo'
+		command: 'getBlockchainInfo'
 	})
 
 	logger.log(response.data);
@@ -67,7 +67,7 @@ it('rejects unauthorized', async () => {
 	expect.assertions(1)
 
 	await axios.post(externalURL + 'rpc', {
-		command: 'getblockchaininfo'
+		command: 'getBlockchainInfo'
 	}).catch(error => expect(error).toBeDefined())
 
 	return;

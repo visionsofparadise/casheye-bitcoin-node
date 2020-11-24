@@ -57,13 +57,13 @@ export const getApis = (btc: any) => {
 	});
 	
 	!isProd && externalApi.post('/rpc', async (req, res) => {	
-		res.setTimeout(10 * 60 * 1000)
-		
 		logger.info(req.body)
 	
 		const { command } = req.body as { command: string };
+
+		const [cmd, ...args] = command.split(' ')
 	
-		const result = await btc.rpc.command(command);
+		const result = await btc.rpc[cmd](...args);
 
 		return result ? res.status(200).json(result) : res.sendStatus(204)
 	})
