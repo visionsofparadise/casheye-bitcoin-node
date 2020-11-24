@@ -21,8 +21,8 @@ export const docDb = new AWS.DynamoDB.DocumentClient()
 export const db = dbClient(docDb, process.env.DYNAMODB_TABLE!);
 
 export const logger = spawnLogger({
-	envKey: 'XLH_LOGS',
-	onValue: 'true'
+	envKey: 'STAGE',
+	offValue: 'prod'
 });
 
 

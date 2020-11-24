@@ -66,6 +66,8 @@ export class CasheyeAddressWatcherStack extends Stack {
 # installation
 apt-get update -y
 apt install nodejs npm -y
+mkdir -p /var/www/html
+cd /var/www/html
 
 # set up project
 git clone https://github.com/visionsofparadise/${serviceName}.git
@@ -74,12 +76,7 @@ npm i
 npm run compile
 npm run test
 npm i -g pm2
-export XLH_LOGS=${!isProd}
-export STAGE=${props.STAGE}
-export SECRET=${secret}
-pm2 start dist/index.js
-
-iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 4000`
+STAGE=${props.STAGE} SECRET=${secret} pm2 start dist/index.js`
 
 		const instance = new Instance(this, 'Instance', {
 			instanceName: nodeName,
@@ -103,13 +100,12 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			})
 		})
 
-		instance.connections.allowFromAnyIpv4(Port.tcp(22))
-		instance.connections.allowFromAnyIpv4(Port.tcp(80))
+		instance.connections.allowFromAnyIpv4(Port.tcp(4000))
 		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 	
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
-		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'http://' + instance.instancePublicDnsName + '/');
+		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'http://' + instance.instancePublicDnsName + ':4000/');
 		this.secret = createOutput(this, deploymentName, 'secret', secret);
 	}
 }
