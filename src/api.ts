@@ -13,8 +13,11 @@ export const getApis = (btc: any) => {
 	api.use(bodyParser.urlencoded({ extended: true }));
 	api.use(bodyParser.json());
 
-	api.use((_, res, next) => {
+	api.use((req, res, next) => {
 		try {
+			const { body, headers } = req
+			logger.info({ body, headers })
+
 			return next()
 		} catch (err) {
 			logger.error(err)
@@ -42,7 +45,7 @@ export const getApis = (btc: any) => {
 
 	externalApi.get('/', async (_, res) => res.sendStatus(200));
 	
-	externalApi.use(async (req, res, next) => {
+	externalApi.use((req, res, next) => {
 		if (req.headers.authorization !== process.env.SECRET) return res.sendStatus(401)
 
 		return next()
@@ -57,15 +60,21 @@ export const getApis = (btc: any) => {
 	});
 	
 	!isProd && externalApi.post('/rpc', async (req, res) => {	
-		logger.info(req.body)
-	
-		const { command } = req.body as { command: string };
+		const { command, args } = req.body as { command: string; args?: Array<any> };
 
-		const [cmd, ...args] = command.split(' ')
-	
-		const result = await btc.rpc[cmd](...args);
+		const argsArray = args || [] 
 
-		return result ? res.status(200).json(result) : res.sendStatus(204)
+		// let result = undefined
+
+		// if (command === 'getblockchaininfo') result = await btc.rpc.getBlockchainInfo()
+		// if (command === 'generate') result = await btc.rpc.generate(...argsArray)
+		// if (command === 'sendtoaddress') result = await btc.rpc.sendToAddress(...argsArray)
+		// if (command === 'getadressinfo') result = await btc.rpc.getAddressInfo(...argsArray)
+		// if (command === 'stop') result = await btc.rpc.stop()
+
+		const result = await btc.rpc[command](...argsArray)
+
+		return result ? res.status(200).send(result) : res.sendStatus(204)
 	})
 
 	return {

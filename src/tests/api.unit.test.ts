@@ -5,9 +5,9 @@ import { btc } from '../bitcoind'
 import axios from 'axios'
 import kill from 'tree-kill'
 
-const { internalApi, externalApi } = getApis(btc)
-
 process.env.SECRET = 'test'
+
+const { internalApi, externalApi } = getApis(btc)
 
 const client = axios.create({
 	headers: {
@@ -47,7 +47,7 @@ it('health check', async () => {
 	expect(response.status).toBe(200);
 
 	return;
-}, 10 * 1000);
+});
 
 it('executes rpc command', async () => {
 	expect.assertions(1)
@@ -61,7 +61,7 @@ it('executes rpc command', async () => {
 	expect(response.data).toBeDefined();
 
 	return;
-}, 60 * 1000);
+});
 
 it('rejects unauthorized', async () => {
 	expect.assertions(1)
@@ -71,12 +71,15 @@ it('rejects unauthorized', async () => {
 	}).catch(error => expect(error).toBeDefined())
 
 	return;
-}, 60 * 1000);
+});
 
 it('adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires', async () => {
 	expect.assertions(7)
 
-	await btc.rpc.generate(101)
+	await client.post(externalURL + 'rpc', {
+		command: 'generate',
+		args: [101]
+	})
 
 	await udelay(5 * 1000)
 
@@ -93,31 +96,49 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	expect(addAddressResponse.status).toBe(204);
 
-	const sendToAddressResponse = await btc.rpc.sendToAddress(address, 1)
+	const sendToAddressResponse = await client.post(externalURL + 'rpc', {
+		command: 'sendToAddress',
+		args: [address, 1]
+	})
 
 	logger.info(sendToAddressResponse)
 
-	await udelay(1 * 1000)
+	await udelay(3 * 1000)
 
-	const getAddress1 = await btc.rpc.getAddressInfo(address)
+	const getAddress1 = await client.post(externalURL + 'rpc', {
+		command: 'getAddressInfo',
+		args: [address]
+	})
 
-	expect(getAddress1.label).toBe('confirming')
+	expect(getAddress1.data.label).toBe('confirming')
 
-	await btc.rpc.generate(6)
-
-	await udelay(1 * 1000)
-
-	const getAddress2 = await btc.rpc.getAddressInfo(address)
-
-	expect(getAddress2.label).toBe('confirming')
-
-	await btc.rpc.generate(1)
+	await client.post(externalURL + 'rpc', {
+		command: 'generate',
+		args: [6]
+	})
 
 	await udelay(1 * 1000)
 
-	const getAddress3 = await btc.rpc.getAddressInfo(address)
+	const getAddress2 = await client.post(externalURL + 'rpc', {
+		command: 'getAddressInfo',
+		args: [address]
+	})
 
-	expect(getAddress3.label).toBe('used')
+	expect(getAddress2.data.label).toBe('confirming')
+
+	await client.post(externalURL + 'rpc', {
+		command: 'generate',
+		args: [1]
+	})
+
+	await udelay(1 * 1000)
+
+	const getAddress3 = await client.post(externalURL + 'rpc', {
+		command: 'getAddressInfo',
+		args: [address]
+	})
+
+	expect(getAddress3.data.label).toBe('used')
 
 	/**
 	 *  ADDRESS EXPIRATION
@@ -136,17 +157,26 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	await udelay(5 * 1000)
 
-	const getAddress4 = await btc.rpc.getAddressInfo(address2)
+	const getAddress4 = await client.post(externalURL + 'rpc', {
+		command: 'getAddressInfo',
+		args: [address2]
+	})
 
-	expect(getAddress4.label).toBe('expired')
+	expect(getAddress4.data.label).toBe('expired')
 
-	await btc.rpc.sendToAddress(address2, 1)
+	await client.post(externalURL + 'rpc', {
+		command: 'sendToAddress',
+		args: [address2, 1]
+	})
 
 	await udelay(1 * 1000)
 
-	const getAddress5 = await btc.rpc.getAddressInfo(address2)
+	const getAddress5 = await client.post(externalURL + 'rpc', {
+		command: 'getAddressInfo',
+		args: [address2]
+	})
 
-	expect(getAddress5.label).toBe('expired')
+	expect(getAddress5.data.label).toBe('expired')
 
 	return;
 }, 5 * 60 * 1000);

@@ -60,7 +60,8 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	expect.assertions(7)
 
 	await client.post(instanceUrl + 'rpc', {
-		command: 'generate 101'
+		command: 'generate',
+		args: [101]
 	})
 
 	await udelay(5 * 1000)
@@ -77,7 +78,8 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	expect(addAddressResponse.status).toBe(204);
 
 	const sendToAddressResponse = await client.post(instanceUrl + 'rpc', {
-		command: `sendToAddress ${address} 1`
+		command: 'sendToAddress',
+		args: [address, 1]
 	})
 
 	logger.info(sendToAddressResponse)
@@ -85,31 +87,36 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	await udelay(1 * 1000)
 
 	const getAddress1 = await client.post(instanceUrl + 'rpc', {
-		command: `getAddressInfo ${address}`
+		command: 'getAddressInfo',
+		args: [address]
 	})
 
 	expect(getAddress1.data.label).toBe('confirming')
 
 	await client.post(instanceUrl + 'rpc', {
-		command: 'generate 6'
+		command: 'generate',
+		args: [6]
 	})
 
 	await udelay(1 * 1000)
 
 	const getAddress2 = await client.post(instanceUrl + 'rpc', {
-		command: `getAddressInfo ${address}`
+		command: 'getAddressInfo',
+		args: [address]
 	})
 
 	expect(getAddress2.data.label).toBe('confirming')
 
 	await client.post(instanceUrl + 'rpc', {
-		command: 'generate 1'
+		command: 'generate',
+		args: [1]
 	})
 
 	await udelay(1 * 1000)
 
 	const getAddress3 = await client.post(instanceUrl + 'rpc', {
-		command: `getAddressInfo ${address}`
+		command: 'getAddressInfo',
+		args: [address]
 	})
 
 	expect(getAddress3.data.label).toBe('used')
@@ -132,19 +139,22 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	await udelay(5 * 1000)
 
 	const getAddress4 = await client.post(instanceUrl + 'rpc', {
-		command: `getAddressInfo ${address2}`
+		command: 'getAddressInfo',
+		args: [address2]
 	})
 
 	expect(getAddress4.data.label).toBe('expired')
 
 	await client.post(instanceUrl + 'rpc', {
-		command: `sendToAddress ${address2} 1`
+		command: 'sendToAddress',
+		args: [address2, 1]
 	})
 
 	await udelay(1 * 1000)
 
 	const getAddress5 = await client.post(instanceUrl + 'rpc', {
-		command: `getAddressInfo ${address2}`
+		command: 'getAddressInfo',
+		args: [address2]
 	})
 
 	expect(getAddress5.data.label).toBe('expired')
