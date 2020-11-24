@@ -64,14 +64,6 @@ export const getApis = (btc: any) => {
 
 		const argsArray = args || [] 
 
-		// let result = undefined
-
-		// if (command === 'getblockchaininfo') result = await btc.rpc.getBlockchainInfo()
-		// if (command === 'generate') result = await btc.rpc.generate(...argsArray)
-		// if (command === 'sendtoaddress') result = await btc.rpc.sendToAddress(...argsArray)
-		// if (command === 'getadressinfo') result = await btc.rpc.getAddressInfo(...argsArray)
-		// if (command === 'stop') result = await btc.rpc.stop()
-
 		const result = await btc.rpc[command](...argsArray)
 
 		return result ? res.status(200).send(result) : res.sendStatus(204)
