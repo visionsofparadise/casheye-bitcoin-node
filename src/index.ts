@@ -3,5 +3,8 @@ import { btc } from './bitcoind'
 
 const { internalApi, externalApi } = getApis(btc)
 
-internalApi.listen(3000, () => console.log('Internal API listening on port 3000'))
-externalApi.listen(4000, () => console.log('External API listening on port 4000'))
+const internalPort = 3000
+const externalPort = 4000
+
+internalApi.listen(internalPort, () => console.log(`Internal API listening on port ${internalPort}`))
+externalApi.listen(externalPort, () => console.log(`External API listening on port ${externalPort}`))
