@@ -66,8 +66,6 @@ export class CasheyeAddressWatcherStack extends Stack {
 # installation
 apt-get update -y
 apt install nodejs npm -y
-mkdir -p /var/www/html
-cd /var/www/html
 
 # set up project
 git clone https://github.com/visionsofparadise/${serviceName}.git
