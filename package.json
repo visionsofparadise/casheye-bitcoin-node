@@ -7,7 +7,6 @@
 		"compile": "tsc",
 		"test": "jest unit --forceExit",
 		"posttest": "rm -r ~/.bitcoin/regtest",
-		"build": "parcel build ./src/handlers/*.ts -d build --target node --bundle-node-modules --no-source-maps",
 		"synth": "cdk synth",
 		"integration": "jest integration",
 		"start": "node dist/index.js"

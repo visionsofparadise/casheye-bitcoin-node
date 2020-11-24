@@ -47,8 +47,10 @@ export class CasheyeAddressWatcherStack extends Stack {
 	
 	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string }) {
 		super(scope, id, props);
+		
 		const deploymentName = `${serviceName}-${props.STAGE}`;
 		const isProd = (props.STAGE === 'prod')
+		
 		const vpc = new Vpc(this, 'VPC', {
 			natGateways: 0,
 			cidr: "10.0.0.0/16",
@@ -101,6 +103,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 			})
 		})
 
+		instance.connections.allowFromAnyIpv4(Port.tcp(22))
 		instance.connections.allowFromAnyIpv4(Port.tcp(80))
 		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 	
