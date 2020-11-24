@@ -59,21 +59,16 @@ it('rejects unauthorized', async () => {
 it('adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires', async () => {
 	expect.assertions(7)
 
-	for (let i = 0; i <= 5; i++) {
-		await client.post(instanceUrl + 'rpc', {
-			command: 'generate',
-			args: [20]
-		})
-
-		await udelay(1 * 1000)
-	}
+	await udelay(10 * 1000)
 
 	await client.post(instanceUrl + 'rpc', {
 		command: 'generate',
-		args: [1]
+		args: [101]
+	}, {
+		timeout: 5 * 60 * 1000
 	})
 
-	await udelay(5 * 1000)
+	await udelay(10 * 1000)
 
 	const address = testAddressGenerator()
 
