@@ -8,7 +8,7 @@ import { ARecord, PublicHostedZone, RecordTarget } from '@aws-cdk/aws-route53';
 import { LoadBalancerTarget } from '@aws-cdk/aws-route53-targets';
 import { Certificate } from '@aws-cdk/aws-certificatemanager';
 import { ApplicationLoadBalancer, ApplicationProtocol } from '@aws-cdk/aws-elasticloadbalancingv2';
-import { InstanceTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
+import { IpTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -70,6 +70,8 @@ export class CasheyeAddressWatcherStack extends Stack {
 			}
 		});
 
+		loadBalancer.connections.allowToAnyIpv4(Port.tcp(80))
+
 		const certificate = Certificate.fromCertificateArn(this, 'Certificate', SecretValue.secretsManager('DOMAIN_CERTIFICATE_ARN').toString());
 		
 		const listener = loadBalancer.addListener('Listener', {
@@ -125,7 +127,6 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 				})
 			})
 
-			loadBalancer.connections.allowTo(instance, Port.tcp(80))
 			instance.connections.allowFromAnyIpv4(Port.tcp(80))	
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 			EventBus.grantPutEvents(instance.grantPrincipal)
@@ -135,7 +136,7 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 
 		listener.addTargets('ApplicationFleet', {
 			port: 80,
-			targets: instances.map(instance => new InstanceTarget(instance)),
+			targets: instances.map(instance => new IpTarget(instance.instancePublicIp)),
 			healthCheck: {
 				port: '80',
 				enabled: true
