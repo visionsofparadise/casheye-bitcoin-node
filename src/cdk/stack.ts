@@ -68,13 +68,14 @@ apt install nodejs npm -y
 # set up project
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
-npm i --production
+npm i
 npm run compile
 npm run test
+npm i -g pm2
 export XLH_LOGS=${!isProd}
 export STAGE=${props.STAGE}
 export SECRET=${secret}
-npm run startd
+pm2 start dist/index.js
 
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 4000`
 
