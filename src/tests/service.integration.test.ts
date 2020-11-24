@@ -36,7 +36,7 @@ it('executes rpc command', async () => {
 	expect.assertions(1)
 
 	const response = await client.post(instanceUrl + 'rpc', {
-		command: 'getblockchaininfo'
+		command: 'getBlockchainInfo'
 	})
 
 	logger.log(response.data);
@@ -50,7 +50,7 @@ it('rejects unauthorized', async () => {
 	expect.assertions(1)
 
 	await axios.post(instanceUrl + 'rpc', {
-		command: 'getblockchaininfo'
+		command: 'getBlockchainInfo'
 	}).catch(error => expect(error).toBeDefined())
 
 	return;
@@ -77,7 +77,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	expect(addAddressResponse.status).toBe(204);
 
 	const sendToAddressResponse = await client.post(instanceUrl + 'rpc', {
-		command: `sendtoaddress ${address} 1`
+		command: `sendToAddress ${address} 1`
 	})
 
 	logger.info(sendToAddressResponse)
@@ -85,7 +85,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	await udelay(1 * 1000)
 
 	const getAddress1 = await client.post(instanceUrl + 'rpc', {
-		command: `getaddressinfo ${address}`
+		command: `getAddressInfo ${address}`
 	})
 
 	expect(getAddress1.data.label).toBe('confirming')
@@ -97,7 +97,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	await udelay(1 * 1000)
 
 	const getAddress2 = await client.post(instanceUrl + 'rpc', {
-		command: `getaddressinfo ${address}`
+		command: `getAddressInfo ${address}`
 	})
 
 	expect(getAddress2.data.label).toBe('confirming')
@@ -109,7 +109,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	await udelay(1 * 1000)
 
 	const getAddress3 = await client.post(instanceUrl + 'rpc', {
-		command: `getaddressinfo ${address}`
+		command: `getAddressInfo ${address}`
 	})
 
 	expect(getAddress3.data.label).toBe('used')
@@ -132,19 +132,19 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	await udelay(5 * 1000)
 
 	const getAddress4 = await client.post(instanceUrl + 'rpc', {
-		command: `getaddressinfo ${address2}`
+		command: `getAddressInfo ${address2}`
 	})
 
 	expect(getAddress4.data.label).toBe('expired')
 
 	await client.post(instanceUrl + 'rpc', {
-		command: `sendtoaddress ${address2} 1`
+		command: `sendToAddress ${address2} 1`
 	})
 
 	await udelay(1 * 1000)
 
 	const getAddress5 = await client.post(instanceUrl + 'rpc', {
-		command: `getaddressinfo ${address2}`
+		command: `getAddressInfo ${address2}`
 	})
 
 	expect(getAddress5.data.label).toBe('expired')
