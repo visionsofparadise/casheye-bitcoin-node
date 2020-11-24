@@ -5,10 +5,6 @@ import { EventBus } from '@aws-cdk/aws-events';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
 import {nanoid} from 'nanoid'
 import { ARecord, PublicHostedZone, RecordTarget } from '@aws-cdk/aws-route53';
-import { LoadBalancerTarget } from '@aws-cdk/aws-route53-targets';
-import { Certificate } from '@aws-cdk/aws-certificatemanager';
-import { ApplicationLoadBalancer, ApplicationProtocol } from '@aws-cdk/aws-elasticloadbalancingv2';
-import { IpTarget } from '@aws-cdk/aws-elasticloadbalancingv2-targets';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -23,7 +19,7 @@ const testEC2Config = {
 }
 
 export class CasheyeAddressWatcherStage extends Stage {	
-	public readonly loadBalancerUrl: CfnOutput;
+	public readonly instanceUrl: CfnOutput;
 	public readonly secret: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string }) {
@@ -37,61 +33,53 @@ export class CasheyeAddressWatcherStage extends Stage {
 			}
 		});
 
-		this.loadBalancerUrl = stack.loadBalancerUrl
+		this.instanceUrl = stack.instanceUrl
 		this.secret = stack.secret
 	}
 }
 
 export class CasheyeAddressWatcherStack extends Stack {
-	public readonly loadBalancerUrl: CfnOutput;
+	public readonly instanceUrl: CfnOutput;
 	public readonly secret: CfnOutput;
 
 	get availabilityZones(): string[] {
     return ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1e', 'us-east-1f'];
-  }
-
+	}
+	
 	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string }) {
 		super(scope, id, props);
-
 		const deploymentName = `${serviceName}-${props.STAGE}`;
 		const isProd = (props.STAGE === 'prod')
-
 		const vpc = new Vpc(this, 'VPC', {
 			natGateways: 0,
 			cidr: "10.0.0.0/16",
 			maxAzs: 2
 		});
-
-		const loadBalancer = new ApplicationLoadBalancer(this, 'LB', {
-			internetFacing: true,
-			vpc,
-			vpcSubnets: {
-				subnets: vpc.publicSubnets
-			}
-		});
-
-		loadBalancer.connections.allowToAnyIpv4(Port.tcp(80))
-
-		const certificate = Certificate.fromCertificateArn(this, 'Certificate', SecretValue.secretsManager('DOMAIN_CERTIFICATE_ARN').toString());
 		
-		const listener = loadBalancer.addListener('Listener', {
-			port: 443,
-			protocol: ApplicationProtocol.HTTPS,
-			certificates: [certificate]
-		});
-
-		const instances: Array<Instance> = []
 		const config = isProd ? prodEC2Config : testEC2Config
 		const secret = nanoid()
+
+		const nodeName = deploymentName + '-node-' + nanoid()
+		const dnsName = nodeName + '.casheye.io'
 		const shebang = `#!/bin/bash
 
 # installation
+add-apt-repository ppa:certbot/certbot -y
 apt-get update -y
 apt install nodejs npm -y
+apt-get install certbot -y
+
+# ssl certificate
+INSTANCE_DNS_NAME=${dnsName}
+certbot certonly --standalone -d $INSTANCE_DNS_NAME -n --agree-tos --email admin@casheye.io
+certbot renew --dry-run
 
 # set up project
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
+cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" .
+cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" .
+export INSTANCE_DNS_NAME=${dnsName}
 export XLH_LOGS=${!isProd}
 export STAGE=${props.STAGE}
 export SECRET=${secret}
@@ -100,51 +88,34 @@ npm run compile
 npm run test
 npm run startd
 
-iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 4000`
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4000`
 
-		for (let i = 0; i < config.instanceCount; i++) {
-			const nodeName = deploymentName + '-node-' + i
-			
-			const instance = new Instance(this, 'Instance', {
-				instanceName: nodeName,
-				vpc,
-				vpcSubnets: {
-					subnets: vpc.publicSubnets
+		const instance = new Instance(this, 'Instance', {
+			instanceName: nodeName,
+			vpc,
+			vpcSubnets: {
+				subnets: vpc.publicSubnets
+			},
+			instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
+			machineImage: MachineImage.genericLinux({
+				'us-east-1': 'ami-0885b1f6bd170450c'
+			}),
+			allowAllOutbound: true,
+			blockDevices: [
+				{
+					deviceName: '/dev/sda1',
+					volume: BlockDeviceVolume.ebs(config.storageSize),
 				},
-				instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
-				machineImage: MachineImage.genericLinux({
-					'us-east-1': 'ami-0885b1f6bd170450c'
-				}),
-				allowAllOutbound: true,
-				blockDevices: [
-					{
-						deviceName: '/dev/sda1',
-						volume: BlockDeviceVolume.ebs(config.storageSize),
-					},
-				],
-				userData: UserData.forLinux({
-					shebang
-				})
+			],
+			userData: UserData.forLinux({
+				shebang
 			})
+		})
 
-			instance.connections.allowFromAnyIpv4(Port.tcp(80))	
-			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-			EventBus.grantPutEvents(instance.grantPrincipal)
-
-			instances.push(instance)
-		}
-
-		listener.addTargets('ApplicationFleet', {
-			port: 80,
-			targets: instances.map(instance => new IpTarget(instance.instancePublicIp)),
-			healthCheck: {
-				port: '80',
-				enabled: true
-			}
-		});
-
-		const lbHostName = deploymentName + '-lb'
-
+		instance.connections.allowFromAnyIpv4(Port.tcp(443))
+		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
+	
+		EventBus.grantPutEvents(instance.grantPrincipal)
 		const hostedZone = PublicHostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
 			zoneName: 'casheye.io',
 			hostedZoneId: SecretValue.secretsManager('CASHEYE_HOSTED_ZONE_ID').toString()
@@ -152,11 +123,11 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 40
 
 		new ARecord(this, 'ARecord', {
 			zone: hostedZone,
-			target: RecordTarget.fromAlias(new LoadBalancerTarget(loadBalancer)),
-			recordName: lbHostName
+			target: RecordTarget.fromIpAddresses(instance.instancePublicIp),
+			recordName: nodeName
 		});
 
-		this.loadBalancerUrl = createOutput(this, deploymentName, 'loadBalancerUrl', 'https://' + lbHostName + '.casheye.io/');
+		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'https://' + dnsName + '/');
 		this.secret = createOutput(this, deploymentName, 'secret', secret);
 	}
 }

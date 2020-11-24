@@ -18,7 +18,7 @@ afterAll(async () => {
 	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
 });
 
-const instanceUrl = process.env.LOADBALANCER_URL!
+const instanceUrl = process.env.INSTANCE_URL!
 
 it('health check', async () => {
 	expect.assertions(1)
