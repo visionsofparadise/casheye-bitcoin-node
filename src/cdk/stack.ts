@@ -74,7 +74,9 @@ npm i
 npm run compile
 npm run test
 npm i -g pm2
-STAGE=${props.STAGE} SECRET=${secret} pm2 start dist/index.js`
+echo "STAGE=${props.STAGE}" >> /.env
+echo "SECRET=${secret}" >> /.env
+pm2 start dist/index.js`
 
 		const instance = new Instance(this, 'Instance', {
 			instanceName: nodeName,

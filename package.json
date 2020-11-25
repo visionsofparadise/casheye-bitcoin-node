@@ -30,6 +30,7 @@
 		"camelcase": "^5.3.1",
 		"cors": "^2.8.5",
 		"dayjs": "^1.9.4",
+		"dotenv": "^5.0.1",
 		"express": "^4.17.1",
 		"upick": "^1.0.0",
 		"xkore-lambda-helpers": "^1.0.31"

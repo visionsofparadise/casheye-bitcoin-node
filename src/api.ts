@@ -5,6 +5,8 @@ import { confirm } from './confirm';
 import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
 import { isProd, logger } from './helpers';
+import dotenv from 'dotenv'
+dotenv.config()
 
 export const getApis = (btc: any) => {
 	const api = express();

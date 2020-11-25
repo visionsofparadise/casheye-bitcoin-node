@@ -5,3 +5,4 @@ node_modules
 cdk.out  
 privkey.pem
 fullchain.pem
+.env
