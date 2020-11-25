@@ -68,7 +68,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		timeout: 5 * 60 * 1000
 	})
 
-	await udelay(10 * 1000)
+	await udelay(2 * 60 * 1000)
 
 	const address = testAddressGenerator()
 
@@ -102,7 +102,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		args: [6]
 	})
 
-	await udelay(1 * 1000)
+	await udelay(3 * 1000)
 
 	const getAddress2 = await client.post(instanceUrl + 'rpc', {
 		command: 'getAddressInfo',

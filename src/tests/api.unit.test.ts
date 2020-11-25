@@ -81,7 +81,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		args: [101]
 	})
 
-	await udelay(5 * 1000)
+	await udelay(2 * 60 * 1000)
 
 	internalApi.listen(3000, () => console.log('Internal API listening on port 3000'))
 
