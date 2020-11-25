@@ -2,8 +2,8 @@ import AWS from 'aws-sdk';
 import spawnLogger from 'envlog';
 import { createEventHelper } from 'xkore-lambda-helpers/dist/util/eventHelper';
 import { dbClient } from 'xkore-lambda-helpers/dist/util/dbClient';
-// import dotenv from 'dotenv'
-// dotenv.config()
+import dotenv from 'dotenv'
+dotenv.config()
 
 export const isProd = process.env.STAGE === 'prod';
 export const isTest = !process.env.JEST_WORKER_ID;
