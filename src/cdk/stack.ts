@@ -73,8 +73,8 @@ npm i
 npm run compile
 npm run test
 npm i -g pm2
-echo "INSTANCE_SECRET=${instanceSecret}" >> /.env
-echo "STAGE=${instanceSecret}" >> /.env
+echo export INSTANCE_SECRET="${instanceSecret}" >> /etc/profile
+echo export STAGE="${props.STAGE}" >> /etc/profile
 pm2 start dist/index.js`
 
 		const instance = new Instance(this, 'Instance', {

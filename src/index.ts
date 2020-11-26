@@ -1,7 +1,5 @@
 import { getApis } from './api'
 import { btc } from './bitcoind'
-import dotenv from 'dotenv'
-dotenv.config()
 
 const { internalApi, externalApi } = getApis(btc, process.env.INSTANCE_SECRET!)
 
