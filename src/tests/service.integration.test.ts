@@ -3,11 +3,9 @@ import axios from 'axios';
 import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
 
-const secret = process.env.SECRET
-
 const client = axios.create({
 	headers: {
-		authorization: secret
+		authorization: process.env.SECRET
 	},
 	timeout: 10 * 60 * 1000
 })

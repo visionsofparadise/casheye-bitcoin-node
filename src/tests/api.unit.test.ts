@@ -5,13 +5,11 @@ import { btc } from '../bitcoind'
 import axios from 'axios'
 import kill from 'tree-kill'
 
-process.env.SECRET = 'test'
-
 const { internalApi, externalApi } = getApis(btc)
 
 const client = axios.create({
 	headers: {
-		authorization: process.env.SECRET
+		authorization: 'test'
 	}
 })
 

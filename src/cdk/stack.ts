@@ -3,7 +3,6 @@ import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { EventBus } from '@aws-cdk/aws-events';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
-import { nanoid } from 'nanoid'
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -58,7 +57,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		});
 		
 		const config = isProd ? prodEC2Config : testEC2Config
-		const secret = nanoid()
+		const secret = this.stackId
 
 		const nodeName = deploymentName + '-node'
 		const shebang = `#!/bin/bash
