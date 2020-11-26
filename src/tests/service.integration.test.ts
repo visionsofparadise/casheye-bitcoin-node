@@ -3,9 +3,11 @@ import axios from 'axios';
 import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
 
+const secret = process.env.SECRET
+
 const client = axios.create({
 	headers: {
-		authorization: process.env.SECRET
+		authorization: secret
 	},
 	timeout: 10 * 60 * 1000
 })
@@ -37,6 +39,11 @@ it('executes rpc command', async () => {
 
 	const response = await client.post(instanceUrl + 'rpc', {
 		command: 'getBlockchainInfo'
+	},
+	{
+		headers: {
+			authorization: secret
+		}
 	})
 
 	logger.log(response.data);
