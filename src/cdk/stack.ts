@@ -68,9 +68,7 @@ git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
 npm i
 npm run compile
-npm run test
 npm i -g pm2
-
 pm2 start dist/index-${props.STAGE}.js`
 
 		const instance = new Instance(this, 'Instance', {
