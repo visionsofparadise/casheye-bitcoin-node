@@ -15,7 +15,7 @@ export const getApis = (btc: any) => {
 	api.use(bodyParser.urlencoded({ extended: true }));
 	api.use(bodyParser.json());
 
-	api.use((req, res, next) => {
+	api.use(async (req, res, next) => {
 		try {
 			const { body, headers } = req
 			logger.info({ body, headers })
@@ -48,7 +48,12 @@ export const getApis = (btc: any) => {
 	externalApi.get('/', async (_, res) => res.sendStatus(200));
 	
 	externalApi.use((req, res, next) => {
-		if (req.headers.authorization !== process.env.SECRET) return res.sendStatus(401)
+		if (req.headers.authorization !== process.env.SECRET) {
+			return res.status(401).send({
+				request: req.headers.authorization,
+				secret: process.env.SECRET
+			})
+		}
 
 		return next()
 	})
