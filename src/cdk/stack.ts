@@ -66,6 +66,13 @@ export class CasheyeAddressWatcherStack extends Stack {
 apt-get update -y
 apt install nodejs npm -y
 
+# environment
+echo 'export INSTANCE_SECRET="${instanceSecret}"' > ~/watcher-env.sh
+echo 'export STAGE="${props.STAGE}" > ~/watcher-env.sh
+chmod +x ~/watcher-env.sh
+cp ~/watcher-env.sh /etc/profile.d/watcher-env.sh
+source /etc/profile
+
 # set up project
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
@@ -73,8 +80,6 @@ npm i
 npm run compile
 npm run test
 npm i -g pm2
-echo export INSTANCE_SECRET="${instanceSecret}" >> /etc/profile
-echo export STAGE="${props.STAGE}" >> /etc/profile
 pm2 start dist/index.js`
 
 		const instance = new Instance(this, 'Instance', {
