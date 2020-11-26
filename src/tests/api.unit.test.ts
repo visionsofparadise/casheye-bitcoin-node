@@ -9,7 +9,7 @@ const { internalApi, externalApi } = getApis(btc)
 
 const client = axios.create({
 	headers: {
-		authorization: 'test'
+		authorization: 'undefined'
 	}
 })
 
