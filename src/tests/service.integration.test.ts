@@ -39,11 +39,10 @@ it('executes rpc command', async () => {
 
 	const response = await client.post(instanceUrl + 'rpc', {
 		command: 'getBlockchainInfo'
-	},
-	{
-		headers: {
-			authorization: secret
-		}
+	}).catch(error => {
+		logger.error({ error })
+
+		throw error
 	})
 
 	logger.log(response.data);

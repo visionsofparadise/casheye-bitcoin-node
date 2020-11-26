@@ -74,8 +74,8 @@ npm i
 npm run compile
 npm run test
 npm i -g pm2
-echo "STAGE=${props.STAGE}" >> /.env
-echo "SECRET=${secret}" >> /.env
+export STAGE=${props.STAGE}
+export SECRET=${secret}
 pm2 start dist/index.js`
 
 		const instance = new Instance(this, 'Instance', {
@@ -106,6 +106,7 @@ pm2 start dist/index.js`
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
 		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'http://' + instance.instancePublicDnsName + ':4000/');
+		
 		this.secret = createOutput(this, deploymentName, 'secret', secret);
 	}
 }
