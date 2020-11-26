@@ -20,6 +20,8 @@ export const docDb = new AWS.DynamoDB.DocumentClient()
 
 export const db = dbClient(docDb, process.env.DYNAMODB_TABLE!);
 
+export const secretsManager = new AWS.SecretsManager();
+
 export const logger = spawnLogger({
 	envKey: 'STAGE',
 	offValue: 'prod'

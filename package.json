@@ -9,8 +9,7 @@
 		"posttest": "rm -r ~/.bitcoin/regtest",
 		"synth": "cdk synth",
 		"integration": "jest integration",
-		"start": "node dist/index.js",
-		"deploy": "cdk deploy"
+		"start": "node dist/index.js"
 	},
 	"repository": {
 		"type": "git",
@@ -29,37 +28,28 @@
 		"bitcoind": "^1.2.1",
 		"body-parser": "^1.19.0",
 		"cors": "^2.8.5",
-		"dayjs": "^1.9.4",
-		"dotenv": "^5.0.1",
 		"express": "^4.17.1",
 		"upick": "^1.0.0",
 		"xkore-lambda-helpers": "^1.0.31"
 	},
 	"devDependencies": {
-		"@aws-cdk/aws-certificatemanager": "^1.70.0",
 		"@aws-cdk/aws-codepipeline": "^1.70.0",
 		"@aws-cdk/aws-codepipeline-actions": "^1.70.0",
 		"@aws-cdk/aws-ec2": "^1.70.0",
-		"@aws-cdk/aws-elasticloadbalancingv2": "^1.70.0",
-		"@aws-cdk/aws-elasticloadbalancingv2-targets": "^1.70.0",
 		"@aws-cdk/aws-events": "^1.70.0",
 		"@aws-cdk/aws-events-targets": "^1.70.0",
-		"@aws-cdk/aws-route53-targets": "^1.70.0",
+		"@aws-cdk/aws-secretsmanager": "^1.75.0",
 		"@aws-cdk/core": "^1.70.0",
 		"@aws-cdk/pipelines": "^1.70.0",
 		"@types/bitcore-lib": "^0.15.2",
 		"@types/body-parser": "^1.19.0",
 		"@types/cors": "^2.8.8",
-		"@types/dotenv": "^8.2.0",
 		"@types/express": "^4.17.8",
 		"@types/jest": "^26.0.15",
 		"@types/node": "^14.14.5",
-		"@types/supertest": "^2.0.10",
 		"aws-cdk": "^1.70.0",
 		"bitcore-lib": "^8.23.0",
 		"jest": "^26.6.0",
-		"parcel-bundler": "^1.12.4",
-		"parcel-plugin-externals": "^0.5.1",
 		"tree-kill": "^1.2.2",
 		"ts-jest": "^26.4.1",
 		"ts-loader": "^8.0.6",
@@ -69,8 +59,5 @@
 		"tslint-plugin-prettier": "^2.3.0",
 		"typescript": "^4.0.3",
 		"udelay": "^1.0.0"
-	},
-	"externals": [
-		"aws-sdk"
-	]
+	}
 }

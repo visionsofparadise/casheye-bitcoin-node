@@ -3,6 +3,7 @@ import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { EventBus } from '@aws-cdk/aws-events';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
+import { Secret } from '@aws-cdk/aws-secretsmanager';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -18,7 +19,6 @@ const testEC2Config = {
 
 export class CasheyeAddressWatcherStage extends Stage {	
 	public readonly instanceUrl: CfnOutput;
-	public readonly instanceSecret: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string }) {
 		super(scope, id, props);
@@ -32,13 +32,11 @@ export class CasheyeAddressWatcherStage extends Stage {
 		});
 
 		this.instanceUrl = stack.instanceUrl
-		this.instanceSecret = stack.instanceSecret
 	}
 }
 
 export class CasheyeAddressWatcherStack extends Stack {
 	public readonly instanceUrl: CfnOutput;
-	public readonly instanceSecret: CfnOutput;
 
 	get availabilityZones(): string[] {
     return ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1e', 'us-east-1f'];
@@ -57,7 +55,6 @@ export class CasheyeAddressWatcherStack extends Stack {
 		});
 		
 		const config = isProd ? prodEC2Config : testEC2Config
-		const instanceSecret = this.stackId
 
 		const nodeName = deploymentName + '-node'
 		const shebang = `#!/bin/bash
@@ -74,9 +71,7 @@ npm run compile
 npm run test
 npm i -g pm2
 
-echo "INSTANCE_SECRET=${instanceSecret}" >> ~/.env
-echo "STAGE=${props.STAGE}" >> ~/.env
-pm2 start dist/index.js`
+pm2 start dist/index-${props.STAGE}.js`
 
 		const instance = new Instance(this, 'Instance', {
 			instanceName: nodeName,
@@ -105,8 +100,9 @@ pm2 start dist/index.js`
 	
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
+		const secret = Secret.fromSecretNameV2(this, 'InstanceSecret', 'WATCHER_INSTANCE_SECRET')
+		secret.grantRead(instance.grantPrincipal)
+
 		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'http://' + instance.instancePublicDnsName + ':4000/');
-		
-		this.instanceSecret = createOutput(this, deploymentName, 'instanceSecret', instanceSecret);
 	}
 }

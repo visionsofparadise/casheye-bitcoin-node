@@ -5,7 +5,7 @@ import { testAddressGenerator } from '../testAddressGenerator'
 
 const client = axios.create({
 	headers: {
-		authorization: process.env.INSTANCE_SECRET
+		authorization: process.env.WATCHER_INSTANCE_SECRET
 	},
 	timeout: 10 * 60 * 1000
 })
