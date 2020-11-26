@@ -1,7 +1,7 @@
 import { getApis } from './api'
 import { btc } from './bitcoind'
 
-const { internalApi, externalApi } = getApis(btc)
+const { internalApi, externalApi } = getApis(btc, process.env.INSTANCE_SECRET!)
 
 const internalPort = 3000
 const externalPort = 4000

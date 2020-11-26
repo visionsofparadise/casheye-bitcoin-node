@@ -73,7 +73,9 @@ npm i
 npm run compile
 npm run test
 npm i -g pm2
-INSTANCE_SECRET=${instanceSecret} STAGE=${props.STAGE} pm2 start dist/index.js`
+export INSTANCE_SECRET=${instanceSecret}
+export STAGE=${props.STAGE}
+pm2 start dist/index.js`
 
 		const instance = new Instance(this, 'Instance', {
 			instanceName: nodeName,

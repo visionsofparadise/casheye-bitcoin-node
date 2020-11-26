@@ -6,7 +6,7 @@ import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
 import { isProd, logger } from './helpers';
 
-export const getApis = (btc: any) => {
+export const getApis = (btc: any, secret: string) => {
 	const api = express();
 
 	api.use(cors());
@@ -46,8 +46,6 @@ export const getApis = (btc: any) => {
 	externalApi.get('/', async (_, res) => res.sendStatus(200));
 	
 	externalApi.use((req, res, next) => {
-		const secret = process.env.INSTANCE_SECRET || 'undefined'
-
 		if (req.headers.authorization !== secret) {
 			return res.status(401).send({
 				request: req.headers.authorization,
