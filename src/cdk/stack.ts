@@ -73,9 +73,7 @@ npm i
 npm run compile
 npm run test
 npm i -g pm2
-export STAGE=${props.STAGE}
-export SECRET=${secret}
-pm2 start dist/index.js`
+SECRET=${secret} STAGE=${props.STAGE} pm2 start dist/index.js`
 
 		const instance = new Instance(this, 'Instance', {
 			instanceName: nodeName,

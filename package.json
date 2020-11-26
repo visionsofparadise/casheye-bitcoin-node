@@ -5,7 +5,7 @@
 	"main": "dist/index.js",
 	"scripts": {
 		"compile": "tsc",
-		"test": "jest unit --forceExit",
+		"test": "STAGE=test jest unit --forceExit",
 		"posttest": "rm -r ~/.bitcoin/regtest",
 		"synth": "cdk synth",
 		"integration": "jest integration",

@@ -4,6 +4,3 @@ module.exports = {
 	verbose: true,
 	rootDir: 'src/',
 };
-
-process.env.XLH_LOGS = 'true'
-process.env.STAGE = 'test';

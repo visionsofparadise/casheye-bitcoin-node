@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 import { confirm } from './confirm';
 import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
-import { isProd, isTest, logger } from './helpers';
+import { isProd, logger } from './helpers';
 
 export const getApis = (btc: any) => {
 	const api = express();
@@ -46,7 +46,7 @@ export const getApis = (btc: any) => {
 	externalApi.get('/', async (_, res) => res.sendStatus(200));
 	
 	externalApi.use((req, res, next) => {
-		const secret = isTest ? process.env.SECRET : 'test'
+		const secret = process.env.SECRET || 'test'
 
 		if (req.headers.authorization !== secret) {
 			return res.status(401).send({
