@@ -58,12 +58,13 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 					`export CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
 					`export UTILITY_API_URL=${Fn.importValue('casheye-utility-test-apiUrl')}`,
 					`export TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY')}`,
+					`export STAGE=test`,
 					'npm i',
 					'npm run integration --passWithNoTests'
 				],
 				useOutputs: {
 					INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl),
-					SECRET: pipeline.stackOutput(testApp.secret)
+					INSTANCE_SECRET: pipeline.stackOutput(testApp.instanceSecret)
 				}
 			})
 		);

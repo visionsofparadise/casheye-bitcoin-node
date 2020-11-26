@@ -18,7 +18,7 @@ const testEC2Config = {
 
 export class CasheyeAddressWatcherStage extends Stage {	
 	public readonly instanceUrl: CfnOutput;
-	public readonly secret: CfnOutput;
+	public readonly instanceSecret: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string }) {
 		super(scope, id, props);
@@ -32,13 +32,13 @@ export class CasheyeAddressWatcherStage extends Stage {
 		});
 
 		this.instanceUrl = stack.instanceUrl
-		this.secret = stack.secret
+		this.instanceSecret = stack.instanceSecret
 	}
 }
 
 export class CasheyeAddressWatcherStack extends Stack {
 	public readonly instanceUrl: CfnOutput;
-	public readonly secret: CfnOutput;
+	public readonly instanceSecret: CfnOutput;
 
 	get availabilityZones(): string[] {
     return ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1e', 'us-east-1f'];
@@ -57,7 +57,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		});
 		
 		const config = isProd ? prodEC2Config : testEC2Config
-		const secret = this.stackId
+		const instanceSecret = this.stackId
 
 		const nodeName = deploymentName + '-node'
 		const shebang = `#!/bin/bash
@@ -73,7 +73,7 @@ npm i
 npm run compile
 npm run test
 npm i -g pm2
-SECRET=${secret} STAGE=${props.STAGE} pm2 start dist/index.js`
+INSTANCE_SECRET=${instanceSecret} STAGE=${props.STAGE} pm2 start dist/index.js`
 
 		const instance = new Instance(this, 'Instance', {
 			instanceName: nodeName,
@@ -104,6 +104,6 @@ SECRET=${secret} STAGE=${props.STAGE} pm2 start dist/index.js`
 
 		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'http://' + instance.instancePublicDnsName + ':4000/');
 		
-		this.secret = createOutput(this, deploymentName, 'secret', secret);
+		this.instanceSecret = createOutput(this, deploymentName, 'instanceSecret', instanceSecret);
 	}
 }
