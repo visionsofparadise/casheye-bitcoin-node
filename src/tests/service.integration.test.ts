@@ -177,4 +177,4 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	expect(getAddress5.data.label).toBe('expired')
 
 	return;
-}, 5 * 60 * 1000);
+}, 10 * 60 * 1000);
