@@ -73,7 +73,8 @@ npm i
 npm run test
 npm run compile
 npm i -g pm2
-STAGE=${props.STAGE} SECRET=${secret} pm2 start dist/index.js`
+STAGE=${props.STAGE} SECRET=${secret} pm2 start dist/index.js
+pm2 startup`
 
 		const instance = new Instance(this, 'Instance', {
 			instanceName: nodeName,
