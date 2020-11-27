@@ -73,15 +73,13 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		await udelay(1000)
 	}
 
-	await udelay(20 * 1000)
+	await udelay(5 * 1000)
 
 	const address = testAddressGenerator()
 
 	const addAddressResponse = await client.post(instanceUrl + 'address', {
 		address,
 		duration: 5 * 60 * 1000
-	}, {
-		timeout: 5 * 60 * 1000
 	})
 
 	logger.log(addAddressResponse.data);

@@ -17,7 +17,7 @@ export const watchAddress = async (address: string, duration: number, btc: any) 
 	logger.info('address imported ' + address);
 	logger.info({ importAddressResponse });
 
-	setTimeout(() => {
+	return setTimeout(() => {
 		btc.rpc.getAddressInfo(address).then((getAddressData: GetAddressInfoResponse) => {
 			logger.info({ getAddressData });
 
@@ -39,6 +39,4 @@ export const watchAddress = async (address: string, duration: number, btc: any) 
 
 		return;
 	}, duration);
-
-	return;
 };

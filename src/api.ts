@@ -21,6 +21,8 @@ export const getApis = (btc: any) => {
 			return next()
 		} catch (err) {
 			logger.error(err)
+
+			if (err.code === 'ECONNRESET') return res.end()
 		
 			return res.sendStatus(500)
 		}
