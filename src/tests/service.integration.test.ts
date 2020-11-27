@@ -68,8 +68,6 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	await client.post(instanceUrl + 'rpc', {
 		command: 'generate',
 		args: [101]
-	}, {
-		timeout: 5 * 60 * 1000
 	})
 
 	await udelay(2 * 60 * 1000)

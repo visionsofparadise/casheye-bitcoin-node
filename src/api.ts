@@ -74,7 +74,7 @@ export const getApis = (btc: any) => {
 		if (command === 'generate') {
 			res.sendStatus(204)
 
-			await btc.rpc.generate(...argsArray)
+			btc.rpc.generate(...argsArray)
 
 			return 
 		}
