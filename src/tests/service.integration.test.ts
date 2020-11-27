@@ -65,12 +65,23 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	await udelay(10 * 1000)
 
-	await client.post(instanceUrl + 'rpc', {
+	const generate10Response = await client.post(instanceUrl + 'rpc', {
 		command: 'generate',
-		args: [101]
+		args: [10]
 	})
 
-	await udelay(2 * 60 * 1000)
+	logger.info({ generate10Response })
+
+	await udelay(20 * 1000)
+
+	const generate91Response = await client.post(instanceUrl + 'rpc', {
+		command: 'generate',
+		args: [91]
+	})
+
+	logger.info({ generate91Response })
+
+	await udelay(3 * 60 * 1000)
 
 	const address = testAddressGenerator()
 
