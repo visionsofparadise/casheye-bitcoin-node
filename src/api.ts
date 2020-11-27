@@ -4,9 +4,9 @@ import bodyParser from 'body-parser';
 import { confirm } from './confirm';
 import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
-import { logger, secretsManager } from './helpers';
+import { isProd, logger } from './helpers';
 
-export const getApis = (btc: any, isProd: boolean, customSecret?: string) => {
+export const getApis = (btc: any) => {
 	const api = express();
 
 	api.use(cors());
@@ -46,9 +46,7 @@ export const getApis = (btc: any, isProd: boolean, customSecret?: string) => {
 	externalApi.get('/', async (_, res) => res.sendStatus(200));
 	
 	externalApi.use(async (req, res, next) => {
-		const secret = customSecret || await secretsManager.getSecretValue({
-			SecretId: 'WATCHER_INSTANCE_SECRET'
-		}).promise()as unknown as string
+		const secret = process.env.SECRET
 
 		if (req.headers.authorization !== secret) {
 			return res.status(401).send({

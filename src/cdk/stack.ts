@@ -3,7 +3,7 @@ import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { EventBus } from '@aws-cdk/aws-events';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
-import { Secret } from '@aws-cdk/aws-secretsmanager';
+import {nanoid} from 'nanoid'
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -19,6 +19,7 @@ const testEC2Config = {
 
 export class CasheyeAddressWatcherStage extends Stage {	
 	public readonly instanceUrl: CfnOutput;
+	public readonly secret: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string }) {
 		super(scope, id, props);
@@ -32,11 +33,13 @@ export class CasheyeAddressWatcherStage extends Stage {
 		});
 
 		this.instanceUrl = stack.instanceUrl
+		this.secret = stack.secret
 	}
 }
 
 export class CasheyeAddressWatcherStack extends Stack {
 	public readonly instanceUrl: CfnOutput;
+	public readonly secret: CfnOutput;
 
 	get availabilityZones(): string[] {
     return ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1e', 'us-east-1f'];
@@ -55,7 +58,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		});
 		
 		const config = isProd ? prodEC2Config : testEC2Config
-
+		const secret = nanoid()
 		const nodeName = deploymentName + '-node'
 		const shebang = `#!/bin/bash
 
@@ -67,9 +70,10 @@ apt install nodejs npm -y
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
 npm i
+npm run test
 npm run compile
 npm i -g pm2
-pm2 start dist/index-${props.STAGE}.js`
+STAGE=${props.STAGE} SECRET=${secret} pm2 start dist/index.js`
 
 		const instance = new Instance(this, 'Instance', {
 			instanceName: nodeName,
@@ -98,9 +102,8 @@ pm2 start dist/index-${props.STAGE}.js`
 	
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
-		const secret = Secret.fromSecretNameV2(this, 'InstanceSecret', 'WATCHER_INSTANCE_SECRET')
-		secret.grantRead(instance.grantPrincipal)
-
 		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'http://' + instance.instancePublicDnsName + ':4000/');
+
+		this.secret = createOutput(this, deploymentName, 'secret', secret);
 	}
 }

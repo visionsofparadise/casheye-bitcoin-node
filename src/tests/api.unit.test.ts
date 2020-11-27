@@ -6,8 +6,9 @@ import axios from 'axios'
 import kill from 'tree-kill'
 
 const secret = 'test'
+process.env.SECRET = secret
 
-const { internalApi, externalApi } = getApis(btc, false, secret)
+const { internalApi, externalApi } = getApis(btc)
 
 const client = axios.create({
 	headers: {

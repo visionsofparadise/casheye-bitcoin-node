@@ -1,7 +1,7 @@
 import { getApis } from './api'
 import { btc } from './bitcoind'
 
-const { internalApi, externalApi } = getApis(btc, false)
+const { internalApi, externalApi } = getApis(btc)
 
 const internalPort = 3000
 const externalPort = 4000

@@ -54,17 +54,17 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				runOrder: testAppStage.nextSequentialRunOrder(),
 				additionalArtifacts: [sourceArtifact],
 				commands: [
-					'sleep 180s',
-					`export CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
-					`export UTILITY_API_URL=${Fn.importValue('casheye-utility-test-apiUrl')}`,
-					`export TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY')}`,
-					`export WATCHER_INSTANCE_SECRET=${SecretValue.secretsManager('WATCHER_INSTANCE_SECRET')}`,
-					`export STAGE=test`,
+					'sleep 600s',
+					'XLH_LOGS=true',
+					`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
+					`UTILITY_API_URL=${Fn.importValue('casheye-utility-test-apiUrl')}`,
+					`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY')}`,
 					'npm i',
-					'npm run integration --passWithNoTests'
+					'npm run integration'
 				],
 				useOutputs: {
-					INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl)
+					INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl),
+					SECRET: pipeline.stackOutput(testApp.secret)
 				}
 			})
 		);
