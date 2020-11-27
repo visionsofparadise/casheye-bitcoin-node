@@ -24,14 +24,14 @@ export const watchAddress = async (address: string, duration: number, btc: any) 
 			if (getAddressData.label === 'watching') {
 				logger.info('address expiring ' + address);
 
-				return btc.rpc.setLabel(address, 'expired').then(() => {
-					return eventHelper.send({
+				return btc.rpc.setLabel(address, 'expired').then(() => 
+					eventHelper.send({
 						DetailType: 'btcAddressExpired',
 						Detail: {
 							address
 						}
-					});
-				});
+					})
+				);
 			}
 
 			return;

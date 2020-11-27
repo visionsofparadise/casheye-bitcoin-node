@@ -1,7 +1,7 @@
 import { logger } from '../helpers';
 import axios from 'axios';
 import udelay from 'udelay'
-import { testAddressGenerator } from '../testAddressGenerator'
+// import { testAddressGenerator } from '../testAddressGenerator'
 
 const client = axios.create({
 	headers: {
@@ -75,7 +75,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	await udelay(2 * 1000)
 
-	const address = testAddressGenerator()
+	const address = 'mwfjApeUk2uwAWuikWmjqnixW7Lg1mHNHE'
 
 	const addAddressResponse = await client.post(instanceUrl + 'address', {
 		address,
@@ -140,7 +140,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	 *  ADDRESS EXPIRATION
 	 */
 
-	const address2 = testAddressGenerator()
+	const address2 = 'mz4JoMe93Bof3SJAN6iN2yGMGtMiZab2YW'
 
 	const addAddress2Response = await client.post(instanceUrl + 'address', {
 		address: address2,
