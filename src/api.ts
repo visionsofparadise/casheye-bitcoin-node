@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 import { confirm } from './confirm';
 import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
-import { isProd, logger } from './helpers';
+import { isProd } from './helpers';
 
 export const getApis = (btc: any) => {
 	const api = express();
@@ -13,20 +13,20 @@ export const getApis = (btc: any) => {
 	api.use(bodyParser.urlencoded({ extended: true }));
 	api.use(bodyParser.json());
 
-	api.use(async (req, res, next) => {
-		try {
-			const { body, headers } = req
-			logger.info({ body, headers })
+	// api.use(async (req, res, next) => {
+	// 	try {
+	// 		const { body, headers } = req
+	// 		logger.info({ body, headers })
 
-			return next()
-		} catch (err) {
-			logger.error(err)
+	// 		return next()
+	// 	} catch (err) {
+	// 		logger.error(err)
 
-			if (err.code === 'ECONNRESET') return res.end()
+	// 		if (err.code === 'ECONNRESET') return res.end()
 		
-			return res.sendStatus(500)
-		}
-	})
+	// 		return res.sendStatus(500)
+	// 	}
+	// })
 	
 	const internalApi = api
 	const externalApi = api
