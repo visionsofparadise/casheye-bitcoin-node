@@ -6,8 +6,7 @@ import { testAddressGenerator } from '../testAddressGenerator'
 const client = axios.create({
 	headers: {
 		authorization: process.env.SECRET
-	},
-	timeout: 10 * 60 * 1000
+	}
 })
 
 beforeAll(async () => {
@@ -30,7 +29,7 @@ it('health check', async () => {
 	expect(response.status).toBe(200);
 
 	return;
-}, 10 * 1000);
+});
 
 it('executes rpc command', async () => {
 	expect.assertions(1)
@@ -48,7 +47,7 @@ it('executes rpc command', async () => {
 	expect(response.data).toBeDefined();
 
 	return;
-}, 60 * 1000);
+});
 
 it('rejects unauthorized', async () => {
 	expect.assertions(1)
@@ -58,32 +57,23 @@ it('rejects unauthorized', async () => {
 	}).catch(error => expect(error).toBeDefined())
 
 	return;
-}, 60 * 1000);
+});
 
 it('adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires', async () => {
 	expect.assertions(7)
 
-	await udelay(10 * 1000)
-
-	for (let i = 0; i <= 20; i++ ) {
-		const generate5Response = await client.post(instanceUrl + 'rpc', {
+	for (let i = 0; i < 101; i++ ) {
+		const generate1Response = await client.post(instanceUrl + 'rpc', {
 			command: 'generate',
-			args: [5]
+			args: [1]
 		})
 	
-		logger.info({ generate5Response })
+		logger.info({ generate1Response })
 	
-		await udelay(20 * 1000)
+		await udelay(1000)
 	}
 
-	const generate1Response = await client.post(instanceUrl + 'rpc', {
-		command: 'generate',
-		args: [1]
-	})
-
-	logger.info({ generate1Response })
-
-	await udelay(20 * 1000)
+	await udelay(2 * 1000)
 
 	const address = testAddressGenerator()
 
@@ -112,12 +102,18 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	expect(getAddress1.data.label).toBe('confirming')
 
-	await client.post(instanceUrl + 'rpc', {
-		command: 'generate',
-		args: [6]
-	})
+	for (let i = 0; i < 6; i++ ) {
+		const generate6Response = await client.post(instanceUrl + 'rpc', {
+			command: 'generate',
+			args: [1]
+		})
+	
+		logger.info({ generate6Response })
+	
+		await udelay(1000)
+	}
 
-	await udelay(20 * 1000)
+	await udelay(2 * 1000)
 
 	const getAddress2 = await client.post(instanceUrl + 'rpc', {
 		command: 'getAddressInfo',
@@ -131,7 +127,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		args: [1]
 	})
 
-	await udelay(5 * 1000)
+	await udelay(2 * 1000)
 
 	const getAddress3 = await client.post(instanceUrl + 'rpc', {
 		command: 'getAddressInfo',

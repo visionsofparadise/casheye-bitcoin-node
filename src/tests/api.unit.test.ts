@@ -18,8 +18,9 @@ const client = axios.create({
 
 beforeAll(async () => {
 	externalApi.listen(4000, () => console.log('Internal API listening on port 4000'))
+	internalApi.listen(3000, () => console.log('Internal API listening on port 3000'))
 
-	await udelay(3 * 1000)
+	await udelay(5 * 1000)
 
 	return
 }, 10 * 1000)
@@ -77,14 +78,14 @@ it('rejects unauthorized', async () => {
 it('adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires', async () => {
 	expect.assertions(7)
 
-	await client.post(externalURL + 'rpc', {
-		command: 'generate',
-		args: [101]
-	})
-
-	await udelay(2 * 60 * 1000)
-
-	internalApi.listen(3000, () => console.log('Internal API listening on port 3000'))
+	for (let i = 0; i <= 101; i++ ) {
+		await client.post(externalURL + 'rpc', {
+			command: 'generate',
+			args: [1]
+		})
+	
+		await udelay(300)
+	}
 
 	const address = 'mwfjApeUk2uwAWuikWmjqnixW7Lg1mHNHE'
 
@@ -113,12 +114,16 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	expect(getAddress1.data.label).toBe('confirming')
 
-	await client.post(externalURL + 'rpc', {
-		command: 'generate',
-		args: [6]
-	})
+	for (let i = 0; i < 6; i++ ) {
+		await client.post(externalURL + 'rpc', {
+			command: 'generate',
+			args: [1]
+		})
+	
+		await udelay(300)
+	}
 
-	await udelay(1 * 1000)
+	await udelay(3 * 1000)
 
 	const getAddress2 = await client.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
@@ -132,7 +137,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		args: [1]
 	})
 
-	await udelay(1 * 1000)
+	await udelay(3 * 1000)
 
 	const getAddress3 = await client.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
@@ -170,7 +175,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		args: [address2, 1]
 	})
 
-	await udelay(1 * 1000)
+	await udelay(3 * 1000)
 
 	const getAddress5 = await client.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
@@ -180,4 +185,4 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	expect(getAddress5.data.label).toBe('expired')
 
 	return;
-}, 5 * 60 * 1000);
+}, 3 * 60 * 1000);
