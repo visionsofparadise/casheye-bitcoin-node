@@ -65,13 +65,13 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	await udelay(10 * 1000)
 
-	for (let i = 0; i <= 10; i++ ) {
-		const generate10Response = await client.post(instanceUrl + 'rpc', {
+	for (let i = 0; i <= 20; i++ ) {
+		const generate5Response = await client.post(instanceUrl + 'rpc', {
 			command: 'generate',
-			args: [10]
+			args: [5]
 		})
 	
-		logger.info({ generate10Response })
+		logger.info({ generate5Response })
 	
 		await udelay(20 * 1000)
 	}
@@ -83,7 +83,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	logger.info({ generate1Response })
 
-	await udelay(10 * 1000)
+	await udelay(20 * 1000)
 
 	const address = testAddressGenerator()
 
