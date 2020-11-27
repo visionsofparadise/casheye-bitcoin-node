@@ -48,9 +48,11 @@ export const getApis = (btc: any) => {
 	externalApi.use(async (req, res, next) => {
 		const secret = process.env.SECRET
 
-		if (req.headers.authorization !== secret) return res.status(401)
-
-		return next()
+		if (req.headers.authorization !== secret) {
+			return res.sendStatus(401)
+		} else {
+			return next()
+		}
 	})
 	
 	externalApi.post('/address', async (req, res) => {
