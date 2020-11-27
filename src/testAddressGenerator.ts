@@ -8,9 +8,11 @@ export const testAddressGenerator = () => {
 
 	const derivedxPubKey = xPubKeyObj.deriveChild(`m/0/${number}`);
 
-	logger.info({ derivedxPubKey });
-
 	const addressObj = new Address(derivedxPubKey.publicKey, Networks.testnet);
 
-	return addressObj.toString()
+	const address = addressObj.toString()
+
+	logger.info({ address });
+
+	return address
 }

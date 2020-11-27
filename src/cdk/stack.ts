@@ -99,7 +99,7 @@ pm2 startup`
 		})
 
 		instance.connections.allowFromAnyIpv4(Port.tcp(4000))
-		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
+		instance.connections.allowFromAnyIpv4(Port.tcp(isProd ? 8333 : 18333))
 	
 		EventBus.grantPutEvents(instance.grantPrincipal)
 

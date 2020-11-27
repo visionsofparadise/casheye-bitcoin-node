@@ -68,7 +68,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			args: [1]
 		})
 	
-		logger.info({ generate1Response })
+		logger.info(generate1Response.status)
 	
 		await udelay(1000)
 	}
@@ -108,7 +108,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			args: [1]
 		})
 	
-		logger.info({ generate6Response })
+		logger.info(generate6Response.status)
 	
 		await udelay(1000)
 	}
