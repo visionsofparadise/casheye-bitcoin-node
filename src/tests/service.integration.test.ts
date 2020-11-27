@@ -70,10 +70,8 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		logger.info(generate1Response.status)
 	
-		await udelay(1000)
+		await udelay(500)
 	}
-
-	await udelay(5 * 1000)
 
 	const address = testAddressGenerator()
 
@@ -93,7 +91,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	logger.info(sendToAddressResponse.data)
 
-	await udelay(5 * 1000)
+	await udelay(3 * 1000)
 
 	const getAddress1 = await client.post(instanceUrl + 'rpc', {
 		command: 'getAddressInfo',
@@ -110,10 +108,8 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		logger.info(generate6Response.status)
 	
-		await udelay(1000)
+		await udelay(500)
 	}
-
-	await udelay(2 * 1000)
 
 	const getAddress2 = await client.post(instanceUrl + 'rpc', {
 		command: 'getAddressInfo',
@@ -151,7 +147,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	expect(addAddress2Response.status).toBe(204);
 
-	await udelay(5 * 1000)
+	await udelay(3 * 1000)
 
 	const getAddress4 = await client.post(instanceUrl + 'rpc', {
 		command: 'getAddressInfo',
@@ -165,7 +161,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		args: [address2, 1]
 	})
 
-	await udelay(5 * 1000)
+	await udelay(3 * 1000)
 
 	const getAddress5 = await client.post(instanceUrl + 'rpc', {
 		command: 'getAddressInfo',

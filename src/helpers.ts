@@ -1,13 +1,18 @@
 import AWS from 'aws-sdk';
 import spawnLogger from 'envlog';
 import { createEventHelper } from 'xkore-lambda-helpers/dist/util/eventHelper';
-import { dbClient } from 'xkore-lambda-helpers/dist/util/dbClient';
 
 export const isProd = process.env.STAGE === 'prod';
 export const isTest = !process.env.JEST_WORKER_ID;
 
 export const eventbridge = isTest
-	? new AWS.EventBridge({ apiVersion: '2015-10-07' })
+	? new AWS.EventBridge({ 
+		apiVersion: '2015-10-07',
+		credentials: {
+			accessKeyId: process.env.WATCHER_INSTANCE_USER!,
+			secretAccessKey: process.env.WATCHER_INSTANCE_PASS!
+		}
+	})
 	: (({
 			putEvents: (_: any) => ({
 				promise: () => 'success'
@@ -15,10 +20,6 @@ export const eventbridge = isTest
 	  } as unknown) as AWS.EventBridge);
 
 export const eventHelper = createEventHelper({ eventbridge: eventbridge as any, Source: `casheye-${process.env.STAGE!}` });
-
-export const docDb = new AWS.DynamoDB.DocumentClient()
-
-export const db = dbClient(docDb, process.env.DYNAMODB_TABLE!);
 
 export const logger = spawnLogger({
 	envKey: 'STAGE',

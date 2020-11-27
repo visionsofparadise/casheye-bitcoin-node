@@ -1,4 +1,4 @@
-import { CfnOutput, Construct, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
+import { CfnOutput, Construct, SecretValue, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { EventBus } from '@aws-cdk/aws-events';
@@ -73,7 +73,7 @@ npm i
 npm run test
 npm run compile
 npm i -g pm2
-STAGE=${props.STAGE} SECRET=${secret} pm2 start dist/index.js
+STAGE=${props.STAGE} SECRET=${secret} WATCHER_INSTANCE_USER=${SecretValue.secretsManager('WATCHER_INSTANCE_USER')} WATCHER_INSTANCE_PASS=${SecretValue.secretsManager('WATCHER_INSTANCE_PASS')} pm2 start dist/index.js
 pm2 startup`
 
 		const instance = new Instance(this, 'Instance', {

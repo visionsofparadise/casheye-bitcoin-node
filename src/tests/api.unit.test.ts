@@ -84,7 +84,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			args: [1]
 		})
 	
-		await udelay(300)
+		await udelay(200)
 	}
 
 	const address = 'mwfjApeUk2uwAWuikWmjqnixW7Lg1mHNHE'
@@ -120,7 +120,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			args: [1]
 		})
 	
-		await udelay(300)
+		await udelay(200)
 	}
 
 	await udelay(3 * 1000)
