@@ -9,7 +9,7 @@
 		"posttest": "rm -r ~/.bitcoin/regtest",
 		"synth": "cdk synth",
 		"integration": "jest integration",
-		"start": "sudo node dist/index.js"
+		"start": "node dist/index.js"
 	},
 	"repository": {
 		"type": "git",

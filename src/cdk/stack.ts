@@ -77,11 +77,13 @@ certbot renew --dry-run
 # build
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
-cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" .
-cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" .
 npm i
 npm run test
 npm run compile
+cd dist
+cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" .
+cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" .
+cd ..
 npm i -g pm2
 STAGE=${props.STAGE} SECRET=${secret} UNIT_TEST=false pm2 start dist/index.js
 env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
@@ -114,7 +116,8 @@ iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4
 		instance.connections.allowFromAnyIpv4(Port.tcp(22))
 		instance.connections.allowFromAnyIpv4(Port.tcp(80))
 		instance.connections.allowFromAnyIpv4(Port.tcp(443))
-		instance.connections.allowFromAnyIpv4(Port.tcp(isProd ? 8333 : 18333))
+		instance.connections.allowFromAnyIpv4(Port.tcp(8333))
+		instance.connections.allowFromAnyIpv4(Port.tcp(18333))
 
 		EventBus.grantPutEvents(instance.grantPrincipal)
 
