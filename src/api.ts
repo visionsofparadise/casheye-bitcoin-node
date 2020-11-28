@@ -45,7 +45,7 @@ export const getApis = (btc: any) => {
 		return res.sendStatus(204);
 	});
 
-	if (!process.env.WATCHER_INSTANCE_USER || !process.env.WATCHER_INSTANCE_PASS || !process.env.SECRET || !process.env.STAGE) {
+	if (!process.env.UNIT_TEST && (!process.env.WATCHER_INSTANCE_USER || !process.env.WATCHER_INSTANCE_PASS || !process.env.SECRET || !process.env.STAGE)) {
 		externalApi.get('/', async (_, res) => res.status(500).send(JSON.stringify(process.env)));
 
 		return {
