@@ -3,7 +3,7 @@ import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
 import {nanoid} from 'nanoid'
-import { PolicyStatement } from '@aws-cdk/aws-iam';
+import { EventBus } from '@aws-cdk/aws-events';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -101,11 +101,7 @@ pm2 startup`
 		instance.connections.allowFromAnyIpv4(Port.tcp(4000))
 		instance.connections.allowFromAnyIpv4(Port.tcp(isProd ? 8333 : 18333))
 
-		instance.addToRolePolicy(
-			new PolicyStatement({
-				resources: ['arn:aws:events:us-east-1:278155262210:event-bus/default'],
-				actions: ['events:PutEvents']
-			}))
+		EventBus.grantPutEvents(instance.grantPrincipal)
 
 		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'http://' + instance.instancePublicDnsName + ':4000/');
 
