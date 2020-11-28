@@ -42,12 +42,16 @@ export const getApis = (btc: any) => {
 		}
 	})
 	
-	externalApi.post('/address', async (req, res, next) => {
+	externalApi.post('/address', async (req, res) => {
 		const { address, duration } = req.body;
+
+		try {
+			await watchAddress(address, duration, btc);
 	
-		await watchAddress(address, duration, btc).catch(next);
-	
-		return res.sendStatus(204);
+			return res.sendStatus(204);
+		} catch (err) {
+			return res.status(500).send(err)
+		}
 	});
 	
 	!isProd && externalApi.post('/rpc', async (req, res, next) => {	

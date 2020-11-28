@@ -6,7 +6,8 @@ import { testAddressGenerator } from '../testAddressGenerator'
 const client = axios.create({
 	headers: {
 		authorization: process.env.SECRET
-	}
+	},
+	
 })
 
 beforeAll(async () => {
