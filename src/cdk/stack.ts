@@ -73,7 +73,7 @@ npm i
 npm run test
 npm run compile
 npm i -g pm2
-STAGE=${props.STAGE} SECRET=${secret} WATCHER_INSTANCE_USER=${SecretValue.secretsManager('WATCHER_INSTANCE_USER')} WATCHER_INSTANCE_PASS=${SecretValue.secretsManager('WATCHER_INSTANCE_PASS')} pm2 start dist/index.js
+STAGE=${props.STAGE} SECRET=${secret} WATCHER_INSTANCE_USER=${SecretValue.secretsManager('WATCHER_INSTANCE_USER').toString()} WATCHER_INSTANCE_PASS=${SecretValue.secretsManager('WATCHER_INSTANCE_PASS').toString()} UNIT_TEST=false pm2 start dist/index.js
 pm2 startup`
 
 		const instance = new Instance(this, 'Instance', {
