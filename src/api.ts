@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 import { confirm } from './confirm';
 import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
-import { isProd } from './helpers';
+import { eventbridge, isProd } from './helpers';
 
 export const getApis = (btc: any) => {
 	const api = express();
@@ -50,7 +50,7 @@ export const getApis = (btc: any) => {
 	
 			return res.sendStatus(204);
 		} catch (err) {
-			return res.status(500).send(err)
+			return res.status(500).send({err, config: eventbridge.config})
 		}
 	});
 	
