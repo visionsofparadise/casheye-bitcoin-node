@@ -54,7 +54,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				runOrder: testAppStage.nextSequentialRunOrder(),
 				additionalArtifacts: [sourceArtifact],
 				commands: [
-					'sleep 500s',
+					'sleep 600s',
 					'STAGE=test',
 					`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
 					`UTILITY_API_URL=${Fn.importValue('casheye-utility-test-apiUrl')}`,
