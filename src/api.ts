@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 import { confirm } from './confirm';
 import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
-import { eventbridge, isProd } from './helpers';
+import { isProd } from './helpers';
 
 export const getApis = (btc: any) => {
 	const api = express();
@@ -45,21 +45,17 @@ export const getApis = (btc: any) => {
 	externalApi.post('/address', async (req, res) => {
 		const { address, duration } = req.body;
 
-		try {
 			await watchAddress(address, duration, btc);
 	
 			return res.sendStatus(204);
-		} catch (err) {
-			return res.status(500).send({err, config: eventbridge.config})
-		}
 	});
 	
-	!isProd && externalApi.post('/rpc', async (req, res, next) => {	
+	!isProd && externalApi.post('/rpc', async (req, res) => {	
 		const { command, args } = req.body as { command: string; args?: Array<any> };
 
 		const argsArray = args || [] 
 
-		const result = await btc.rpc[command](...argsArray).catch(next)
+		const result = await btc.rpc[command](...argsArray)
 
 		return result ? res.status(200).send(result) : res.sendStatus(204)
 	})
