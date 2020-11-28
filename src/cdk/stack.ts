@@ -77,16 +77,13 @@ certbot renew --dry-run
 # build
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
+cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" .
+cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" .
 npm i
 npm run test
 npm run compile
-cd dist
-cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" .
-cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" .
-cd ..
 npm i -g pm2
 STAGE=${props.STAGE} SECRET=${secret} UNIT_TEST=false pm2 start dist/index.js
-env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
 
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4000`
 
