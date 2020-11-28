@@ -1,4 +1,4 @@
-import { CfnOutput, Construct, SecretValue, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
+import { CfnOutput, Construct, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
@@ -73,7 +73,7 @@ npm i
 npm run test
 npm run compile
 npm i -g pm2
-STAGE=${props.STAGE} SECRET=${secret} AWS_ACCESS_KEY_ID=${SecretValue.secretsManager('WATCHER_INSTANCE_USER')} AWS_SECRET_ACCESS_KEY=${SecretValue.secretsManager('WATCHER_INSTANCE_PASS')} UNIT_TEST=false pm2 start dist/index.js
+STAGE=${props.STAGE} SECRET=${secret} UNIT_TEST=false pm2 start dist/index.js
 pm2 startup`
 
 		const instance = new Instance(this, 'Instance', {
