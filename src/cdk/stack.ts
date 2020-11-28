@@ -2,7 +2,7 @@ import { CfnOutput, Construct, SecretValue, Stack, StackProps,  Stage, StageProp
 import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
-import {nanoid} from 'nanoid'
+import {nanoid, customAlphabet, urlAlphabet } from 'nanoid'
 import { EventBus } from '@aws-cdk/aws-events';
 import { ARecord, PublicHostedZone, RecordTarget } from '@aws-cdk/aws-route53';
 
@@ -58,11 +58,11 @@ export class CasheyeAddressWatcherStack extends Stack {
 
 		const config = isProd ? prodEC2Config : testEC2Config
 		const secret = nanoid()		
-		const nodeName = deploymentName + '-node'
+		const nodeName = deploymentName + '-node-' + customAlphabet(urlAlphabet, 5)()
 		const dnsName = nodeName + '.casheye.io'
 		const shebang = `#!/bin/bash
 
-# installation
+# install
 apt-get update -y
 apt install nodejs npm -y
 apt-get install certbot -y
@@ -72,7 +72,7 @@ INSTANCE_DNS_NAME=${dnsName}
 certbot certonly --standalone -d $INSTANCE_DNS_NAME -n --agree-tos --email admin@casheye.io
 certbot renew --dry-run
 
-# set up project
+# build
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
 cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" .
