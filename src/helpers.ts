@@ -13,11 +13,7 @@ export const eventbridge = isUnitTest
 	} as unknown) as AWS.EventBridge)
 	: new AWS.EventBridge({ 
 			apiVersion: '2015-10-07',
-			region: 'us-east-1',
-			credentials: {
-				accessKeyId: process.env.WATCHER_INSTANCE_USER!,
-				secretAccessKey: process.env.WATCHER_INSTANCE_PASS!
-			}
+			region: 'us-east-1'
 		})
 
 export const eventHelper = createEventHelper({ eventbridge, Source: `casheye-${process.env.STAGE!}` });
