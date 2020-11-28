@@ -63,113 +63,119 @@ it('rejects unauthorized', async () => {
 it('adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires', async () => {
 	expect.assertions(7)
 
-	for (let i = 0; i < 101; i++ ) {
-		const generate1Response = await client.post(instanceUrl + 'rpc', {
+	try {
+		for (let i = 0; i < 101; i++ ) {
+			const generate1Response = await client.post(instanceUrl + 'rpc', {
+				command: 'generate',
+				args: [1]
+			})
+		
+			logger.info(generate1Response.status)
+		
+			await udelay(500)
+		}
+	
+		const address = testAddressGenerator()
+	
+		const addAddressResponse = await client.post(instanceUrl + 'address', {
+			address,
+			duration: 5 * 60 * 1000
+		})
+	
+		logger.log(addAddressResponse.data);
+	
+		expect(addAddressResponse.status).toBe(204);
+	
+		const sendToAddressResponse = await client.post(instanceUrl + 'rpc', {
+			command: 'sendToAddress',
+			args: [address, 1]
+		})
+	
+		logger.info(sendToAddressResponse.data)
+	
+		await udelay(3 * 1000)
+	
+		const getAddress1 = await client.post(instanceUrl + 'rpc', {
+			command: 'getAddressInfo',
+			args: [address]
+		})
+	
+		expect(getAddress1.data.label).toBe('confirming')
+	
+		for (let i = 0; i < 6; i++ ) {
+			const generate6Response = await client.post(instanceUrl + 'rpc', {
+				command: 'generate',
+				args: [1]
+			})
+		
+			logger.info(generate6Response.status)
+		
+			await udelay(500)
+		}
+	
+		const getAddress2 = await client.post(instanceUrl + 'rpc', {
+			command: 'getAddressInfo',
+			args: [address]
+		})
+	
+		expect(getAddress2.data.label).toBe('confirming')
+	
+		await client.post(instanceUrl + 'rpc', {
 			command: 'generate',
 			args: [1]
 		})
 	
-		logger.info(generate1Response.status)
+		await udelay(2 * 1000)
 	
-		await udelay(500)
-	}
-
-	const address = testAddressGenerator()
-
-	const addAddressResponse = await client.post(instanceUrl + 'address', {
-		address,
-		duration: 5 * 60 * 1000
-	})
-
-	logger.log(addAddressResponse.data);
-
-	expect(addAddressResponse.status).toBe(204);
-
-	const sendToAddressResponse = await client.post(instanceUrl + 'rpc', {
-		command: 'sendToAddress',
-		args: [address, 1]
-	})
-
-	logger.info(sendToAddressResponse.data)
-
-	await udelay(3 * 1000)
-
-	const getAddress1 = await client.post(instanceUrl + 'rpc', {
-		command: 'getAddressInfo',
-		args: [address]
-	})
-
-	expect(getAddress1.data.label).toBe('confirming')
-
-	for (let i = 0; i < 6; i++ ) {
-		const generate6Response = await client.post(instanceUrl + 'rpc', {
-			command: 'generate',
-			args: [1]
+		const getAddress3 = await client.post(instanceUrl + 'rpc', {
+			command: 'getAddressInfo',
+			args: [address]
 		})
 	
-		logger.info(generate6Response.status)
+		expect(getAddress3.data.label).toBe('used')
 	
-		await udelay(500)
+		/**
+		 *  ADDRESS EXPIRATION
+		 */
+	
+		const address2 = testAddressGenerator()
+	
+		const addAddress2Response = await client.post(instanceUrl + 'address', {
+			address: address2,
+			duration: 1 * 1000
+		})
+	
+		logger.log(addAddress2Response.data);
+	
+		expect(addAddress2Response.status).toBe(204);
+	
+		await udelay(3 * 1000)
+	
+		const getAddress4 = await client.post(instanceUrl + 'rpc', {
+			command: 'getAddressInfo',
+			args: [address2]
+		})
+	
+		expect(getAddress4.data.label).toBe('expired')
+	
+		await client.post(instanceUrl + 'rpc', {
+			command: 'sendToAddress',
+			args: [address2, 1]
+		})
+	
+		await udelay(3 * 1000)
+	
+		const getAddress5 = await client.post(instanceUrl + 'rpc', {
+			command: 'getAddressInfo',
+			args: [address2]
+		})
+	
+		expect(getAddress5.data.label).toBe('expired')
+	} catch (err) {
+		logger.error(err)
+
+		throw err
 	}
-
-	const getAddress2 = await client.post(instanceUrl + 'rpc', {
-		command: 'getAddressInfo',
-		args: [address]
-	})
-
-	expect(getAddress2.data.label).toBe('confirming')
-
-	await client.post(instanceUrl + 'rpc', {
-		command: 'generate',
-		args: [1]
-	})
-
-	await udelay(2 * 1000)
-
-	const getAddress3 = await client.post(instanceUrl + 'rpc', {
-		command: 'getAddressInfo',
-		args: [address]
-	})
-
-	expect(getAddress3.data.label).toBe('used')
-
-	/**
-	 *  ADDRESS EXPIRATION
-	 */
-
-	const address2 = testAddressGenerator()
-
-	const addAddress2Response = await client.post(instanceUrl + 'address', {
-		address: address2,
-		duration: 1 * 1000
-	})
-
-	logger.log(addAddress2Response.data);
-
-	expect(addAddress2Response.status).toBe(204);
-
-	await udelay(3 * 1000)
-
-	const getAddress4 = await client.post(instanceUrl + 'rpc', {
-		command: 'getAddressInfo',
-		args: [address2]
-	})
-
-	expect(getAddress4.data.label).toBe('expired')
-
-	await client.post(instanceUrl + 'rpc', {
-		command: 'sendToAddress',
-		args: [address2, 1]
-	})
-
-	await udelay(3 * 1000)
-
-	const getAddress5 = await client.post(instanceUrl + 'rpc', {
-		command: 'getAddressInfo',
-		args: [address2]
-	})
-
-	expect(getAddress5.data.label).toBe('expired')
-
+	
 	return;
 }, 10 * 60 * 1000);
