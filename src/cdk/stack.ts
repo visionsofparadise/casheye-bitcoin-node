@@ -64,11 +64,12 @@ export class CasheyeAddressWatcherStack extends Stack {
 
 # install
 apt-get update -y
+add-apt-repository ppa:certbot/certbot -y
 apt install nodejs npm -y
 apt-get install certbot -y
+apt-get upgrade -y
 
 # ssl
-sleep 180s
 INSTANCE_DNS_NAME=${dnsName}
 certbot certonly --standalone -d $INSTANCE_DNS_NAME -n --agree-tos --email certs@casheye.io
 certbot renew --dry-run
