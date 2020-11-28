@@ -69,15 +69,15 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			})
 		);
 
-		pipeline.addStage('Approval').addManualApprovalAction({
-			actionName: 'Approval'
-		})
+		// pipeline.addStage('Approval').addManualApprovalAction({
+		// 	actionName: 'Approval'
+		// })
 
-		const prodApp = new CasheyeAddressWatcherStage(this, serviceName + '-prod', {
-			STAGE: 'prod'
-		});
+		// const prodApp = new CasheyeAddressWatcherStage(this, serviceName + '-prod', {
+		// 	STAGE: 'prod'
+		// });
 
-		pipeline.addApplicationStage(prodApp);
+		// pipeline.addApplicationStage(prodApp);
 	}
 }
 
