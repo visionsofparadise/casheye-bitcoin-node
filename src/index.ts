@@ -6,7 +6,7 @@ import https from 'https'
 const { internalApi, externalApi } = getApis(btc)
 
 const internalPort = 3000
-const externalPort = 4000
+const externalPort = process.env.PORT || 4000
 
 internalApi.listen(internalPort, () => console.log(`Internal API listening on port ${internalPort}`))
 
