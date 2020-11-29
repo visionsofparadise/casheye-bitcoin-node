@@ -11,8 +11,8 @@ const externalPort = 4000
 internalApi.listen(internalPort, () => console.log(`Internal API listening on port ${internalPort}`))
 
 const httpsServer = https.createServer({
-  key: fs.readFileSync('../privkey.pem'),
-  cert: fs.readFileSync('../fullchain.pem'),
+  key: fs.readFileSync('./privkey.pem'),
+  cert: fs.readFileSync('./fullchain.pem'),
 }, externalApi);
 
 httpsServer.listen(externalPort, () => {

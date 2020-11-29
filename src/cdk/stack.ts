@@ -77,8 +77,8 @@ certbot renew --dry-run
 # build
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
-cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" .
-cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" .
+cp "/etc/letsencrypt/live/${dnsName}/privkey.pem" dist
+cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" dist
 npm i
 npm run test
 npm run compile
