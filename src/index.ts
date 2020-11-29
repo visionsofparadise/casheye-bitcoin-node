@@ -6,13 +6,13 @@ import https from 'https'
 const { internalApi, externalApi } = getApis(btc)
 
 const internalPort = 3000
-const externalPort = process.env.PORT || 4000
+const externalPort = 4000
 
 internalApi.listen(internalPort, () => console.log(`Internal API listening on port ${internalPort}`))
 
 const httpsServer = https.createServer({
-  key: fs.readFileSync('./privkey.pem'),
-  cert: fs.readFileSync('./fullchain.pem'),
+  key: fs.readFileSync(__dirname + '/privkey.pem', 'utf8'),
+  cert: fs.readFileSync(__dirname + '/fullchain.pem', 'utf8'),
 }, externalApi);
 
 httpsServer.listen(externalPort, () => {
