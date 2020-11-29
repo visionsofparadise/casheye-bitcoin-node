@@ -82,8 +82,7 @@ cp "/etc/letsencrypt/live/${dnsName}/fullchain.pem" .
 npm i
 npm run test
 npm run compile
-npm i -g pm2
-STAGE=${props.STAGE} SECRET=${secret} UNIT_TEST=false pm2 start dist/index.js
+STAGE=${props.STAGE} SECRET=${secret} UNIT_TEST=false npm run startd
 
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4000`
 
