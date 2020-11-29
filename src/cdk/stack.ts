@@ -96,7 +96,7 @@ env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd 
 			})
 		})
 
-		instance.connections.allowFromAnyIpv4(Port.tcp(80))
+		instance.connections.allowFromAnyIpv4(Port.tcp(4000))
 		instance.connections.allowFromAnyIpv4(Port.tcp(isProd ? 8333 : 18333))
 
 		EventBus.grantPutEvents(instance.grantPrincipal)
