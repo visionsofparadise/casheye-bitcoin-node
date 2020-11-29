@@ -5,6 +5,8 @@ import { confirm } from './confirm';
 import { txDetected } from './txDetected';
 import { watchAddress } from './watchAddress';
 import { isProd } from './helpers';
+import dotenv from 'dotenv'
+dotenv.config()
 
 export const getApis = (btc: any) => {
 	const api = express();
@@ -33,7 +35,7 @@ export const getApis = (btc: any) => {
 	externalApi.get('/', async (_, res) => res.sendStatus(200));
 	
 	externalApi.use(async (req, res, next) => {
-		const secret = process.env.SECRET
+		const secret = process.env.SECRET || 'test'
 
 		if (req.headers.authorization !== secret) {
 			return res.sendStatus(401)

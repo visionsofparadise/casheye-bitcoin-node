@@ -2,7 +2,7 @@ import { CfnOutput, Construct, Stack, StackProps,  Stage, StageProps } from '@aw
 import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
-import {nanoid, customAlphabet, urlAlphabet } from 'nanoid'
+import {nanoid} from 'nanoid'
 import { EventBus } from '@aws-cdk/aws-events';
 
 const prodEC2Config = {
@@ -57,7 +57,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 
 		const config = isProd ? prodEC2Config : testEC2Config
 		const secret = nanoid()		
-		const nodeName = deploymentName + '-node-' + customAlphabet(urlAlphabet, 5)()
+		const nodeName = deploymentName + '-node-0'
 		const shebang = `#!/bin/bash
 
 # install
@@ -71,7 +71,9 @@ npm i
 npm run test
 npm run compile
 npm i -g pm2
-STAGE=${props.STAGE} SECRET=${secret} UNIT_TEST=false pm2 start dist/index.js
+echo "SECRET=${secret}" >> ~/.env
+echo "STAGE=${props.STAGE}" >> ~/.env
+pm2 start dist/index.js
 env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu`
 
 		const instance = new Instance(this, 'Instance', {
