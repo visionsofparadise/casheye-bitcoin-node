@@ -79,6 +79,8 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		}
 	
 		const address = testAddressGenerator()
+
+		logger.info(QueueUrl)
 	
 		const addAddressResponse = await sqs.sendMessage({
 			QueueUrl,
