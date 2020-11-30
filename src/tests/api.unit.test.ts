@@ -4,8 +4,9 @@ import udelay from 'udelay'
 import { btc } from '../bitcoind'
 import axios from 'axios'
 import kill from 'tree-kill'
+import {nanoid} from 'nanoid'
 
-const secret = 'test'
+const secret = nanoid()
 process.env.SECRET = secret
 
 const { internalApi, externalApi } = getApis(btc)
