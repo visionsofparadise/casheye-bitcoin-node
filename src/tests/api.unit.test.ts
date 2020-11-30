@@ -4,20 +4,10 @@ import udelay from 'udelay'
 import { btc } from '../bitcoind'
 import axios from 'axios'
 import kill from 'tree-kill'
-import {nanoid} from 'nanoid'
 import { getWatcher } from '../addressWatcher'
-
-const secret = nanoid()
-process.env.SECRET = secret
 
 const { internalApi, externalApi } = getApis(btc)
 const watcher = getWatcher(btc)
-
-const client = axios.create({
-	headers: {
-		authorization: secret
-	}
-})
 
 beforeAll(async () => {
 	externalApi.listen(4000, () => console.log('Internal API listening on port 4000'))
@@ -32,7 +22,7 @@ beforeAll(async () => {
 const externalURL = 'http://127.0.0.1:4000/'
 
 afterAll(async () => {
-	await client.post(externalURL + 'rpc', {
+	await axios.post(externalURL + 'rpc', {
 		command: 'stop'
 	})
 
@@ -58,7 +48,7 @@ it('health check', async () => {
 it('executes rpc command', async () => {
 	expect.assertions(1)
 
-	const response = await client.post(externalURL + 'rpc', {
+	const response = await axios.post(externalURL + 'rpc', {
 		command: 'getBlockchainInfo'
 	})
 
@@ -69,21 +59,11 @@ it('executes rpc command', async () => {
 	return;
 });
 
-it('rejects unauthorized', async () => {
-	expect.assertions(1)
-
-	await axios.post(externalURL + 'rpc', {
-		command: 'getBlockchainInfo'
-	}).catch(error => expect(error).toBeDefined())
-
-	return;
-});
-
 it('adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires', async () => {
 	expect.assertions(7)
 
 	for (let i = 0; i <= 101; i++ ) {
-		await client.post(externalURL + 'rpc', {
+		await axios.post(externalURL + 'rpc', {
 			command: 'generate',
 			args: [1]
 		})
@@ -107,7 +87,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	await udelay(3 * 1000)
 
-	const sendToAddressResponse = await client.post(externalURL + 'rpc', {
+	const sendToAddressResponse = await axios.post(externalURL + 'rpc', {
 		command: 'sendToAddress',
 		args: [address, 1]
 	})
@@ -116,7 +96,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	await udelay(3 * 1000)
 
-	const getAddress1 = await client.post(externalURL + 'rpc', {
+	const getAddress1 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
 		args: [address]
 	})
@@ -124,7 +104,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	expect(getAddress1.data.label).toBe('confirming')
 
 	for (let i = 0; i < 6; i++ ) {
-		await client.post(externalURL + 'rpc', {
+		await axios.post(externalURL + 'rpc', {
 			command: 'generate',
 			args: [1]
 		})
@@ -134,21 +114,21 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	await udelay(3 * 1000)
 
-	const getAddress2 = await client.post(externalURL + 'rpc', {
+	const getAddress2 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
 		args: [address]
 	})
 
 	expect(getAddress2.data.label).toBe('confirming')
 
-	await client.post(externalURL + 'rpc', {
+	await axios.post(externalURL + 'rpc', {
 		command: 'generate',
 		args: [1]
 	})
 
 	await udelay(3 * 1000)
 
-	const getAddress3 = await client.post(externalURL + 'rpc', {
+	const getAddress3 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
 		args: [address]
 	})
@@ -175,21 +155,21 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	await udelay(5 * 1000)
 
-	const getAddress4 = await client.post(externalURL + 'rpc', {
+	const getAddress4 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
 		args: [address2]
 	})
 
 	expect(getAddress4.data.label).toBe('expired')
 
-	await client.post(externalURL + 'rpc', {
+	await axios.post(externalURL + 'rpc', {
 		command: 'sendToAddress',
 		args: [address2, 1]
 	})
 
 	await udelay(3 * 1000)
 
-	const getAddress5 = await client.post(externalURL + 'rpc', {
+	const getAddress5 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
 		args: [address2]
 	})

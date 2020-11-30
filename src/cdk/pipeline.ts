@@ -65,8 +65,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				],
 				useOutputs: {
 					QUEUE_URL: pipeline.stackOutput(testApp.queueUrl),
-					INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl),
-					SECRET: pipeline.stackOutput(testApp.secret)
+					INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl)
 				},
 				rolePolicyStatements: [new PolicyStatement({
 					actions: ['sqs:SendMessage', 'sqs:GetQueueAttributes', 'sqs:GetQueueUrl'],

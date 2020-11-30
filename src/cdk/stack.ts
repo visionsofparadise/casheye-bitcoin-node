@@ -2,7 +2,6 @@ import { CfnOutput, Construct, Duration, Stack, StackProps,  Stage, StageProps }
 import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
-import {nanoid} from 'nanoid'
 import { EventBus } from '@aws-cdk/aws-events';
 import { Queue } from '@aws-cdk/aws-sqs';
 
@@ -19,7 +18,6 @@ const testEC2Config = {
 export class CasheyeAddressWatcherStage extends Stage {	
 	public readonly queueUrl: CfnOutput;
 	public readonly instanceUrl: CfnOutput;
-	public readonly secret: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string }) {
 		super(scope, id, props);
@@ -34,14 +32,12 @@ export class CasheyeAddressWatcherStage extends Stage {
 
 		this.queueUrl = stack.queueUrl
 		this.instanceUrl = stack.instanceUrl
-		this.secret = stack.secret
 	}
 }
 
 export class CasheyeAddressWatcherStack extends Stack {
 	public readonly queueUrl: CfnOutput;
 	public readonly instanceUrl: CfnOutput;
-	public readonly secret: CfnOutput;
 
 	get availabilityZones(): string[] {
     return ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1e', 'us-east-1f'];
@@ -68,9 +64,9 @@ export class CasheyeAddressWatcherStack extends Stack {
 		this.queueUrl = createOutput(this, deploymentName, 'queueUrl', queue.queueUrl);
 
 		const config = isProd ? prodEC2Config : testEC2Config
-		const secret = nanoid()		
 		const nodeName = deploymentName + '-node-0'
 		const shebang = `#!/bin/bash
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 # install
 apt-get update -y
@@ -83,7 +79,7 @@ npm i
 npm run test
 npm run compile
 npm i -g pm2
-SECRET=${secret} STAGE=${props.STAGE} QUEUE_URL=${queue.queueUrl} node genEnv.js
+STAGE=${props.STAGE} QUEUE_URL=${queue.queueUrl} node genEnv.js
 pm2 start dist/index.js
 env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu`
 
@@ -116,6 +112,5 @@ env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd 
 		queue.grantConsumeMessages(instance.grantPrincipal)
 
 		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'http://' + instance.instancePublicDnsName + ':4000/');
-		this.secret = createOutput(this, deploymentName, 'secret', secret);
 	}
 }

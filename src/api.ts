@@ -3,7 +3,6 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { confirm } from './confirm';
 import { txDetected } from './txDetected';
-import { watchAddress } from './watchAddress';
 import { isProd } from './helpers';
 import dotenv from 'dotenv'
 dotenv.config()
@@ -33,24 +32,6 @@ export const getApis = (btc: any) => {
 	});
 
 	externalApi.get('/', async (_, res) => res.sendStatus(200));
-	
-	externalApi.use(async (req, res, next) => {
-		const secret = process.env.SECRET || 'test'
-
-		if (req.headers.authorization !== secret) {
-			return res.sendStatus(401)
-		} else {
-			return next()
-		}
-	})
-	
-	externalApi.post('/address', async (req, res) => {
-		const { address, duration } = req.body;
-
-			await watchAddress(address, duration, btc);
-	
-			return res.sendStatus(204);
-	});
 	
 	!isProd && externalApi.post('/rpc', async (req, res) => {	
 		const { command, args } = req.body as { command: string; args?: Array<any> };
