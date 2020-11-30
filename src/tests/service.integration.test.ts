@@ -94,7 +94,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		expect(addAddressResponse.MessageId).toBeDefined();
 
-		await udelay(5 * 1000)
+		await udelay(3 * 1000)
 	
 		const sendToAddressResponse = await client.post(instanceUrl + 'rpc', {
 			command: 'sendToAddress',
@@ -103,7 +103,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		logger.info(sendToAddressResponse.data)
 	
-		await udelay(5 * 1000)
+		await udelay(3 * 1000)
 	
 		const getAddress1 = await client.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
@@ -164,7 +164,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		expect(addAddress2Response.MessageId).toBeDefined();
 	
-		await udelay(10 * 1000)
+		await udelay(6 * 1000)
 	
 		const getAddress4 = await client.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',

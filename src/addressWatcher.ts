@@ -1,6 +1,8 @@
 import { logger, sqs } from './helpers'
 import { watchAddress } from './watchAddress'
 import { DeleteMessageRequest } from 'aws-sdk/clients/sqs'
+import dotenv from 'dotenv'
+dotenv.config()
 
 export const getWatcher = (btc: any) => {
 	const watch = async () => {
@@ -38,7 +40,7 @@ export const getWatcher = (btc: any) => {
 				}
 			}))
 	
-			const success = results.filter(result => result)
+			const success = results.filter(result => result.isWatched)
 
 			await Promise.all(success.map(async result => {
 				await sqs.deleteMessage({
