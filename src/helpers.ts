@@ -1,6 +1,7 @@
 import AWS from 'aws-sdk';
 import spawnLogger from 'envlog';
 import { createEventHelper } from 'xkore-lambda-helpers/dist/util/eventHelper';
+import mockSQS from '@abetomo/simply-imitated-sqs'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -19,6 +20,13 @@ export const eventbridge = isUnitTest
 		})
 
 export const eventHelper = createEventHelper({ eventbridge, Source: `casheye-${process.env.STAGE!}` });
+
+export const sqs = isUnitTest 
+	? new mockSQS as AWS.SQS
+	: new AWS.SQS({
+			apiVersion: '2012-11-05',
+			region: 'us-east-1'
+		});
 
 export const logger = spawnLogger({
 	envKey: 'STAGE',

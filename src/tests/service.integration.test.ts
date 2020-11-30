@@ -1,14 +1,16 @@
-import { logger } from '../helpers';
+import { logger, sqs } from '../helpers';
 import axios from 'axios';
 import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
 
 const client = axios.create({
 	headers: {
-		authorization: process.env.SECRET
+		authorization: process.env.SECRET!
 	},
 	
 })
+
+const QueueUrl = process.env.QUEUE_URL!
 
 beforeAll(async () => {
 	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
@@ -77,14 +79,19 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const address = testAddressGenerator()
 	
-		const addAddressResponse = await client.post(instanceUrl + 'address', {
-			address,
-			duration: 5 * 60 * 1000
-		})
+		const addAddressResponse = await sqs.sendMessage({
+			QueueUrl,
+			MessageBody: JSON.stringify({
+				address,
+				duration: 5 * 60 * 1000
+			})
+		}).promise()
 	
-		logger.log(addAddressResponse.data);
+		logger.log(addAddressResponse);
 	
-		expect(addAddressResponse.status).toBe(204);
+		expect(addAddressResponse.MessageId).toBeDefined();
+
+		await udelay(3 * 1000)
 	
 		const sendToAddressResponse = await client.post(instanceUrl + 'rpc', {
 			command: 'sendToAddress',
@@ -140,14 +147,17 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const address2 = testAddressGenerator()
 	
-		const addAddress2Response = await client.post(instanceUrl + 'address', {
-			address: address2,
-			duration: 1 * 1000
-		})
+		const addAddress2Response = await sqs.sendMessage({
+			QueueUrl: 'test',
+			MessageBody: JSON.stringify({
+				address: address2,
+				duration: 1 * 1000
+			})
+		}).promise()
 	
-		logger.log(addAddress2Response.data);
+		logger.log(addAddress2Response);
 	
-		expect(addAddress2Response.status).toBe(204);
+		expect(addAddress2Response.MessageId).toBeDefined();
 	
 		await udelay(3 * 1000)
 	

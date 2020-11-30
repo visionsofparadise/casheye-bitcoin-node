@@ -1,15 +1,17 @@
-import { logger } from '../helpers';
+import { logger, sqs } from '../helpers';
 import { getApis } from '../api'
 import udelay from 'udelay'
 import { btc } from '../bitcoind'
 import axios from 'axios'
 import kill from 'tree-kill'
 import {nanoid} from 'nanoid'
+import { getWatcher } from '../addressWatcher'
 
 const secret = nanoid()
 process.env.SECRET = secret
 
 const { internalApi, externalApi } = getApis(btc)
+const watcher = getWatcher(btc)
 
 const client = axios.create({
 	headers: {
@@ -20,6 +22,7 @@ const client = axios.create({
 beforeAll(async () => {
 	externalApi.listen(4000, () => console.log('Internal API listening on port 4000'))
 	internalApi.listen(3000, () => console.log('Internal API listening on port 3000'))
+	watcher.watch()
 
 	await udelay(5 * 1000)
 
@@ -90,14 +93,19 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	const address = 'mwfjApeUk2uwAWuikWmjqnixW7Lg1mHNHE'
 
-	const addAddressResponse = await client.post(externalURL + 'address', {
-		address,
-		duration: 5 * 60 * 1000
-	})
+	const addAddressResponse = await sqs.sendMessage({
+		QueueUrl: 'test',
+		MessageBody: JSON.stringify({
+			address,
+			duration: 5 * 60 * 1000
+		})
+	}).promise()
 
-	logger.log(addAddressResponse.data);
+	logger.log(addAddressResponse);
 
-	expect(addAddressResponse.status).toBe(204);
+	expect(addAddressResponse.MessageId).toBeDefined();
+
+	await udelay(3 * 1000)
 
 	const sendToAddressResponse = await client.post(externalURL + 'rpc', {
 		command: 'sendToAddress',
@@ -153,14 +161,17 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	const address2 = 'mz4JoMe93Bof3SJAN6iN2yGMGtMiZab2YW'
 
-	const addAddress2Response = await client.post(externalURL + 'address', {
-		address: address2,
-		duration: 1 * 1000
-	})
+	const addAddress2Response = await sqs.sendMessage({
+		QueueUrl: 'test',
+		MessageBody: JSON.stringify({
+			address: address2,
+			duration: 1 * 1000
+		})
+	}).promise()
 
-	logger.log(addAddress2Response.data);
+	logger.log(addAddress2Response);
 
-	expect(addAddress2Response.status).toBe(204);
+	expect(addAddress2Response.MessageId).toBeDefined();
 
 	await udelay(5 * 1000)
 

@@ -17,7 +17,7 @@ export const txDetected = async (txId: string, btc: any) => {
 
 	const address = tx.details.filter(detail => detail.category === 'receive')[0]
 
-	if (tx.confirmations !== 0 || address.label !== 'watching') return;
+	if (tx.confirmations !== 0 || !address || address.label !== 'watching') return;
 
 	await btc.rpc.setLabel(address.address, 'confirming');
 
