@@ -43,11 +43,6 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			synthAction
 		});
 
-		pipeline.codePipeline.addToRolePolicy(new PolicyStatement({
-			actions: ['sqs:SendMessage', 'sqs:GetQueueAttributes', 'sqs:GetQueueUrl'],
-			resources: ['*']
-		}))
-
 		const testApp = new CasheyeAddressWatcherStage(this, serviceName + '-test', {
 			STAGE: 'test'
 		});
@@ -72,9 +67,13 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 					QUEUE_URL: pipeline.stackOutput(testApp.queueUrl),
 					INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl),
 					SECRET: pipeline.stackOutput(testApp.secret)
-				}
+				},
+				rolePolicyStatements: [new PolicyStatement({
+					actions: ['sqs:SendMessage', 'sqs:GetQueueAttributes', 'sqs:GetQueueUrl'],
+					resources: ['*']
+				})]
 			})
-		);
+		)
 
 		// pipeline.addStage('Approval').addManualApprovalAction({
 		// 	actionName: 'Approval'
