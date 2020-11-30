@@ -153,7 +153,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		const address2 = testAddressGenerator()
 	
 		const addAddress2Response = await sqs.sendMessage({
-			QueueUrl: 'test',
+			QueueUrl,
 			MessageDeduplicationId: nanoid(),
 			MessageGroupId: nanoid(),
 			MessageBody: JSON.stringify({
