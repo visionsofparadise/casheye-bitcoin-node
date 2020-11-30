@@ -2,6 +2,7 @@ import { logger, sqs } from '../helpers';
 import axios from 'axios';
 import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
+import { nanoid } from 'nanoid';
 
 const client = axios.create({
 	headers: {
@@ -81,6 +82,8 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const addAddressResponse = await sqs.sendMessage({
 			QueueUrl,
+			MessageDeduplicationId: nanoid(),
+			MessageGroupId: nanoid(),
 			MessageBody: JSON.stringify({
 				address,
 				duration: 5 * 60 * 1000
@@ -149,6 +152,8 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const addAddress2Response = await sqs.sendMessage({
 			QueueUrl: 'test',
+			MessageDeduplicationId: nanoid(),
+			MessageGroupId: nanoid(),
 			MessageBody: JSON.stringify({
 				address: address2,
 				duration: 1 * 1000
