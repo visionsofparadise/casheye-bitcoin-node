@@ -27,12 +27,10 @@ it(`adds and pays${n} addresses, then generates a block`, async () => {
 		const initFundsStart = day().unix()
 
 		for (let i = 0; i < 101; i++ ) {
-			const generate1Response = await axios.post(instanceUrl + 'rpc', {
+			await axios.post(instanceUrl + 'rpc', {
 				command: 'generate',
 				args: [1]
 			})
-		
-			logger.info(generate1Response.status)
 		
 			await udelay(500)
 		}
@@ -138,4 +136,4 @@ it(`adds and pays${n} addresses, then generates a block`, async () => {
 	}
 	
 	return;
-}, 10 * 60 * 1000);
+}, 30 * 60 * 1000);

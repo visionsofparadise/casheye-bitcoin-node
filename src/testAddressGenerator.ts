@@ -1,4 +1,3 @@
-import { logger } from "./helpers";
 import { HDPublicKey, Address, Networks } from 'bitcore-lib'
 
 export const testAddressGenerator = (n?: number) => {
@@ -11,8 +10,6 @@ export const testAddressGenerator = (n?: number) => {
 	const addressObj = new Address(derivedxPubKey.publicKey, Networks.testnet);
 
 	const address = addressObj.toString()
-
-	logger.info({ address });
 
 	return address
 }
