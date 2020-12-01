@@ -30,4 +30,6 @@ export const startBTC = () => {
 	bitcoind(isProd ? prodConfig : testConfig) as ChildProcess & { rpc: any };
 
 	logger.info('BTC node online')
+
+	return
 }

@@ -1,3 +1,3 @@
-import { startBTC } from 'bitcoind'
+import { startBTC } from './bitcoind'
 
 startBTC()
