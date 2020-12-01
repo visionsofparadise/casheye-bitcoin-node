@@ -5,6 +5,7 @@ import { testAddressGenerator } from '../testAddressGenerator'
 import { nanoid } from 'nanoid';
 
 const QueueUrl = process.env.QUEUE_URL!
+const instanceUrl = process.env.INSTANCE_URL!
 
 beforeAll(async () => {
 	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
@@ -13,8 +14,6 @@ beforeAll(async () => {
 afterAll(async () => {
 	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
 });
-
-const instanceUrl = process.env.INSTANCE_URL!
 
 it('health check', async () => {
 	expect.assertions(1)
@@ -62,8 +61,6 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		}
 	
 		const address = testAddressGenerator()
-
-		logger.info(QueueUrl)
 	
 		const addAddressResponse = await sqs.sendMessage({
 			QueueUrl,

@@ -49,28 +49,54 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 
 		const testAppStage = pipeline.addApplicationStage(testApp);
 
+		const queueSendPolicy = new PolicyStatement({
+			actions: ['sqs:SendMessage', 'sqs:GetQueueAttributes', 'sqs:GetQueueUrl'],
+			resources: ['*']
+		})
+
+		const testEnv = [
+			'STAGE=test',
+			`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
+			`UTILITY_API_URL=${Fn.importValue('casheye-utility-test-apiUrl')}`,
+			`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY')}`,
+		]
+
+		const outputs = {
+			QUEUE_URL: pipeline.stackOutput(testApp.queueUrl),
+			INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl)
+		}
+
 		testAppStage.addActions(
 			new ShellScriptAction({
-				actionName: 'IntegrationTests',
+				actionName: 'Integration Tests',
 				runOrder: testAppStage.nextSequentialRunOrder(),
 				additionalArtifacts: [sourceArtifact],
 				commands: [
 					'sleep 500s',
-					'STAGE=test',
-					`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
-					`UTILITY_API_URL=${Fn.importValue('casheye-utility-test-apiUrl')}`,
-					`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY')}`,
+					...testEnv,
 					'npm i',
 					'npm run integration'
 				],
-				useOutputs: {
-					QUEUE_URL: pipeline.stackOutput(testApp.queueUrl),
-					INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl)
-				},
-				rolePolicyStatements: [new PolicyStatement({
-					actions: ['sqs:SendMessage', 'sqs:GetQueueAttributes', 'sqs:GetQueueUrl'],
-					resources: ['*']
-				})]
+				useOutputs: outputs,
+				rolePolicyStatements: [queueSendPolicy]
+			})
+		)
+
+		testEnv.push('PERFORMANCE_TEST_N=1000')
+
+		testAppStage.addActions(
+			new ShellScriptAction({
+				actionName: 'Performance Tests',
+				runOrder: testAppStage.nextSequentialRunOrder(),
+				additionalArtifacts: [sourceArtifact],
+				commands: [
+					'sleep 5s',
+					...testEnv,
+					'npm i',
+					'npm run performance'
+				],
+				useOutputs: outputs,
+				rolePolicyStatements: [queueSendPolicy]
 			})
 		)
 
