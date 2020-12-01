@@ -68,7 +68,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 
 		testAppStage.addActions(
 			new ShellScriptAction({
-				actionName: 'Integration Tests',
+				actionName: 'Integration',
 				runOrder: testAppStage.nextSequentialRunOrder(),
 				additionalArtifacts: [sourceArtifact],
 				commands: [
@@ -86,7 +86,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 
 		testAppStage.addActions(
 			new ShellScriptAction({
-				actionName: 'Performance Tests',
+				actionName: 'Performance',
 				runOrder: testAppStage.nextSequentialRunOrder(),
 				additionalArtifacts: [sourceArtifact],
 				commands: [
