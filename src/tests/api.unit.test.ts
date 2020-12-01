@@ -1,20 +1,20 @@
 import { logger, sqs } from '../helpers';
-import { getApis } from '../api'
+import { internalApi, externalApi } from '../api'
 import udelay from 'udelay'
-import { btc } from '../bitcoind'
+import { startBTC } from '../bitcoind'
 import axios from 'axios'
-import kill from 'tree-kill'
-import { getWatcher } from '../addressWatcher'
-
-const { internalApi, externalApi } = getApis(btc)
-const watcher = getWatcher(btc)
+import { watch } from '../watch'
 
 beforeAll(async () => {
-	externalApi.listen(4000, () => console.log('Internal API listening on port 4000'))
-	internalApi.listen(3000, () => console.log('Internal API listening on port 3000'))
-	watcher.watch()
+	startBTC()
 
-	await udelay(5 * 1000)
+	await udelay(3 * 1000)
+
+	internalApi.listen(3000, () => console.log('Internal API listening on port 3000'))
+	externalApi.listen(4000, () => console.log('Internal API listening on port 4000'))
+	watch()
+
+	await udelay(3 * 1000)
 
 	return
 }, 10 * 1000)
@@ -27,8 +27,6 @@ afterAll(async () => {
 	})
 
 	await udelay(3 * 1000)
-
-	kill(btc.pid)
 
 	return
 }, 20 * 1000)
@@ -67,8 +65,6 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			command: 'generate',
 			args: [1]
 		})
-	
-		await udelay(300)
 	}
 
 	const address = 'mwfjApeUk2uwAWuikWmjqnixW7Lg1mHNHE'
@@ -85,7 +81,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	expect(addAddressResponse.MessageId).toBeDefined();
 
-	await udelay(3 * 1000)
+	await udelay(1000)
 
 	const sendToAddressResponse = await axios.post(externalURL + 'rpc', {
 		command: 'sendToAddress',
@@ -94,7 +90,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	logger.info(sendToAddressResponse)
 
-	await udelay(3 * 1000)
+	await udelay(1000)
 
 	const getAddress1 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
@@ -108,11 +104,9 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			command: 'generate',
 			args: [1]
 		})
-	
-		await udelay(300)
 	}
 
-	await udelay(3 * 1000)
+	await udelay(1000)
 
 	const getAddress2 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
@@ -126,7 +120,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		args: [1]
 	})
 
-	await udelay(3 * 1000)
+	await udelay(1000)
 
 	const getAddress3 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
@@ -153,7 +147,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	expect(addAddress2Response.MessageId).toBeDefined();
 
-	await udelay(5 * 1000)
+	await udelay(3 * 1000)
 
 	const getAddress4 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
@@ -167,7 +161,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		args: [address2, 1]
 	})
 
-	await udelay(3 * 1000)
+	await udelay(1000)
 
 	const getAddress5 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',

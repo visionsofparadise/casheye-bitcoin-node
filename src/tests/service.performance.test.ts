@@ -21,6 +21,8 @@ const n = process.env.PERFORMANCE_TEST_N ? parseInt(process.env.PERFORMANCE_TEST
 it(`adds and pays${n} addresses, then generates a block`, async () => {
 	expect.assertions(4)
 
+	jest.useRealTimers()
+
 	try {
 		logger.info('Initializing funds...')
 
@@ -81,8 +83,10 @@ it(`adds and pays${n} addresses, then generates a block`, async () => {
 
 		const successfulQueues = queueResults.filter(result => result.Successful.length === 10)
 
-		logger.info(`Queues ${successfulQueues.length} out of ${n}`)
+		logger.info(`Queues ${successfulQueues.length} out of ${n / 10}`)
 		logger.info(`Queued messages in ${queueDuration}s`)
+
+		await udelay(30 * 1000)
 
 		logger.info('Sending to addresses...')
 

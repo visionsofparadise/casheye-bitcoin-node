@@ -1,4 +1,5 @@
 import { eventHelper, logger } from './helpers';
+import { rpc } from './rpc'
 
 interface GetTransactionResponse {
 	confirmations: number;
@@ -10,8 +11,8 @@ interface GetTransactionResponse {
 	}>;
 }
 
-export const txDetected = async (txId: string, btc: any) => {
-	const tx = (await btc.rpc.getTransaction(txId, true)) as GetTransactionResponse;
+export const txDetected = async (txId: string) => {
+	const tx = (await rpc.getTransaction(txId, true)) as GetTransactionResponse;
 
 	logger.info({tx})
 
@@ -19,7 +20,7 @@ export const txDetected = async (txId: string, btc: any) => {
 
 	if (tx.confirmations !== 0 || !address || address.label !== 'watching') return;
 
-	await btc.rpc.setLabel(address.address, 'confirming');
+	await rpc.setLabel(address.address, 'confirming');
 
 	await eventHelper.send({
 		DetailType: 'btcTxDetected',

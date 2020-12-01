@@ -65,6 +65,9 @@ export class CasheyeAddressWatcherStack extends Stack {
 
 		const config = isProd ? prodEC2Config : testEC2Config
 		const nodeName = deploymentName + '-node-0'
+
+		const instanceEnv = `STAGE=${props.STAGE} QUEUE_URL=${queue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+
 		const shebang = `#!/bin/bash
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
@@ -79,9 +82,14 @@ npm i
 npm run test
 npm run compile
 npm i -g pm2
-STAGE=${props.STAGE} QUEUE_URL=${queue.queueUrl} node genEnv.js
-pm2 start dist/index.js
-env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu`
+RPC_USER=$(openssl rand -hex 12)
+RPC_PASSWORD=$(openssl rand -hex 12)
+${instanceEnv} pm2 start dist/startBTC.js
+${instanceEnv} pm2 start dist/startApi.js
+${instanceEnv} pm2 start dist/startWatch.js
+env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+
+pm2 save`
 
 		const instance = new Instance(this, 'Instance', {
 			instanceName: nodeName,

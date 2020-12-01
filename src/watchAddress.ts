@@ -1,11 +1,12 @@
 import { logger, eventHelper } from './helpers';
+import { rpc } from './rpc'
 
 interface GetAddressInfoResponse {
 	label: string;
 }
 
-export const watchAddress = async (address: string, duration: number, btc: any) => {
-	const importAddressResponse = await btc.rpc.importAddress(address, 'watching', false);
+export const watchAddress = async (address: string, duration: number) => {
+	const importAddressResponse = await rpc.importAddress(address, 'watching', false);
 
 	await eventHelper.send({
 		DetailType: 'btcAddressWatching',
@@ -18,13 +19,13 @@ export const watchAddress = async (address: string, duration: number, btc: any) 
 	logger.info({ importAddressResponse });
 
 	return setTimeout(() => {
-		btc.rpc.getAddressInfo(address).then((getAddressData: GetAddressInfoResponse) => {
+		rpc.getAddressInfo(address).then((getAddressData: GetAddressInfoResponse) => {
 			logger.info({ getAddressData });
 
 			if (getAddressData.label === 'watching') {
 				logger.info('address expiring ' + address);
 
-				return btc.rpc.setLabel(address, 'expired').then(() => 
+				return rpc.setLabel(address, 'expired').then(() => 
 					eventHelper.send({
 						DetailType: 'btcAddressExpired',
 						Detail: {
