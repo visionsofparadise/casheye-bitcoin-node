@@ -18,7 +18,7 @@ afterAll(async () => {
 
 const n = process.env.PERFORMANCE_TEST_N ? parseInt(process.env.PERFORMANCE_TEST_N) : 1000
 
-it(`adds and pays${n} addresses, then generates a block`, async () => {
+it(`adds and pays ${n} addresses, then generates a block`, async () => {
 	expect.assertions(4)
 
 	jest.useRealTimers()
@@ -111,7 +111,7 @@ it(`adds and pays${n} addresses, then generates a block`, async () => {
 
 		expect(sendResults.length).toBe(n);
 
-		const successfulSends = sendResults.filter(result => result.status && result.status === '200')
+		const successfulSends = sendResults.filter(result => result.status && result.status === 200)
 
 		logger.info(`Sends ${successfulSends.length} out of ${n}`)
 		logger.info(`Sent to addresses in ${sendDuration}s`)
