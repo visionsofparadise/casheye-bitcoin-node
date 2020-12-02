@@ -2,7 +2,6 @@ import { logger, sqs } from '../helpers';
 import axios from 'axios';
 import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
-import { nanoid } from 'nanoid';
 
 const QueueUrl = process.env.QUEUE_URL!
 const instanceUrl = process.env.INSTANCE_URL!
@@ -49,9 +48,9 @@ it(`adds ${n} addresses`, async () => {
 
 	for (let i = 0; i < n; i++) {
 		messages.push({
-			MessageGroupId: nanoid(),
-			Id: nanoid(),
-			MessageDeduplicationId: nanoid(),
+			MessageGroupId: i.toString(),
+			Id: i.toString(),
+			MessageDeduplicationId: i.toString(),
 			MessageBody: JSON.stringify({
 				address: testAddressGenerator(i + (1000 * 1000)),
 				duration: 5 * 60 * 1000
@@ -86,7 +85,7 @@ it(`adds ${n} addresses`, async () => {
 
 	logger.info(`Queues ${successfulQueues.length} out of ${n / 10}`)
 	
-	await udelay(30 * 1000)
+	await udelay(60 * 1000)
 	
 	return;
 }, 5 * 60 * 1000);
@@ -126,7 +125,7 @@ it(`pays ${n} addresses`, async () => {
 		args: [1]
 	})
 
-	await udelay(30 * 1000)
+	await udelay(60 * 1000)
 	
 	return;
 }, 10 * 60 * 1000);
