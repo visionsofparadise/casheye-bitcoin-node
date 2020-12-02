@@ -78,8 +78,8 @@ apt install nodejs npm -y
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
 npm i --production
-npm i -g pm2
-npm run compile
+npm i -g typescript pm2
+tsc
 RPC_USER=$(openssl rand -hex 12)
 RPC_PASSWORD=$(openssl rand -hex 12)
 ${instanceEnv} pm2 start dist/startBTC.js
