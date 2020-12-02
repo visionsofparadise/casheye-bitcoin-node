@@ -28,7 +28,7 @@ it(`initializes funds`, async () => {
 			args: [1]
 		})
 	
-		await udelay(500)
+		await udelay(300)
 	}
 
 	console.timeEnd('initialization')
@@ -85,8 +85,6 @@ it(`adds ${n} addresses`, async () => {
 
 	logger.info(`Queues ${successfulQueues.length} out of ${n / 10}`)
 	
-	await udelay(3 * 60 * 1000)
-	
 	return;
 }, 10 * 60 * 1000);
 
@@ -117,6 +115,12 @@ it(`pays ${n} addresses`, async () => {
 	const successfulSends = sendResults.filter(result => result.status && result.status === 200)
 
 	logger.info(`Sends ${successfulSends.length} out of ${n}`)
+	
+	return;
+}, 10 * 60 * 1000);
+
+it(`verifies ${n} addresses have been paid`, async () => {
+	expect.assertions(1)
 
 	logger.info('Generating block...')
 
@@ -126,12 +130,6 @@ it(`pays ${n} addresses`, async () => {
 	})
 
 	await udelay(60 * 1000)
-	
-	return;
-}, 10 * 60 * 1000);
-
-it(`verifies ${n} addresses have been paid`, async () => {
-	expect.assertions(1)
 
 	console.time('verifying')
 

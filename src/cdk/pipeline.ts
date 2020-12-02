@@ -83,7 +83,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			})
 		)
 
-		testEnv.push('PERFORMANCE_TEST_N=500')
+		testEnv.push('PERFORMANCE_TEST_N=100')
 
 		testAppStage.addActions(
 			new ShellScriptAction({
