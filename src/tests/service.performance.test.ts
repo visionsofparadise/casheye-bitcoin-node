@@ -5,6 +5,7 @@ import { testAddressGenerator } from '../testAddressGenerator'
 
 const QueueUrl = process.env.QUEUE_URL!
 const instanceUrl = process.env.INSTANCE_URL!
+const n = process.env.PERFORMANCE_TEST_N ? parseInt(process.env.PERFORMANCE_TEST_N) : 100
 
 beforeAll(async () => {
 	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
@@ -13,8 +14,6 @@ beforeAll(async () => {
 afterAll(async () => {
 	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
 });
-
-const n = process.env.PERFORMANCE_TEST_N ? parseInt(process.env.PERFORMANCE_TEST_N) : 1000
 
 it(`initializes funds`, async () => {
 	expect.assertions(1)
@@ -129,7 +128,7 @@ it(`verifies ${n} addresses have been paid`, async () => {
 		args: [1]
 	})
 
-	await udelay(60 * 1000)
+	await udelay(3 * 60 * 1000)
 
 	console.time('verifying')
 
