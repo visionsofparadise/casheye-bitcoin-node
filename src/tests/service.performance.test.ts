@@ -52,7 +52,7 @@ it(`adds ${n} addresses`, async () => {
 			MessageDeduplicationId: i.toString(),
 			MessageBody: JSON.stringify({
 				address: testAddressGenerator(i + (1000 * 1000)),
-				duration: 5 * 60 * 1000
+				duration: 15 * 60 * 1000
 			})
 		})
 	}
@@ -90,6 +90,8 @@ it(`adds ${n} addresses`, async () => {
 it(`pays ${n} addresses`, async () => {
 	expect.assertions(1)
 
+	await udelay(5 * 60 * 1000)
+
 	logger.info('Sending to addresses...')
 	console.time('sending')
 
@@ -116,7 +118,7 @@ it(`pays ${n} addresses`, async () => {
 	logger.info(`Sends ${successfulSends.length} out of ${n}`)
 	
 	return;
-}, 10 * 60 * 1000);
+}, 15 * 60 * 1000);
 
 it(`verifies ${n} addresses have been paid`, async () => {
 	expect.assertions(1)
@@ -128,7 +130,7 @@ it(`verifies ${n} addresses have been paid`, async () => {
 		args: [1]
 	})
 
-	await udelay(3 * 60 * 1000)
+	await udelay(5 * 60 * 1000)
 
 	console.time('verifying')
 
@@ -154,4 +156,4 @@ it(`verifies ${n} addresses have been paid`, async () => {
 	logger.info(`Verifications ${successfulVerifications.length} out of ${n}`)
 	
 	return;
-}, 10 * 60 * 1000);
+}, 15 * 60 * 1000);

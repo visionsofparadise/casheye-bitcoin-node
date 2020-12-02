@@ -12,6 +12,8 @@ export const confirm = async () => {
 	const page = async (pageNumber: number) => {
 		const txs = (await rpc.listTransactions('confirming', 100, pageNumber * 100, true)) as ListTransactionsResponse;
 
+		if (txs.length === 0) return
+
 		logger.info({ txs })
 
 		const over6Txs = txs.filter(tx => tx.confirmations > 6)
