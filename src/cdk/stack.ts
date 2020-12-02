@@ -66,7 +66,7 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const config = isProd ? prodEC2Config : testEC2Config
 		const nodeName = deploymentName + '-node-0'
 
-		const instanceEnv = `STAGE=${props.STAGE} QUEUE_URL=${queue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+		const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} QUEUE_URL=${queue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 		const shebang = `#!/bin/bash
 
@@ -77,7 +77,7 @@ apt install nodejs npm -y
 # build
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
-npm i
+npm i --production
 npm i -g pm2
 npm run compile
 RPC_USER=$(openssl rand -hex 12)

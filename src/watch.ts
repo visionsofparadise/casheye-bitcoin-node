@@ -1,6 +1,5 @@
-import { logger, sqs } from './helpers'
-import { watchAddress } from './watchAddress'
-import { DeleteMessageRequest } from 'aws-sdk/clients/sqs'
+import { isUnitTest, logger, sqs } from './helpers'
+import { watchAddresses } from './watchAddress'
 
 export const watch = async (): Promise<any> => {
 	const QueueUrl = process.env.QUEUE_URL || 'test'
@@ -13,36 +12,32 @@ export const watch = async (): Promise<any> => {
 	if (response.Messages) {
 		logger.info(response.Messages)
 
-		const results = await Promise.all(response.Messages.map(async (msg) => {
-			try {
-				if (!msg.Body) throw Error('No body')
+		const filteredMessages = response.Messages.filter(msg => msg.Body)
 
-				const data = JSON.parse(msg.Body) as { address: string; duration: number }
+		const batchedMessages = filteredMessages.map(msg => {
+			const data = JSON.parse(msg.Body!) as { address: string; duration: number }
 
-				await watchAddress(data.address, data.duration)
+			return data
+		})
 
-				return {
-					...msg,
-					isWatched: true
-				}
-			} catch (err) {
-				logger.error(err)
+		await watchAddresses(batchedMessages)
 
-				return {
-					...msg,
-					isWatched: false
-				}
-			}
-		}))
-
-		const success = results.filter(result => result.isWatched)
-
-		await Promise.all(success.map(async result => {
-			await sqs.deleteMessage({
+		if (isUnitTest) {
+			await Promise.all(filteredMessages.map(async result => {
+				await sqs.deleteMessage({
+					QueueUrl,
+					ReceiptHandle: result.ReceiptHandle
+				} as any).promise()
+			}))
+		} else {
+			await sqs.deleteMessageBatch({
 				QueueUrl,
-				ReceiptHandle: result.ReceiptHandle
-			} as DeleteMessageRequest).promise()
-		}))
+				Entries: filteredMessages.map(result => ({
+					Id: result.MessageId!,
+					ReceiptHandle: result.ReceiptHandle!
+				} as any))
+			}).promise()
+		}
 
 		return watch()
 	}

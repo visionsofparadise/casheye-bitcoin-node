@@ -17,7 +17,8 @@ export const eventbridge = isUnitTest
 			region: 'us-east-1'
 		})
 
-export const eventHelper = createEventHelper({ eventbridge, Source: `casheye-${process.env.STAGE!}` });
+export const eventSource = `casheye-${process.env.STAGE!}`
+export const eventHelper = createEventHelper({ eventbridge, Source: eventSource });
 
 export const sqs = isUnitTest 
 	? new mockSQS as AWS.SQS

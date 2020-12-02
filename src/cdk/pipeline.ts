@@ -74,6 +74,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				commands: [
 					'sleep 300s',
 					...testEnv,
+					'npm rm bitcoind',
 					'npm i',
 					'npm run integration'
 				],
@@ -92,6 +93,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				commands: [
 					'sleep 5s',
 					...testEnv,
+					'npm rm bitcoind',
 					'npm i',
 					'npm run performance'
 				],

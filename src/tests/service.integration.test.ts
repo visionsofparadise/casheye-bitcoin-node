@@ -2,7 +2,6 @@ import { logger, sqs } from '../helpers';
 import axios from 'axios';
 import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
-import { nanoid } from 'nanoid';
 
 const QueueUrl = process.env.QUEUE_URL!
 const instanceUrl = process.env.INSTANCE_URL!
@@ -64,8 +63,8 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const addAddressResponse = await sqs.sendMessage({
 			QueueUrl,
-			MessageDeduplicationId: nanoid(),
-			MessageGroupId: nanoid(),
+			MessageDeduplicationId: address,
+			MessageGroupId: address,
 			MessageBody: JSON.stringify({
 				address,
 				duration: 5 * 60 * 1000
@@ -134,8 +133,8 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const addAddress2Response = await sqs.sendMessage({
 			QueueUrl,
-			MessageDeduplicationId: nanoid(),
-			MessageGroupId: nanoid(),
+			MessageDeduplicationId: address2,
+			MessageGroupId: address2,
 			MessageBody: JSON.stringify({
 				address: address2,
 				duration: 1 * 1000

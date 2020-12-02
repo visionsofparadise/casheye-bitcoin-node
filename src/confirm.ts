@@ -1,5 +1,5 @@
 import upick from 'upick';
-import { eventHelper, logger } from './helpers';
+import { eventbridge, eventSource, logger } from './helpers';
 import { rpc } from './rpc'
 
 type ListTransactionsResponse = Array<{
@@ -14,31 +14,29 @@ export const confirm = async () => {
 
 		logger.info({ txs })
 
-		await Promise.all(
-			txs.map(async tx => {
-				const txPruned = upick(tx, ['txid', 'address', 'confirmations']);
+		const over6Txs = txs.filter(tx => tx.confirmations > 6)
+		const under6Txs = txs.filter(tx => tx.confirmations <= 6)
 
-				if (tx.confirmations > 6) {
-					await rpc.setLabel(tx.address, 'used');
+		await rpc.command(over6Txs.map(tx => ({
+			method: 'setlabel',
+			parameters: [tx.address, 'used']
+		})))
 
-					await eventHelper.send({
-						DetailType: 'btcAddressUsed',
-						Detail: txPruned
-					});
+		await eventbridge.putEvents({
+			Entries: over6Txs.map(tx => ({
+				Source: eventSource,
+				DetailType: 'btcAddressUsed',
+				Detail: JSON.stringify(upick(tx, ['txid', 'address', 'confirmations']))
+			}))
+		}).promise()
 
-					return;
-				}
-
-				await eventHelper.send({
-					DetailType: 'btcConfirmation',
-					Detail: txPruned
-				});
-
-				return;
-			})
-		);
-
-		if (txs.length >= 100) await page(pageNumber + 1);
+		await eventbridge.putEvents({
+			Entries: under6Txs.map(tx => ({
+				Source: eventSource,
+				DetailType: 'btcConfirmation',
+				Detail: JSON.stringify(upick(tx, ['txid', 'address', 'confirmations']))
+			}))
+		}).promise()
 
 		return;
 	};

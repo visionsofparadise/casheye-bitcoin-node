@@ -85,10 +85,10 @@ it(`adds ${n} addresses`, async () => {
 
 	logger.info(`Queues ${successfulQueues.length} out of ${n / 10}`)
 	
-	await udelay(60 * 1000)
+	await udelay(3 * 60 * 1000)
 	
 	return;
-}, 5 * 60 * 1000);
+}, 10 * 60 * 1000);
 
 it(`pays ${n} addresses`, async () => {
 	expect.assertions(1)
