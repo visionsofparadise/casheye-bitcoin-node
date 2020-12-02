@@ -69,7 +69,6 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const instanceEnv = `STAGE=${props.STAGE} QUEUE_URL=${queue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 		const shebang = `#!/bin/bash
-exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 # install
 apt-get update -y
@@ -79,9 +78,8 @@ apt install nodejs npm -y
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
 npm i
-npm run test
-npm run compile
 npm i -g pm2
+npm run compile
 RPC_USER=$(openssl rand -hex 12)
 RPC_PASSWORD=$(openssl rand -hex 12)
 ${instanceEnv} pm2 start dist/startBTC.js

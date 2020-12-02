@@ -57,7 +57,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		
 			logger.info(generate1Response.status)
 		
-			await udelay(500)
+			await udelay(300)
 		}
 	
 		const address = testAddressGenerator()
@@ -102,7 +102,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		
 			logger.info(generate6Response.status)
 		
-			await udelay(500)
+			await udelay(300)
 		}
 	
 		const getAddress2 = await axios.post(instanceUrl + 'rpc', {

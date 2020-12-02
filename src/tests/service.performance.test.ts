@@ -152,7 +152,7 @@ it(`verifies ${n} addresses have been paid`, async () => {
 
 	expect(verificationResults.length).toBe(n)
 
-	const successfulVerifications = verificationResults.filter(result => result.data.label === 'confirming')
+	const successfulVerifications = verificationResults.filter(result => result.data && result.data.label === 'confirming')
 
 	logger.info(`Verifications ${successfulVerifications.length} out of ${n}`)
 	

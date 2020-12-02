@@ -72,7 +72,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				runOrder: testAppStage.nextSequentialRunOrder(),
 				additionalArtifacts: [sourceArtifact],
 				commands: [
-					'sleep 500s',
+					'sleep 300s',
 					...testEnv,
 					'npm i',
 					'npm run integration'
