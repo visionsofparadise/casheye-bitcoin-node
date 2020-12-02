@@ -1,4 +1,4 @@
-import { CfnOutput, Construct, Duration, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
+import { CfnOutput, Construct, Duration, SecretValue, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
@@ -75,7 +75,7 @@ apt-get update -y
 apt install nodejs npm -y
 
 # build
-git clone https://github.com/visionsofparadise/${serviceName}.git
+git clone https://visionsofparadise:${SecretValue.secretsManager('GITHUB_TOKEN')}@github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
 npm i
 npm i -g pm2
