@@ -154,7 +154,7 @@ it(`verifies ${n} addresses have been paid`, async () => {
 	const successfulVerifications = verificationResults.filter(result => result.data && result.data.label === 'confirming')
 
 	logger.info(`Verifications ${successfulVerifications.length} out of ${n}`)
-	logger.info({ verificationResults })
+	logger.info({ results: verificationResults.map(result => result.data) })
 	
 	return;
 }, 15 * 60 * 1000);
