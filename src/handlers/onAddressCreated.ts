@@ -21,20 +21,26 @@ export const onAddressCreatedHandler = new EventLambdaHandler<'addressCreated', 
 	detailJSONSchema: jsonSchema
 }, async ({ detail }) => {
 	logger.info({ detail })
-	
-	const response = await sqs
-	.sendMessage({
-		QueueUrl: process.env.QUEUE_URL || 'test',
-		MessageGroupId: detail.pubKey,
-		MessageDeduplicationId: detail.pubKey,
-		MessageBody: JSON.stringify({
-			address: detail.pubKey,
-			duration: detail.expiresAt - day().unix()
-		})
-	})
-	.promise();
 
-	logger.info({ response });
+	const duration = detail.expiresAt - day().unix()
+
+	logger.info({ duration })
+
+	if (duration > 0) {
+		const response = await sqs
+		.sendMessage({
+			QueueUrl: process.env.QUEUE_URL || 'test',
+			MessageGroupId: detail.pubKey,
+			MessageDeduplicationId: detail.pubKey,
+			MessageBody: JSON.stringify({
+				address: detail.pubKey,
+				duration
+			})
+		})
+		.promise();
+	
+		logger.info({ response });
+	}
 
 	return
 })
