@@ -31,7 +31,8 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			buildCommands: [
 				`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
 				'npm run compile',
-			],
+				'npm run build'
+				],
 			testCommands: ['npm run test'],
 			synthCommand: 'npm run synth'
 		});
@@ -67,7 +68,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				'sleep 300s',
 				...testEnv,
 				'npm rm bitcoind',
-				'npm i',
+				'npm ci',
 				'npm run integration'
 			],
 			useOutputs: outputs
@@ -85,7 +86,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 				'sleep 5s',
 				...testEnv,
 				'npm rm bitcoind',
-				'npm i',
+				'npm ci',
 				'npm run performance'
 			],
 			useOutputs: outputs
