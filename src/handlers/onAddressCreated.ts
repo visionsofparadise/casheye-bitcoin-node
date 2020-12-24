@@ -20,6 +20,8 @@ export const onAddressCreatedHandler = new EventLambdaHandler<'addressCreated', 
 	detailType: ['addressCreated'],
 	detailJSONSchema: jsonSchema
 }, async ({ detail }) => {
+	logger.info({ detail })
+	
 	const response = await sqs
 	.sendMessage({
 		QueueUrl: process.env.QUEUE_URL || 'test',

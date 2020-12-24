@@ -53,18 +53,22 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const address = testAddressGenerator()
 
+		const event = {
+			Source: 'casheye-' + process.env.STAGE!,
+			DetailType: 'addressCreated',
+			Detail: JSON.stringify({
+				pubKey: address,
+				expiresAt: day().add(5, 'minute').unix()
+			})
+		}
+
+		logger.info({ event })
+
 		await eventbridge.putEvents({
-			Entries: [{
-				Source: 'casheye-' + process.env.STAGE!,
-				DetailType: 'addressCreated',
-				Detail: JSON.stringify({
-					pubKey: address,
-					expiresAt: day().add(5, 'minute').unix()
-				})
-			}]
+			Entries: [event]
 		}).promise()
 
-		await udelay(3 * 1000)
+		await udelay(5 * 1000)
 	
 		const sendToAddressResponse = await axios.post(instanceUrl + 'rpc', {
 			command: 'sendToAddress',
