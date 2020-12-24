@@ -4,7 +4,7 @@ import { CdkPipeline, SimpleSynthAction, ShellScriptAction } from '@aws-cdk/pipe
 import { GitHubSourceAction } from '@aws-cdk/aws-codepipeline-actions';
 import { CasheyeAddressWatcherStage } from './stack';
 import { App } from '@aws-cdk/core';
-import { PolicyStatement } from '@aws-cdk/aws-iam';
+import { EventBus } from '@aws-cdk/aws-events';
 
 export const serviceName = 'casheye-address-watcher';
 
@@ -49,11 +49,6 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 
 		const testAppStage = pipeline.addApplicationStage(testApp);
 
-		const queueSendPolicy = new PolicyStatement({
-			actions: ['sqs:SendMessage', 'sqs:GetQueueAttributes', 'sqs:GetQueueUrl'],
-			resources: ['*']
-		})
-
 		const testEnv = [
 			'STAGE=test',
 			`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
@@ -62,45 +57,45 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 		]
 
 		const outputs = {
-			QUEUE_URL: pipeline.stackOutput(testApp.queueUrl),
-			INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl)
+			INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl!)
 		}
 
-		testAppStage.addActions(
-			new ShellScriptAction({
-				actionName: 'Integration',
-				runOrder: testAppStage.nextSequentialRunOrder(),
-				additionalArtifacts: [sourceArtifact],
-				commands: [
-					'sleep 300s',
-					...testEnv,
-					'npm rm bitcoind',
-					'npm i',
-					'npm run integration'
-				],
-				useOutputs: outputs,
-				rolePolicyStatements: [queueSendPolicy]
-			})
-		)
+		const integrationTestAction = new ShellScriptAction({
+			actionName: 'Integration',
+			runOrder: testAppStage.nextSequentialRunOrder(),
+			additionalArtifacts: [sourceArtifact],
+			commands: [
+				'sleep 300s',
+				...testEnv,
+				'npm rm bitcoind',
+				'npm i',
+				'npm run integration'
+			],
+			useOutputs: outputs
+		})
+
+		testAppStage.addActions(integrationTestAction)
 
 		testEnv.push('PERFORMANCE_TEST_N=100')
 
-		testAppStage.addActions(
-			new ShellScriptAction({
-				actionName: 'Performance',
-				runOrder: testAppStage.nextSequentialRunOrder(),
-				additionalArtifacts: [sourceArtifact],
-				commands: [
-					'sleep 5s',
-					...testEnv,
-					'npm rm bitcoind',
-					'npm i',
-					'npm run performance'
-				],
-				useOutputs: outputs,
-				rolePolicyStatements: [queueSendPolicy]
-			})
-		)
+		const performanceTestAction = new ShellScriptAction({
+			actionName: 'Performance',
+			runOrder: testAppStage.nextSequentialRunOrder(),
+			additionalArtifacts: [sourceArtifact],
+			commands: [
+				'sleep 5s',
+				...testEnv,
+				'npm rm bitcoind',
+				'npm i',
+				'npm run performance'
+			],
+			useOutputs: outputs
+		})
+
+		testAppStage.addActions(performanceTestAction)
+
+		EventBus.grantPutEvents(integrationTestAction)
+		EventBus.grantPutEvents(performanceTestAction)
 
 		// pipeline.addStage('Approval').addManualApprovalAction({
 		// 	actionName: 'Approval'

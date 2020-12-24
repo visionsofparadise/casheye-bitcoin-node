@@ -1,9 +1,20 @@
-import { CfnOutput, Construct, Duration, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
+import { CfnOutput, Construct, Duration, Fn, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
 import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
-import { createOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
+import { masterOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
+import { EventResource } from 'xkore-lambda-helpers/dist/cdk/EventResource'
+import { masterLambda } from 'xkore-lambda-helpers/dist/cdk/masterLambda'
 import { EventBus } from '@aws-cdk/aws-events';
+import { Runtime, Code } from '@aws-cdk/aws-lambda';
 import { Queue } from '@aws-cdk/aws-sqs';
+import { btcAddressUsedEvent } from '../confirm';
+import { btcAddressExpiredEvent } from '../watchAddress';
+import { btcAddressWatchingEvent } from '../watchAddress';
+import { btcTxDetectedEvent } from '../txDetected';
+import { btcConfirmationEvent } from '../confirm';
+import { onAddressCreatedHandler } from '../handlers/onAddressCreated';
+import { DocumentationItems } from 'xkore-lambda-helpers/dist/cdk/DocumentationItems';
+import path from 'path'
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -16,8 +27,7 @@ const testEC2Config = {
 }
 
 export class CasheyeAddressWatcherStage extends Stage {	
-	public readonly queueUrl: CfnOutput;
-	public readonly instanceUrl: CfnOutput;
+	public readonly instanceUrl?: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string }) {
 		super(scope, id, props);
@@ -30,14 +40,17 @@ export class CasheyeAddressWatcherStage extends Stage {
 			}
 		});
 
-		this.queueUrl = stack.queueUrl
 		this.instanceUrl = stack.instanceUrl
 	}
 }
 
+const { initializeEventLambda } = masterLambda({
+	runtime: Runtime.NODEJS_12_X,
+	code: Code.fromAsset(path.join(__dirname, '../../build')),
+})
+
 export class CasheyeAddressWatcherStack extends Stack {
-	public readonly queueUrl: CfnOutput;
-	public readonly instanceUrl: CfnOutput;
+	public readonly instanceUrl?: CfnOutput;
 
 	get availabilityZones(): string[] {
     return ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1e', 'us-east-1f'];
@@ -48,6 +61,18 @@ export class CasheyeAddressWatcherStack extends Stack {
 		
 		const deploymentName = `${serviceName}-${props.STAGE}`;
 		const isProd = (props.STAGE === 'prod')
+
+		const documented = [new EventResource(this, {
+			Event: btcAddressUsedEvent
+		}), new EventResource(this, {
+			Event: btcAddressExpiredEvent
+		}), new EventResource(this, {
+			Event: btcAddressWatchingEvent
+		}), new EventResource(this, {
+			Event: btcTxDetectedEvent
+		}), new EventResource(this, {
+			Event: btcConfirmationEvent
+		})]
 		
 		const vpc = new Vpc(this, 'VPC', {
 			natGateways: 0,
@@ -59,9 +84,6 @@ export class CasheyeAddressWatcherStack extends Stack {
 			fifo: true,
 			visibilityTimeout: Duration.seconds(5)
 		});
-
-		createOutput(this, deploymentName, 'queueArn', queue.queueArn);
-		this.queueUrl = createOutput(this, deploymentName, 'queueUrl', queue.queueUrl);
 
 		const config = isProd ? prodEC2Config : testEC2Config
 		const nodeName = deploymentName + '-node-0'
@@ -117,6 +139,34 @@ pm2 save`
 		EventBus.grantPutEvents(instance.grantPrincipal)
 		queue.grantConsumeMessages(instance.grantPrincipal)
 
-		this.instanceUrl = createOutput(this, deploymentName, 'instanceUrl', 'http://' + instance.instancePublicDnsName + ':4000/');
+		const createEventLambda = initializeEventLambda('casheye-' + props.STAGE)
+
+		const onAddressCreated = createEventLambda(this, 'onAddressCreated', {
+			EventLambdaHandler: onAddressCreatedHandler,
+			environment: {
+				STAGE: props.STAGE,
+				QUEUE_URL: queue.queueUrl
+			}
+		})
+
+		queue.grantSendMessages(onAddressCreated)
+
+		if (props.STAGE !== 'prod') {
+			const createOutput = masterOutput(this, deploymentName)
+
+			this.instanceUrl = createOutput('instanceUrl', 'http://' + instance.instancePublicDnsName + ':4000/');
+		}
+
+		new DocumentationItems(this, 'DocumentationItems', {
+			stage: props.STAGE,
+			service: serviceName,
+			tableArn: Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`),
+			groups: [
+				{
+					name: 'AddressWatcher',
+					items: documented
+				}
+			]
+		});
 	}
 }

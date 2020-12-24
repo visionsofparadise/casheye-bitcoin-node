@@ -1,19 +1,12 @@
-import { logger, sqs } from '../helpers';
+import { eventbridge, logger } from '../helpers';
 import axios from 'axios';
 import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
+import { Source } from '../helpers'
+import day from 'dayjs'
 
-const QueueUrl = process.env.QUEUE_URL!
 const instanceUrl = process.env.INSTANCE_URL!
 const n = process.env.PERFORMANCE_TEST_N ? parseInt(process.env.PERFORMANCE_TEST_N) : 100
-
-beforeAll(async () => {
-	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
-});
-
-afterAll(async () => {
-	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
-});
 
 it(`initializes funds`, async () => {
 	expect.assertions(1)
@@ -43,46 +36,27 @@ it(`adds ${n} addresses`, async () => {
 	logger.info('Generating messages...')
 	console.time('messages')
 
-	const messages = []
+	const entries = []
 
 	for (let i = 0; i < n; i++) {
-		messages.push({
-			MessageGroupId: i.toString(),
-			Id: i.toString(),
-			MessageDeduplicationId: i.toString(),
-			MessageBody: JSON.stringify({
-				address: testAddressGenerator(i + (1000 * 1000)),
-				duration: 15 * 60 * 1000
+		entries.push({
+			Source,
+			DetailType: 'addressCreated',
+			Detail: JSON.stringify({
+				pubKey: testAddressGenerator(i + (1000 * 1000)),
+				expiresAt: day().add(15, 'minute').unix()
 			})
 		})
 	}
-
-	console.timeEnd('messages')
-	logger.info(`${messages.length} messages generated out of ${n}`)
-
-	expect(messages.length).toBe(n)
-
-	logger.info('Adding messages to queue...')
-	console.time('queueing')
-
-	const queueResults = []
-
-	for (let i = 0; i < n / 10; i++) {
-		const result = await sqs.sendMessageBatch({
-			QueueUrl,
-			Entries: messages.slice(i, i + 10)
-		}).promise()
-
-		queueResults.push(result)
-	}
-
-	console.timeEnd('queueing')
 	
-	expect(queueResults.length).toBe(n / 10);
+	await eventbridge.putEvents({
+		Entries: entries
+	}).promise()
 
-	const successfulQueues = queueResults.filter(result => result.Successful.length === 10)
+	console.timeEnd('entries')
+	logger.info(`${entries.length} entries generated and sent out of ${n}`)
 
-	logger.info(`Queues ${successfulQueues.length} out of ${n / 10}`)
+	expect(entries.length).toBe(n)
 	
 	return;
 }, 10 * 60 * 1000);

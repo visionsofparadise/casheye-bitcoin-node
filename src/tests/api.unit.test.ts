@@ -101,7 +101,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	expect(getAddress1.data.label).toBe('confirming')
 
-	for (let i = 0; i < 6; i++ ) {
+	for (let i = 0; i < 5; i++ ) {
 		await axios.post(externalURL + 'rpc', {
 			command: 'generate',
 			args: [1]

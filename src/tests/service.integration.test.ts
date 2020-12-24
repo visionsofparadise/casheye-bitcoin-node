@@ -1,18 +1,10 @@
-import { logger, sqs } from '../helpers';
+import { eventbridge, logger } from '../helpers';
 import axios from 'axios';
 import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
+import day from 'dayjs'
 
-const QueueUrl = process.env.QUEUE_URL!
 const instanceUrl = process.env.INSTANCE_URL!
-
-beforeAll(async () => {
-	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
-});
-
-afterAll(async () => {
-	await axios.post(process.env.UTILITY_API_URL + 'resetdb', {});
-});
 
 it('health check', async () => {
 	expect.assertions(1)
@@ -45,7 +37,7 @@ it('executes rpc command', async () => {
 });
 
 it('adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires', async () => {
-	expect.assertions(7)
+	expect.assertions(5)
 
 	try {
 		for (let i = 0; i < 101; i++ ) {
@@ -60,20 +52,17 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		}
 	
 		const address = testAddressGenerator()
-	
-		const addAddressResponse = await sqs.sendMessage({
-			QueueUrl,
-			MessageDeduplicationId: address,
-			MessageGroupId: address,
-			MessageBody: JSON.stringify({
-				address,
-				duration: 5 * 60 * 1000
-			})
+
+		await eventbridge.putEvents({
+			Entries: [{
+				Source: 'casheye-' + process.env.STAGE!,
+				DetailType: 'addressCreated',
+				Detail: JSON.stringify({
+					pubKey: address,
+					expiresAt: day().add(5, 'minute').unix()
+				})
+			}]
 		}).promise()
-	
-		logger.log(addAddressResponse);
-	
-		expect(addAddressResponse.MessageId).toBeDefined();
 
 		await udelay(3 * 1000)
 	
@@ -93,7 +82,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		expect(getAddress1.data.label).toBe('confirming')
 	
-		for (let i = 0; i < 6; i++ ) {
+		for (let i = 0; i < 5; i++ ) {
 			const generate6Response = await axios.post(instanceUrl + 'rpc', {
 				command: 'generate',
 				args: [1]
@@ -130,20 +119,17 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		 */
 	
 		const address2 = testAddressGenerator()
-	
-		const addAddress2Response = await sqs.sendMessage({
-			QueueUrl,
-			MessageDeduplicationId: address2,
-			MessageGroupId: address2,
-			MessageBody: JSON.stringify({
-				address: address2,
-				duration: 1 * 1000
-			})
+
+		await eventbridge.putEvents({
+			Entries: [{
+				Source: 'casheye-' + process.env.STAGE!,
+				DetailType: 'addressCreated',
+				Detail: JSON.stringify({
+					pubKey: address2,
+					expiresAt: day().add(1, 'second').unix()
+				})
+			}]
 		}).promise()
-	
-		logger.log(addAddress2Response);
-	
-		expect(addAddress2Response.MessageId).toBeDefined();
 	
 		await udelay(6 * 1000)
 	

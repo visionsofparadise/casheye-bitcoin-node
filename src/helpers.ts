@@ -1,10 +1,11 @@
 import AWS from 'aws-sdk';
 import spawnLogger from 'envlog';
-import { createEventHelper } from 'xkore-lambda-helpers/dist/util/eventHelper';
 import mockSQS from '@abetomo/simply-imitated-sqs'
 
 export const isProd = process.env.STAGE === 'prod';
 export const isUnitTest = process.env.UNIT_TEST === 'true';
+
+export const Source = 'casheye-' + process.env.STAGE
 
 export const eventbridge = isUnitTest
 	? (({
@@ -16,9 +17,6 @@ export const eventbridge = isUnitTest
 			apiVersion: '2015-10-07',
 			region: 'us-east-1'
 		})
-
-export const eventSource = `casheye-${process.env.STAGE!}`
-export const eventHelper = createEventHelper({ eventbridge, Source: eventSource });
 
 export const sqs = isUnitTest 
 	? new mockSQS as AWS.SQS
