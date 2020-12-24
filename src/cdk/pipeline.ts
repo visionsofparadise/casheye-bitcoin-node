@@ -1,4 +1,4 @@
-import { Stack, Construct, StackProps, SecretValue, Fn } from '@aws-cdk/core';
+import { Stack, Construct, StackProps, SecretValue } from '@aws-cdk/core';
 import { Artifact } from '@aws-cdk/aws-codepipeline';
 import { CdkPipeline, SimpleSynthAction, ShellScriptAction } from '@aws-cdk/pipelines';
 import { GitHubSourceAction } from '@aws-cdk/aws-codepipeline-actions';
@@ -52,7 +52,6 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 		const testEnv = [
 			'STAGE=test',
 			`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
-			`UTILITY_API_URL=${Fn.importValue('casheye-utility-test-apiUrl')}`,
 			`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY')}`,
 		]
 
@@ -97,15 +96,15 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 		EventBus.grantPutEvents(integrationTestAction)
 		EventBus.grantPutEvents(performanceTestAction)
 
-		// pipeline.addStage('Approval').addManualApprovalAction({
-		// 	actionName: 'Approval'
-		// })
+		pipeline.addStage('Approval').addManualApprovalAction({
+			actionName: 'Approval'
+		})
 
-		// const prodApp = new CasheyeAddressWatcherStage(this, serviceName + '-prod', {
-		// 	STAGE: 'prod'
-		// });
+		const prodApp = new CasheyeAddressWatcherStage(this, serviceName + '-prod', {
+			STAGE: 'prod'
+		});
 
-		// pipeline.addApplicationStage(prodApp);
+		pipeline.addApplicationStage(prodApp);
 	}
 }
 
