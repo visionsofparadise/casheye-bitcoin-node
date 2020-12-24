@@ -16,7 +16,7 @@ const jsonSchema = jsonObjectSchemaGenerator<OnAddressCreatedDetail>({
 	}
 })
 
-export const onAddressCreatedHandler = new EventLambdaHandler({
+export const onAddressCreatedHandler = new EventLambdaHandler<'addressCreated', OnAddressCreatedDetail>({
 	detailType: ['addressCreated'],
 	detailJSONSchema: jsonSchema
 }, async ({ detail }) => {

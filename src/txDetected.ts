@@ -13,9 +13,7 @@ interface GetTransactionResponse {
 	}>;
 }
 
-interface BtcTxDetectedDetail {
-	tx: GetTransactionResponse
-}
+interface BtcTxDetectedDetail extends GetTransactionResponse {}
 
 export const btcTxDetectedEvent = new Event<BtcTxDetectedDetail>({
 	source: 'casheye-' + process.env.STAGE,
@@ -26,14 +24,13 @@ export const btcTxDetectedEvent = new Event<BtcTxDetectedDetail>({
 		properties: {
 			confirmations: { type: 'number' },
 			amount: { type: 'number' },
-			details: { type: 'array', items: { 
-				type: 'object', 
+			details: { type: 'array', items: jsonObjectSchemaGenerator<BtcTxDetectedDetail['details'][number]>({ 
 				properties: {
 					address: { type: 'string' },
 					category: { type: 'string' },
 					label: { type: 'string' }
 				}
-			}}
+			})}
 		}
 	})
 });
@@ -49,7 +46,7 @@ export const txDetected = async (txId: string) => {
 
 	await rpc.setLabel(address.address, 'confirming');
 
-	await btcTxDetectedEvent.send({tx})
+	await btcTxDetectedEvent.send(tx)
 
 	return;
 };
