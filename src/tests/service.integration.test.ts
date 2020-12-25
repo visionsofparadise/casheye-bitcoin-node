@@ -53,11 +53,6 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const address = testAddressGenerator()
 
-		const now = day().unix()
-		const in5minutes = day().add(5, 'minute').unix()
-
-		logger.info({ now, in5minutes })
-
 		const event = {
 			Source: 'casheye-' + process.env.STAGE!,
 			DetailType: 'addressCreated',

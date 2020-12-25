@@ -8,7 +8,7 @@ export interface OnAddressCreatedDetail {
 	expiresAt: number;
 }
 
-const jsonSchema = jsonObjectSchemaGenerator<OnAddressCreatedDetail>({
+const detailJSONSchema = jsonObjectSchemaGenerator<OnAddressCreatedDetail>({
 	description: 'Adds addressCreated events to the address watching queue',
 	properties: {
 		pubKey: { type: 'string' },
@@ -18,7 +18,7 @@ const jsonSchema = jsonObjectSchemaGenerator<OnAddressCreatedDetail>({
 
 export const onAddressCreatedHandler = new EventLambdaHandler<'addressCreated', OnAddressCreatedDetail>({
 	detailType: ['addressCreated'],
-	detailJSONSchema: jsonSchema
+	detailJSONSchema,
 }, async ({ detail }) => {
 	logger.info({ detail })
 
