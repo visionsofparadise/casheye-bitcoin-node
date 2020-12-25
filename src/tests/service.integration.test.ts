@@ -53,12 +53,17 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const address = testAddressGenerator()
 
+		const now = day().unix()
+		const in5minutes = day().add(5, 'minute').unix()
+
+		logger.info({ now, in5minutes })
+
 		const event = {
 			Source: 'casheye-' + process.env.STAGE!,
 			DetailType: 'addressCreated',
 			Detail: JSON.stringify({
 				pubKey: address,
-				expiresAt: day().add(5, 'minute').unix()
+				expiresAt: day().unix() + 5 * 60 * 1000
 			})
 		}
 
@@ -130,7 +135,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 				DetailType: 'addressCreated',
 				Detail: JSON.stringify({
 					pubKey: address2,
-					expiresAt: day().add(1, 'second').unix()
+					expiresAt: day().unix() + 1 * 1000
 				})
 			}]
 		}).promise()
