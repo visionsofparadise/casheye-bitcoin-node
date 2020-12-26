@@ -49,14 +49,20 @@ it(`adds ${n} addresses`, async () => {
 				})
 			})
 		}
+
+		logger.info('Adding addresses')
 	
 		for (let i = 0; i < n / 10; i + 10) {
+			logger.info('batch number ' + i)
+
 			const itemsLeft = entries.length - i
 			const items = itemsLeft < 10 ? itemsLeft : 10
 	
 			await eventbridge.putEvents({
 				Entries: entries.slice(i, i + items)
 			}).promise()
+
+			await udelay(1000)
 		}
 	
 		console.timeEnd('entries')
@@ -70,7 +76,7 @@ it(`adds ${n} addresses`, async () => {
 
 		throw err
 	}
-}, 10 * 60 * 1000);
+}, 15 * 60 * 1000);
 
 it(`pays ${n} addresses`, async () => {
 	expect.assertions(1)

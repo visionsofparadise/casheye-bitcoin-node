@@ -38,8 +38,6 @@ export const watch = async (): Promise<any> => {
 				} as any))
 			}).promise()
 		}
-
-		return setTimeout(watch, 200)
 	}
 
 	return setTimeout(watch, 1000)
