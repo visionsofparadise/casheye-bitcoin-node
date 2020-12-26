@@ -13,7 +13,7 @@ import { btcAddressWatchingEvent } from '../watchAddress';
 import { btcTxDetectedEvent } from '../txDetected';
 import { btcConfirmationEvent } from '../confirm';
 import { onAddressCreatedHandler } from '../handlers/onAddressCreated';
-import { DocumentationItems } from 'xkore-lambda-helpers/dist/cdk/DocumentationItems';
+import { DocumentationItems, Documented } from 'xkore-lambda-helpers/dist/cdk/DocumentationItems';
 import path from 'path'
 
 const prodEC2Config = {
@@ -62,17 +62,13 @@ export class CasheyeAddressWatcherStack extends Stack {
 		const deploymentName = `${serviceName}-${props.STAGE}`;
 		const isProd = (props.STAGE === 'prod')
 
-		const documented = [new EventResource(this, {
-			Event: btcAddressUsedEvent
-		}), new EventResource(this, {
-			Event: btcAddressExpiredEvent
-		}), new EventResource(this, {
-			Event: btcAddressWatchingEvent
-		}), new EventResource(this, {
-			Event: btcTxDetectedEvent
-		}), new EventResource(this, {
-			Event: btcConfirmationEvent
-		})]
+		const documented: Array<Documented> = [
+			new EventResource(this, btcAddressUsedEvent), 
+			new EventResource(this, btcAddressExpiredEvent), 
+			new EventResource(this, btcAddressWatchingEvent), 
+			new EventResource(this, btcTxDetectedEvent), 
+			new EventResource(this, btcConfirmationEvent)
+		]
 		
 		const vpc = new Vpc(this, 'VPC', {
 			natGateways: 0,
@@ -150,6 +146,7 @@ pm2 save`
 		})
 
 		queue.grantSendMessages(onAddressCreated)
+		documented.push(onAddressCreated)
 
 		if (props.STAGE !== 'prod') {
 			const createOutput = masterOutput(this, deploymentName)
@@ -158,9 +155,9 @@ pm2 save`
 		}
 
 		new DocumentationItems(this, 'DocumentationItems', {
+			tableArn: Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`),
 			stage: props.STAGE,
 			service: serviceName,
-			tableArn: Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`),
 			groups: [
 				{
 					name: 'AddressWatcher',

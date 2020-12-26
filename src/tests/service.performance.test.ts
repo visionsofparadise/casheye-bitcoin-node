@@ -48,10 +48,15 @@ it(`adds ${n} addresses`, async () => {
 			})
 		})
 	}
-	
-	await eventbridge.putEvents({
-		Entries: entries
-	}).promise()
+
+	for (let i = 0; i < n / 10; i + 10) {
+		const itemsLeft = entries.length - i
+		const items = itemsLeft < 10 ? itemsLeft : 10
+
+		await eventbridge.putEvents({
+			Entries: entries.slice(i, i + items)
+		}).promise()
+	}
 
 	console.timeEnd('entries')
 	logger.info(`${entries.length} entries generated and sent out of ${n}`)
