@@ -32,7 +32,7 @@ it(`initializes funds`, async () => {
 
 it(`adds ${n} addresses`, async () => {
 	try {
-		expect.assertions(2)
+		expect.assertions(1)
 
 		logger.info('Generating messages...')
 		console.time('messages')
@@ -78,7 +78,7 @@ it(`adds ${n} addresses`, async () => {
 
 		throw err
 	}
-}, 15 * 60 * 1000);
+}, 10 * 60 * 1000);
 
 it(`pays ${n} addresses`, async () => {
 	expect.assertions(1)
