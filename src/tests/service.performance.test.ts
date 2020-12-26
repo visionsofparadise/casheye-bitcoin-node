@@ -31,39 +31,45 @@ it(`initializes funds`, async () => {
 }, 60 * 1000);
 
 it(`adds ${n} addresses`, async () => {
-	expect.assertions(2)
+	try {
+		expect.assertions(2)
 
-	logger.info('Generating messages...')
-	console.time('messages')
-
-	const entries = []
-
-	for (let i = 0; i < n; i++) {
-		entries.push({
-			Source,
-			DetailType: 'addressCreated',
-			Detail: JSON.stringify({
-				pubKey: testAddressGenerator(i + (1000 * 1000)),
-				expiresAt: day().unix() + 15 * 60 * 1000
-			})
-		})
-	}
-
-	for (let i = 0; i < n / 10; i + 10) {
-		const itemsLeft = entries.length - i
-		const items = itemsLeft < 10 ? itemsLeft : 10
-
-		await eventbridge.putEvents({
-			Entries: entries.slice(i, i + items)
-		}).promise()
-	}
-
-	console.timeEnd('entries')
-	logger.info(`${entries.length} entries generated and sent out of ${n}`)
-
-	expect(entries.length).toBe(n)
+		logger.info('Generating messages...')
+		console.time('messages')
 	
-	return;
+		const entries = []
+	
+		for (let i = 0; i < n; i++) {
+			entries.push({
+				Source,
+				DetailType: 'addressCreated',
+				Detail: JSON.stringify({
+					pubKey: testAddressGenerator(i + (1000 * 1000)),
+					expiresAt: day().unix() + 15 * 60 * 1000
+				})
+			})
+		}
+	
+		for (let i = 0; i < n / 10; i + 10) {
+			const itemsLeft = entries.length - i
+			const items = itemsLeft < 10 ? itemsLeft : 10
+	
+			await eventbridge.putEvents({
+				Entries: entries.slice(i, i + items)
+			}).promise()
+		}
+	
+		console.timeEnd('entries')
+		logger.info(`${entries.length} entries generated and sent out of ${n}`)
+	
+		expect(entries.length).toBe(n)
+
+		return;
+	} catch (err) {
+		logger.error(err)
+
+		throw err
+	}
 }, 10 * 60 * 1000);
 
 it(`pays ${n} addresses`, async () => {
