@@ -62,7 +62,7 @@ it(`adds ${n} addresses`, async () => {
 	
 			await eventbridge.putEvents({
 				Entries: entries.slice(index, index + items)
-			}).promise()
+			}).promise().catch(logger.error)
 
 			await udelay(1000)
 		}
