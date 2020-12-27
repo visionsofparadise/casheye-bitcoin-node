@@ -97,15 +97,11 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 		EventBus.grantPutEvents(integrationTestAction)
 		EventBus.grantPutEvents(performanceTestAction)
 
-		pipeline.addStage('Approval').addManualApprovalAction({
-			actionName: 'Approval'
-		})
+		// const prodApp = new CasheyeAddressWatcherStage(this, serviceName + '-prod', {
+		// 	STAGE: 'prod'
+		// });
 
-		const prodApp = new CasheyeAddressWatcherStage(this, serviceName + '-prod', {
-			STAGE: 'prod'
-		});
-
-		pipeline.addApplicationStage(prodApp);
+		// pipeline.addApplicationStage(prodApp);
 	}
 }
 

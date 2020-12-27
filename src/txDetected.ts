@@ -38,15 +38,19 @@ export const btcTxDetectedEvent = new Event<BtcTxDetectedDetail>({
 export const txDetected = async (txId: string) => {
 	const tx = (await rpc.getTransaction(txId, true)) as GetTransactionResponse;
 
+	if (tx.confirmations !== 0) return 
+
 	logger.info({tx})
 
-	const address = tx.details.filter(detail => detail.category === 'receive')[0]
+	const addresses = tx.details.filter(detail => detail.category === 'receive' && detail.label === 'watching')
 
-	if (tx.confirmations !== 0 || !address || address.label !== 'watching') return;
+	await Promise.all(addresses.map(async address => {
+		await rpc.setLabel(address.address, 'confirming');
 
-	await rpc.setLabel(address.address, 'confirming');
+		await btcTxDetectedEvent.send(tx)
 
-	await btcTxDetectedEvent.send(tx)
+		return
+	}))
 
 	return;
 };

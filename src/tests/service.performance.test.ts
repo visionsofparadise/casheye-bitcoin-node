@@ -127,15 +127,17 @@ it(`verifies ${n} addresses have been paid`, async () => {
 
 	await udelay(5 * 60 * 1000)
 
-	const result = await axios.post<Array<any>>(instanceUrl + 'rpc', {
+	const response = await axios.post<Array<{ label: string; confirmations: number }>>(instanceUrl + 'rpc', {
 		command: 'listReceivedByAddress',
 		args: [undefined, false, true]
 	})
 
-	logger.info(`Verifications ${result.data.length} out of ${n}`)
-	logger.info({ result: result.data })
+	const result = response.data.filter(receivedBy => receivedBy.label === 'confirming' && receivedBy.confirmations === 1)
 
-	expect(result.data.length).toBe(n)
+	logger.info(`Verifications ${result.length} out of ${n}`)
+	logger.info({ result })
+
+	expect(result.length).toBe(n)
 	
 	return;
 }, 15 * 60 * 1000);
