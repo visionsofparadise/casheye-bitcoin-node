@@ -72,7 +72,7 @@ export const confirm = async () => {
 			await btcConfirmationEvent.send(under6Txs.slice(index, index + 10).map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
 		}
 
-		if (txs.length === 100) return page(pageNumber + 1)
+		if (txs.length === 100) setTimeout(() => page(pageNumber + 1), 1000)
 
 		return;
 	};

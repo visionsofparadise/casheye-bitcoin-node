@@ -6,7 +6,7 @@ import { Source } from '../helpers'
 import day from 'dayjs'
 
 const instanceUrl = process.env.INSTANCE_URL!
-const n = process.env.PERFORMANCE_TEST_N ? parseInt(process.env.PERFORMANCE_TEST_N) : 100
+const n = process.env.PERFORMANCE_TEST_N ? parseInt(process.env.PERFORMANCE_TEST_N) : 200
 
 it(`initializes funds`, async () => {
 	expect.assertions(1)
@@ -121,19 +121,16 @@ it(`verifies ${n} addresses have been paid`, async () => {
 	await axios.post(instanceUrl + 'rpc', {
 		command: 'generate',
 		args: [1]
-	})
+	}).catch(error => error)
 
 	logger.info('waiting for confirmation 5 minutes...')
 
 	await udelay(5 * 60 * 1000)
 
-	console.time('verifying')
-
 	const result = await axios.post<Array<any>>(instanceUrl + 'rpc', {
 		command: 'listReceivedByAddress',
 		args: [undefined, false, true]
 	})
-	console.timeEnd('verifying')
 
 	logger.info(`Verifications ${result.data.length} out of ${n}`)
 	logger.info({ result: result.data })
