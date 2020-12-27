@@ -66,9 +66,11 @@ export const confirm = async () => {
 			parameters: [tx.address, 'used']
 		})))
 
-		await btcAddressUsedEvent.send(over6Txs.map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
-
-		await btcConfirmationEvent.send(under6Txs.map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
+		for (let i = 0; i < 10; i++) {
+			const index = i * 10
+			await btcAddressUsedEvent.send(over6Txs.slice(index, index + 10).map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
+			await btcConfirmationEvent.send(under6Txs.slice(index, index + 10).map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
+		}
 
 		if (txs.length === 100) return page(pageNumber + 1)
 

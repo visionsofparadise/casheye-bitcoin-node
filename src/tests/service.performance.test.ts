@@ -123,31 +123,22 @@ it(`verifies ${n} addresses have been paid`, async () => {
 		args: [1]
 	})
 
+	logger.info('waiting for confirmation 5 minutes...')
+
 	await udelay(5 * 60 * 1000)
 
 	console.time('verifying')
 
-	const verificationResults = []
-
-	for (let i = 0; i < n; i++) {
-		const address = testAddressGenerator(i + (1000 * 1000))
-
-		const result = await axios.post(instanceUrl + 'rpc', {
-			command: 'getAddressInfo',
-			args: [address]
-		}).catch(error => error)
-
-		verificationResults.push(result)
-	}
-
+	const result = await axios.post<Array<any>>(instanceUrl + 'rpc', {
+		command: 'listReceivedByAddress',
+		args: [undefined, false, true]
+	})
 	console.timeEnd('verifying')
 
-	expect(verificationResults.length).toBe(n)
+	logger.info(`Verifications ${result.data.length} out of ${n}`)
+	logger.info({ result: result.data })
 
-	const successfulVerifications = verificationResults.filter(result => result.data && result.data.label === 'confirming')
-
-	logger.info(`Verifications ${successfulVerifications.length} out of ${n}`)
-	logger.info({ results: verificationResults.map(result => result.data) })
+	expect(result.data.length).toBe(n)
 	
 	return;
 }, 15 * 60 * 1000);
