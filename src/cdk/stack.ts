@@ -156,7 +156,6 @@ pm2 save`
 
 		new DocumentationItems(this, 'DocumentationItems', {
 			tableArn: Fn.importValue(`casheye-dynamodb-${props.STAGE}-arn`),
-			stage: props.STAGE,
 			service: serviceName,
 			groups: [
 				{
