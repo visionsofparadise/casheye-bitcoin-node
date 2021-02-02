@@ -51,13 +51,13 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			await udelay(300)
 		}
 	
-		const address = testAddressGenerator()
+		const pubKey = testAddressGenerator()
 
 		const event = {
 			Source: 'casheye-' + process.env.STAGE!,
 			DetailType: 'addressCreated',
 			Detail: JSON.stringify({
-				pubKey: address,
+				pubKey,
 				expiresAt: day().unix() + 5 * 60 * 1000
 			})
 		}
@@ -72,7 +72,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const sendToAddressResponse = await axios.post(instanceUrl + 'rpc', {
 			command: 'sendToAddress',
-			args: [address, 1]
+			args: [pubKey, 1]
 		})
 	
 		logger.info(sendToAddressResponse.data)
@@ -81,7 +81,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const getAddress1 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
-			args: [address]
+			args: [pubKey]
 		})
 	
 		expect(getAddress1.data.label).toBe('confirming')
@@ -99,7 +99,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const getAddress2 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
-			args: [address]
+			args: [pubKey]
 		})
 	
 		expect(getAddress2.data.label).toBe('confirming')
@@ -113,7 +113,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const getAddress3 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
-			args: [address]
+			args: [pubKey]
 		})
 	
 		expect(getAddress3.data.label).toBe('used')
@@ -122,14 +122,14 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		 *  ADDRESS EXPIRATION
 		 */
 	
-		const address2 = testAddressGenerator()
+		const pubKey2 = testAddressGenerator()
 
 		await eventbridge.putEvents({
 			Entries: [{
 				Source: 'casheye-' + process.env.STAGE!,
 				DetailType: 'addressCreated',
 				Detail: JSON.stringify({
-					pubKey: address2,
+					pubKey: pubKey2,
 					expiresAt: day().unix() + 1 * 1000
 				})
 			}]
@@ -139,21 +139,21 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		const getAddress4 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
-			args: [address2]
+			args: [pubKey2]
 		})
 	
 		expect(getAddress4.data.label).toBe('expired')
 	
 		await axios.post(instanceUrl + 'rpc', {
 			command: 'sendToAddress',
-			args: [address2, 1]
+			args: [pubKey2, 1]
 		})
 	
 		await udelay(3 * 1000)
 	
 		const getAddress5 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
-			args: [address2]
+			args: [pubKey2]
 		})
 	
 		expect(getAddress5.data.label).toBe('expired')
