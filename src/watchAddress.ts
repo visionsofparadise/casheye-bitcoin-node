@@ -2,9 +2,10 @@ import { Event } from 'xkore-lambda-helpers/dist/Event';
 import { jsonObjectSchemaGenerator } from 'xkore-lambda-helpers/dist/jsonObjectSchemaGenerator';
 import { logger, eventbridge } from './helpers';
 import { rpc } from './rpc'
+import day from 'dayjs'
 
 interface BtcAddressWatchingDetail {
-	address: string;
+	pubKey: string;
 }
 
 export const btcAddressWatchingEvent = new Event<BtcAddressWatchingDetail>({
@@ -14,14 +15,12 @@ export const btcAddressWatchingEvent = new Event<BtcAddressWatchingDetail>({
 	detailJSONSchema: jsonObjectSchemaGenerator<BtcAddressWatchingDetail>({
 		description: 'Triggered when an address is being watched for transactions and confirmations.',
 		properties: {
-			address: { type: 'string' }
+			pubKey: { type: 'string' }
 		}
 	})
 });
 
-interface BtcAddressExpiredDetail {
-	address: string;
-}
+type BtcAddressExpiredDetail = BtcAddressWatchingDetail
 
 export const btcAddressExpiredEvent = new Event<BtcAddressExpiredDetail>({
 	source: 'casheye-' + process.env.STAGE,
@@ -30,7 +29,7 @@ export const btcAddressExpiredEvent = new Event<BtcAddressExpiredDetail>({
 	detailJSONSchema: jsonObjectSchemaGenerator<BtcAddressExpiredDetail>({
 		description: 'Triggered when an address with no transactions expires and stops being watched.',
 		properties: {
-			address: { type: 'string' }
+			pubKey: { type: 'string' }
 		}
 	})
 });
@@ -39,14 +38,14 @@ interface GetAddressInfoResponse {
 	label: string;
 }
 
-export const watchAddresses = async (batch: Array<{address: string, duration: number}>) => {
+export const watchAddresses = async (batch: Array<{pubKey: string, expiresAt: number}>) => {
 	const importAddressesResponse = await rpc.command(batch.map(item => ({
 		method: 'importaddress',
-		parameters: [item.address, 'watching', false]
+		parameters: [item.pubKey, 'watching', false]
 	})))
 
 	await btcAddressWatchingEvent.send(batch.map(item => ({
-			address: item.address
+			pubKey: item.pubKey
 		})))
 
 	logger.info('addresses imported ' + batch);
@@ -55,17 +54,17 @@ export const watchAddresses = async (batch: Array<{address: string, duration: nu
 	const timeouts: Array<NodeJS.Timeout> = []
 
 	for (const item of batch) {
-		const { address, duration } = item
+		const { pubKey, expiresAt } = item
 
 		const timeout = setTimeout(() => {
-			rpc.getAddressInfo(address).then((getAddressData: GetAddressInfoResponse) => {
+			rpc.getAddressInfo(pubKey).then((getAddressData: GetAddressInfoResponse) => {
 				logger.info({ getAddressData });
 	
 				if (getAddressData.label === 'watching') {
-					logger.info('address expiring ' + address);
+					logger.info('address expiring ' + pubKey);
 	
-					return rpc.setLabel(address, 'expired').then(() => btcAddressExpiredEvent.send({
-						address
+					return rpc.setLabel(pubKey, 'expired').then(() => btcAddressExpiredEvent.send({
+						pubKey
 					})
 					);
 				}
@@ -74,7 +73,7 @@ export const watchAddresses = async (batch: Array<{address: string, duration: nu
 			});
 	
 			return;
-		}, duration)
+		}, expiresAt - day().unix())
 
 		timeouts.push(timeout)
 

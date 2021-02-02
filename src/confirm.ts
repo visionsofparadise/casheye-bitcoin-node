@@ -24,11 +24,7 @@ export const btcAddressUsedEvent = new Event<BtcAddressUsedDetail>({
 	})
 });
 
-interface BtcConfirmationDetail {
-	txid: string;
-	address: string;
-	confirmations: number
-}
+type BtcConfirmationDetail = BtcAddressUsedDetail
 
 export const btcConfirmationEvent = new Event<BtcConfirmationDetail>({
 	source: 'casheye-' + process.env.STAGE,
@@ -44,11 +40,7 @@ export const btcConfirmationEvent = new Event<BtcConfirmationDetail>({
 	})
 });
 
-type ListTransactionsResponse = Array<{
-	txid: string;
-	address: string;
-	confirmations: number;
-}>;
+type ListTransactionsResponse = Array<BtcAddressUsedDetail>;
 
 export const confirm = async () => {
 	const page = async (pageNumber: number): Promise<void> => {

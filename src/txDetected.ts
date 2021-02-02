@@ -4,6 +4,7 @@ import { eventbridge, logger } from './helpers';
 import { rpc } from './rpc'
 
 interface GetTransactionResponse {
+	txid: string;
 	confirmations: number;
 	amount: number;
 	details: Array<{
@@ -13,7 +14,7 @@ interface GetTransactionResponse {
 	}>;
 }
 
-interface BtcTxDetectedDetail extends GetTransactionResponse {}
+type BtcTxDetectedDetail = GetTransactionResponse
 
 export const btcTxDetectedEvent = new Event<BtcTxDetectedDetail>({
 	source: 'casheye-' + process.env.STAGE,
@@ -22,6 +23,7 @@ export const btcTxDetectedEvent = new Event<BtcTxDetectedDetail>({
 	detailJSONSchema: jsonObjectSchemaGenerator<BtcTxDetectedDetail>({
 		description: 'Triggered when an address is being watched for transactions and confirmations.',
 		properties: {
+			txid: { type: 'string' },
 			confirmations: { type: 'number' },
 			amount: { type: 'number' },
 			details: { type: 'array', items: jsonObjectSchemaGenerator<BtcTxDetectedDetail['details'][number]>({ 

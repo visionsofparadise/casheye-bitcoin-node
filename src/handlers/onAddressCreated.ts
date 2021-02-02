@@ -33,8 +33,8 @@ export const onAddressCreatedHandler = new EventLambdaHandler<'addressCreated', 
 			MessageGroupId: detail.pubKey,
 			MessageDeduplicationId: detail.pubKey,
 			MessageBody: JSON.stringify({
-				address: detail.pubKey,
-				duration
+				pubKey: detail.pubKey,
+				expiresAt: detail.expiresAt
 			})
 		})
 		.promise();

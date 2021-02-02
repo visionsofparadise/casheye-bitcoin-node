@@ -15,7 +15,7 @@ export const watch = async (): Promise<any> => {
 		const filteredMessages = response.Messages.filter(msg => msg.Body)
 
 		const batchedMessages = filteredMessages.map(msg => {
-			const data = JSON.parse(msg.Body!) as { address: string; duration: number }
+			const data = JSON.parse(msg.Body!) as { pubKey: string; expiresAt: number }
 
 			return data
 		})
