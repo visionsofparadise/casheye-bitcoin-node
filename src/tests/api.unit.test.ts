@@ -4,6 +4,7 @@ import udelay from 'udelay'
 import { startBTC } from '../bitcoind'
 import axios from 'axios'
 import { watch } from '../watch'
+import day from 'dayjs'
 
 beforeAll(async () => {
 	startBTC()
@@ -69,13 +70,13 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		await udelay(100)
 	}
 
-	const address = 'mwfjApeUk2uwAWuikWmjqnixW7Lg1mHNHE'
+	const pubKey = 'mwfjApeUk2uwAWuikWmjqnixW7Lg1mHNHE'
 
 	const addAddressResponse = await sqs.sendMessage({
 		QueueUrl: 'test',
 		MessageBody: JSON.stringify({
-			address,
-			duration: 5 * 60 * 1000
+			pubKey,
+			expiresAt: day().unix() + 5 * 60 * 1000
 		})
 	}).promise()
 
@@ -87,7 +88,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	const sendToAddressResponse = await axios.post(externalURL + 'rpc', {
 		command: 'sendToAddress',
-		args: [address, 1]
+		args: [pubKey, 1]
 	})
 
 	logger.info(sendToAddressResponse)
@@ -96,7 +97,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	const getAddress1 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
-		args: [address]
+		args: [pubKey]
 	})
 
 	expect(getAddress1.data.label).toBe('confirming')
@@ -114,7 +115,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	const getAddress2 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
-		args: [address]
+		args: [pubKey]
 	})
 
 	expect(getAddress2.data.label).toBe('confirming')
@@ -128,7 +129,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	const getAddress3 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
-		args: [address]
+		args: [pubKey]
 	})
 
 	expect(getAddress3.data.label).toBe('used')
@@ -137,13 +138,13 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	 *  ADDRESS EXPIRATION
 	 */
 
-	const address2 = 'mz4JoMe93Bof3SJAN6iN2yGMGtMiZab2YW'
+	const pubKey2 = 'mz4JoMe93Bof3SJAN6iN2yGMGtMiZab2YW'
 
 	const addAddress2Response = await sqs.sendMessage({
 		QueueUrl: 'test',
 		MessageBody: JSON.stringify({
-			address: address2,
-			duration: 1 * 1000
+			pubKey: pubKey2,
+			expiresAt: day().unix() + 1 * 1000
 		})
 	}).promise()
 
@@ -155,21 +156,21 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 
 	const getAddress4 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
-		args: [address2]
+		args: [pubKey2]
 	})
 
 	expect(getAddress4.data.label).toBe('expired')
 
 	await axios.post(externalURL + 'rpc', {
 		command: 'sendToAddress',
-		args: [address2, 1]
+		args: [pubKey2, 1]
 	})
 
 	await udelay(1000)
 
 	const getAddress5 = await axios.post(externalURL + 'rpc', {
 		command: 'getAddressInfo',
-		args: [address2]
+		args: [pubKey2]
 	})
 
 	expect(getAddress5.data.label).toBe('expired')
