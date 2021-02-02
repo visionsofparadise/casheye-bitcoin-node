@@ -1,7 +1,6 @@
 import { EventLambdaHandler } from 'xkore-lambda-helpers/dist/EventLambdaHandler'
 import { jsonObjectSchemaGenerator } from 'xkore-lambda-helpers/dist/jsonObjectSchemaGenerator'
 import { logger, sqs } from '../helpers'
-import day from 'dayjs'
 
 export interface OnAddressCreatedDetail {
 	pubKey: string
@@ -20,13 +19,6 @@ export const onAddressCreatedHandler = new EventLambdaHandler<'addressCreated', 
 	detailType: ['addressCreated'],
 	detailJSONSchema,
 }, async ({ detail }) => {
-	logger.info({ detail })
-
-	const duration = detail.expiresAt - day().unix()
-
-	logger.info({ duration })
-
-	if (duration > 0) {
 		const response = await sqs
 		.sendMessage({
 			QueueUrl: process.env.QUEUE_URL || 'test',
@@ -40,9 +32,8 @@ export const onAddressCreatedHandler = new EventLambdaHandler<'addressCreated', 
 		.promise();
 	
 		logger.info({ response });
-	}
 
-	return
+		return
 })
 
 export const handler = onAddressCreatedHandler.handler
