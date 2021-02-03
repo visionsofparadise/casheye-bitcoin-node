@@ -44,10 +44,6 @@ export const watchAddresses = async (batch: Array<{pubKey: string, expiresAt: nu
 		parameters: [item.pubKey, 'watching', false]
 	})))
 
-	await btcAddressWatchingEvent.send(batch.map(item => ({
-			pubKey: item.pubKey
-		})))
-
 	logger.info('addresses imported ' + batch);
 	logger.info({ importAddressesResponse });
 
@@ -80,5 +76,9 @@ export const watchAddresses = async (batch: Array<{pubKey: string, expiresAt: nu
 		return
 	}
 
+	await btcAddressWatchingEvent.send(batch.map(item => ({
+		pubKey: item.pubKey
+	})))
+	
 	return timeouts
 };

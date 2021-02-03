@@ -49,7 +49,10 @@ export const txDetected = async (txId: string) => {
 	await Promise.all(addresses.map(async address => {
 		await rpc.setLabel(address.address, 'confirming');
 
-		await btcTxDetectedEvent.send(tx)
+		await btcTxDetectedEvent.send({
+			...tx,
+			amount: (typeof tx.amount === 'string' ? parseInt(tx.amount) : tx.amount) * 10 ** 8
+		})
 
 		return
 	}))
