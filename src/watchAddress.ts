@@ -72,13 +72,11 @@ export const watchAddresses = async (batch: Array<{pubKey: string, expiresAt: nu
 		}, expiresAt - day().unix())
 
 		timeouts.push(timeout)
-
-		return
 	}
 
 	await btcAddressWatchingEvent.send(batch.map(item => ({
 		pubKey: item.pubKey
 	})))
-	
+
 	return timeouts
 };
