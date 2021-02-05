@@ -69,7 +69,7 @@ export const watchAddresses = async (batch: Array<{pubKey: string, expiresAt: nu
 			});
 	
 			return;
-		}, expiresAt - day().unix())
+		}, expiresAt - day().valueOf())
 
 		timeouts.push(timeout)
 	}

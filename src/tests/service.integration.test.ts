@@ -58,7 +58,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			DetailType: 'addressCreated',
 			Detail: JSON.stringify({
 				pubKey,
-				expiresAt: day().unix() + 5 * 60 * 1000
+				expiresAt: day().add(5, 'minute').valueOf()
 			})
 		}
 
@@ -130,7 +130,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 				DetailType: 'addressCreated',
 				Detail: JSON.stringify({
 					pubKey: pubKey2,
-					expiresAt: day().unix() + 1 * 1000
+					expiresAt: day().add(1, 'second').valueOf()
 				})
 			}]
 		}).promise()

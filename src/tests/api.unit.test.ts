@@ -76,7 +76,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		QueueUrl: 'test',
 		MessageBody: JSON.stringify({
 			pubKey,
-			expiresAt: day().unix() + 5 * 60 * 1000
+			expiresAt: day().add(5, 'minute').valueOf()
 		})
 	}).promise()
 
@@ -144,7 +144,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		QueueUrl: 'test',
 		MessageBody: JSON.stringify({
 			pubKey: pubKey2,
-			expiresAt: day().unix() + 1 * 1000
+			expiresAt: day().add(1, 'second').valueOf()
 		})
 	}).promise()
 
@@ -176,4 +176,54 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	expect(getAddress5.data.label).toBe('expired')
 
 	return;
+}, 3 * 60 * 1000);
+
+it('relabels an expired address to watching', async () => {
+	expect.assertions(4)
+
+	const pubKey = 'mzMB8zZAB1kmnA8xDccgtQQvcL2w6k9MMK'
+
+	const addAddressResponse = await sqs.sendMessage({
+		QueueUrl: 'test',
+		MessageBody: JSON.stringify({
+			pubKey,
+			expiresAt: day().add(1, 'second').valueOf()
+		})
+	}).promise()
+
+	logger.log(addAddressResponse);
+
+	expect(addAddressResponse.MessageId).toBeDefined();
+
+	await udelay(3000)
+
+	const getAddress1 = await axios.post(externalURL + 'rpc', {
+		command: 'getAddressInfo',
+		args: [pubKey]
+	})
+
+	expect(getAddress1.data.label).toBe('expired')
+
+	const addAddressResponse2 = await sqs.sendMessage({
+		QueueUrl: 'test',
+		MessageBody: JSON.stringify({
+			pubKey,
+			expiresAt: day().add(5, 'minute').valueOf()
+		})
+	}).promise()
+
+	logger.log(addAddressResponse2);
+
+	expect(addAddressResponse2.MessageId).toBeDefined();
+
+	await udelay(1000)
+
+	const getAddress2 = await axios.post(externalURL + 'rpc', {
+		command: 'getAddressInfo',
+		args: [pubKey]
+	})
+
+	expect(getAddress2.data.label).toBe('watching')
+
+	return
 }, 3 * 60 * 1000);
