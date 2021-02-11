@@ -18,15 +18,19 @@ const externalApi = api
 internalApi.get('/wallet-notify/:txId', async (req, res) => {
 	const { txId } = req.params;
 
+	res.sendStatus(204)
+
 	await txDetected(txId);
 
-	return res.sendStatus(204);
+	return;
 });
 
 internalApi.get('/block-notify/:blockHash', async (_, res) => {
+	res.sendStatus(204)
+	
 	await confirm();
 
-	return res.sendStatus(204);
+	return ;
 });
 
 externalApi.get('/', async (_, res) => res.sendStatus(200));
