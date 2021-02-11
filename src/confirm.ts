@@ -52,16 +52,24 @@ export const confirm = async () => {
 
 		const over6Txs = txs.filter(tx => tx.confirmations >= 6)
 
-		for (let i = 0; i < 10; i++) {
+		for (let i = 0; i < Math.ceil(txs.length / 10); i++) {
 			const index = i * 10
-			await btcConfirmationEvent.send(txs.slice(index, index + 10).map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
-			await btcAddressUsedEvent.send(over6Txs.slice(index, index + 10).map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
+			const endIndex = index + 10
+			
+			await btcConfirmationEvent.send(txs.slice(index, endIndex > txs.length ? txs.length : endIndex).map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
 		}
 
 		await rpc.command(over6Txs.map(tx => ({
 			method: 'setlabel',
 			parameters: [tx.address, 'used']
 		})))
+
+		for (let i = 0; i < Math.ceil(over6Txs.length / 10); i++) {
+			const index = i * 10
+			const endIndex = index + 10
+			
+			await btcAddressUsedEvent.send(over6Txs.slice(index, endIndex > txs.length ? txs.length : endIndex).map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
+		}
 
 		if (txs.length === 100) setTimeout(() => page(pageNumber + 1), 1000)
 
