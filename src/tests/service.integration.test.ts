@@ -109,7 +109,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			args: [1]
 		})
 	
-		await udelay(2 * 1000)
+		await udelay(10 * 1000)
 	
 		const getAddress3 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
