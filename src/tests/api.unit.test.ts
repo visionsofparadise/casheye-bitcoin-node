@@ -60,6 +60,7 @@ it('executes rpc command', async () => {
 
 it('adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires', async () => {
 	expect.assertions(7)
+	jest.useRealTimers()
 
 	for (let i = 0; i <= 101; i++ ) {
 		await axios.post(externalURL + 'rpc', {

@@ -38,6 +38,7 @@ it('executes rpc command', async () => {
 
 it('adds an address, detects payment, confirms seven times then completes, then adds address, waits and expires', async () => {
 	expect.assertions(5)
+	jest.useRealTimers()
 
 	try {
 		for (let i = 0; i < 101; i++ ) {
