@@ -95,13 +95,15 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		
 			logger.info(generate6Response.status)
 		
-			await udelay(300)
+			await udelay(3 * 1000)
 		}
 	
 		const getAddress2 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
 			args: [pubKey]
 		})
+
+		logger.info({ getAddress2 })
 	
 		expect(getAddress2.data.label).toBe('confirming')
 	
