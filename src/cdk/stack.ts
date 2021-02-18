@@ -23,7 +23,7 @@ const prodEC2Config = {
 
 const testEC2Config = {
 	storageSize: 20,
-	instanceSize: InstanceSize.SMALL
+	instanceSize: InstanceSize.MICRO
 }
 
 export class CasheyeAddressWatcherStage extends Stage {	
