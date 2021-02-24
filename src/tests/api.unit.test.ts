@@ -77,7 +77,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		QueueUrl: 'test',
 		MessageBody: JSON.stringify({
 			pubKey,
-			expiresAt: day().add(5, 'minute').valueOf()
+			expiresAt: day().add(5, 'minute').unix()
 		})
 	}).promise()
 
@@ -145,7 +145,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		QueueUrl: 'test',
 		MessageBody: JSON.stringify({
 			pubKey: pubKey2,
-			expiresAt: day().add(1, 'second').valueOf()
+			expiresAt: day().add(1, 'second').unix()
 		})
 	}).promise()
 
@@ -188,7 +188,7 @@ it('relabels an expired address to watching', async () => {
 		QueueUrl: 'test',
 		MessageBody: JSON.stringify({
 			pubKey,
-			expiresAt: day().add(1, 'second').valueOf()
+			expiresAt: day().add(1, 'second').unix()
 		})
 	}).promise()
 
@@ -209,7 +209,7 @@ it('relabels an expired address to watching', async () => {
 		QueueUrl: 'test',
 		MessageBody: JSON.stringify({
 			pubKey,
-			expiresAt: day().add(5, 'minute').valueOf()
+			expiresAt: day().add(5, 'minute').unix()
 		})
 	}).promise()
 
