@@ -30,4 +30,12 @@ export const logger = spawnLogger({
 	offValue: 'prod'
 });
 
+export type Network = 'mainnet' | 'testnet' | 'regtest'
 
+export type Currency = 'BTC' | 'BTC-testnet'
+
+export const networkCurrencies = {
+	mainnet: ['BTC'],
+	testnet: ['BTC-testnet'],
+	regtest: ['BTC', 'BTC-testnet']
+}

@@ -45,7 +45,8 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 		});
 
 		const testApp = new CasheyeBitcoinNodeStage(this, serviceName + '-test', {
-			STAGE: 'test'
+			STAGE: 'test',
+			NETWORK: 'regtest'
 		});
 
 		const testAppStage = pipeline.addApplicationStage(testApp);
@@ -97,11 +98,19 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 		EventBus.grantAllPutEvents(integrationTestAction)
 		EventBus.grantAllPutEvents(performanceTestAction)
 
-		// const prodApp = new CasheyeBitcoinNodeStage(this, serviceName + '-prod', {
-		// 	STAGE: 'prod'
-		// });
+		const testnetApp = new CasheyeBitcoinNodeStage(this, serviceName + '-testnet-prod', {
+			STAGE: 'prod',
+			NETWORK: 'testnet'
+		});
 
-		// pipeline.addApplicationStage(prodApp);
+		pipeline.addApplicationStage(testnetApp);
+
+		const mainnetApp = new CasheyeBitcoinNodeStage(this, serviceName + '-mainnet-prod', {
+			STAGE: 'prod',
+			NETWORK: 'mainnet'
+		});
+
+		pipeline.addApplicationStage(mainnetApp);
 	}
 }
 

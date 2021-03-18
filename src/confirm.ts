@@ -1,4 +1,4 @@
-import { eventbridge, logger } from './helpers';
+import { Currency, eventbridge, logger, Network, networkCurrencies } from './helpers';
 import { jsonObjectSchemaGenerator } from 'xkore-lambda-helpers/dist/jsonObjectSchemaGenerator'
 import { Event } from 'xkore-lambda-helpers/dist/Event'
 import { rpc } from './rpc'
@@ -8,6 +8,7 @@ type BtcConfirmationDetail = {
 	txid: string;
 	address: string;
 	confirmations: number
+	currency: Currency
 }
 
 export const btcConfirmationEvent = new Event<BtcConfirmationDetail>({
@@ -19,7 +20,8 @@ export const btcConfirmationEvent = new Event<BtcConfirmationDetail>({
 		properties: {
 			txid: { type: 'string' },
 			address: { type: 'string' },
-			confirmations: { type: 'number' }
+			confirmations: { type: 'number' },
+			currency: { type: 'string' }
 		}
 	})
 });
@@ -37,7 +39,7 @@ export const confirm = async () => {
 		const txsBatch = chunk(txs, 10)
 
 		for (const batch of txsBatch) {			
-			await btcConfirmationEvent.send(batch.map(({ txid, address, confirmations }) => ({ txid, address, confirmations })))
+			await btcConfirmationEvent.send(batch.map(({ txid, address, confirmations }) => ({ txid, address, confirmations, currency: networkCurrencies[process.env.NETWORK! as Network][0] as Currency })))
 		}
 
 		const over6Txs = txs.filter(tx => tx.confirmations >= 6)

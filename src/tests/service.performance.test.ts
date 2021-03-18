@@ -20,7 +20,7 @@ it(`initializes funds`, async () => {
 			args: [1]
 		})
 	
-		await udelay(300)
+		await udelay(500)
 	}
 
 	console.timeEnd('initialization')
@@ -45,7 +45,8 @@ it(`adds ${n} addresses`, async () => {
 				DetailType: 'addressCreated',
 				Detail: JSON.stringify({
 					pubKey: testAddressGenerator(i + (1000 * 1000)),
-					expiresAt: day().add(20, 'minute').unix()
+					currency: 'BTC',
+					expiresAt: day().add(30, 'minute').unix()
 				})
 			})
 		}

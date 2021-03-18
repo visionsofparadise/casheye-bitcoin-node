@@ -14,6 +14,7 @@ import { btcConfirmationEvent } from '../confirm';
 import { onAddressCreatedHandler } from '../handlers/onAddressCreated';
 import { DocumentationItems, Documented } from 'xkore-lambda-helpers/dist/cdk/DocumentationItems';
 import path from 'path'
+import { Network, networkCurrencies } from '../helpers';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -28,11 +29,12 @@ const testEC2Config = {
 export class CasheyeBitcoinNodeStage extends Stage {	
 	public readonly instanceUrl?: CfnOutput;
 
-		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string }) {
+		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string; NETWORK: Network }) {
 		super(scope, id, props);
 
 		const stack = new CasheyeBitcoinNodeStack(this, 'stack', {
 			STAGE: props.STAGE,
+			NETWORK: props.NETWORK,
 			env: {
 				account: process.env.CDK_DEFAULT_ACCOUNT,
 				region: 'us-east-1'
@@ -55,7 +57,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
     return ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1e', 'us-east-1f'];
 	}
 	
-	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string }) {
+	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string; NETWORK: Network }) {
 		super(scope, id, props);
 		
 		const deploymentName = `${serviceName}-${props.STAGE}`;
@@ -82,7 +84,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		const config = isProd ? prodEC2Config : testEC2Config
 		const nodeName = deploymentName + '-node-0'
 
-		const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} QUEUE_URL=${queue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+		const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} NETWORK=${props.NETWORK} QUEUE_URL=${queue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 		const shebang = `#!/bin/bash
 
@@ -124,7 +126,8 @@ pm2 save`
 			],
 			userData: UserData.forLinux({
 				shebang
-			})
+			}),
+			userDataCausesReplacement: true
 		})
 
 		instance.connections.allowFromAnyIpv4(Port.tcp(4000))
@@ -137,6 +140,11 @@ pm2 save`
 
 		const onAddressCreated = createRuleLambda(this, 'onAddressCreated', {
 			RuleLambdaHandler: onAddressCreatedHandler,
+			eventPattern: {
+				detail: {
+					currency: networkCurrencies[props.NETWORK]
+				}
+			},
 			environment: {
 				STAGE: props.STAGE,
 				QUEUE_URL: queue.queueUrl

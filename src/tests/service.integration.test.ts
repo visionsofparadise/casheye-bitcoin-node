@@ -59,6 +59,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			DetailType: 'addressCreated',
 			Detail: JSON.stringify({
 				pubKey,
+				currency: 'BTC',
 				expiresAt: day().add(5, 'minute').unix()
 			})
 		}
@@ -133,6 +134,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 				DetailType: 'addressCreated',
 				Detail: JSON.stringify({
 					pubKey: pubKey2,
+					currency: 'BTC',
 					expiresAt: day().add(1, 'second').unix()
 				})
 			}]

@@ -6,7 +6,7 @@
 	"scripts": {
 		"compile": "tsc",
 		"build": "parcel build ./src/handlers/*.ts -d build --target node --bundle-node-modules --no-source-maps",
-		"test": "STAGE=test UNIT_TEST=true jest unit --forceExit",
+		"test": "STAGE=test NETWORK=regtest UNIT_TEST=true jest unit --forceExit",
 		"posttest": "rm -r ~/.bitcoin/regtest",
 		"synth": "cdk synth",
 		"integration": "jest integration",
