@@ -1,4 +1,3 @@
-import upick from 'upick';
 import { eventbridge, logger } from './helpers';
 import { jsonObjectSchemaGenerator } from 'xkore-lambda-helpers/dist/jsonObjectSchemaGenerator'
 import { Event } from 'xkore-lambda-helpers/dist/Event'
@@ -56,7 +55,7 @@ export const confirm = async () => {
 			const index = i * 10
 			const endIndex = index + 10
 			
-			await btcConfirmationEvent.send(txs.slice(index, endIndex > txs.length ? txs.length : endIndex).map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
+			await btcConfirmationEvent.send(txs.slice(index, endIndex > txs.length ? txs.length : endIndex).map(({ txid, address, confirmations }) => ({ txid, address, confirmations })))
 		}
 
 		await rpc.command(over6Txs.map(tx => ({
@@ -68,7 +67,7 @@ export const confirm = async () => {
 			const index = i * 10
 			const endIndex = index + 10
 			
-			await btcAddressUsedEvent.send(over6Txs.slice(index, endIndex > txs.length ? txs.length : endIndex).map(tx => upick(tx, ['txid', 'address', 'confirmations'])))
+			await btcAddressUsedEvent.send(over6Txs.slice(index, endIndex > txs.length ? txs.length : endIndex).map(({ txid, address, confirmations }) => ({ txid, address, confirmations })))
 		}
 
 		if (txs.length === 100) setTimeout(() => page(pageNumber + 1), 1000)

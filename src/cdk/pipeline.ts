@@ -94,8 +94,8 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 
 		testAppStage.addActions(performanceTestAction)
 
-		EventBus.grantPutEvents(integrationTestAction)
-		EventBus.grantPutEvents(performanceTestAction)
+		EventBus.grantAllPutEvents(integrationTestAction)
+		EventBus.grantAllPutEvents(performanceTestAction)
 
 		// const prodApp = new CasheyeBitcoinNodeStage(this, serviceName + '-prod', {
 		// 	STAGE: 'prod'

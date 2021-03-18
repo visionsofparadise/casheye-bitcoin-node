@@ -44,7 +44,7 @@ export class CasheyeBitcoinNodeStage extends Stage {
 	}
 }
 
-const { initializeEventLambda } = masterLambda({
+const { initializeRuleLambda } = masterLambda({
 	runtime: Runtime.NODEJS_12_X,
 	code: Code.fromAsset(path.join(__dirname, '../../build')),
 })
@@ -132,13 +132,13 @@ pm2 save`
 		instance.connections.allowFromAnyIpv4(Port.tcp(4000))
 		instance.connections.allowFromAnyIpv4(Port.tcp(isProd ? 8333 : 18333))
 
-		EventBus.grantPutEvents(instance.grantPrincipal)
+		EventBus.grantAllPutEvents(instance.grantPrincipal)
 		queue.grantConsumeMessages(instance.grantPrincipal)
 
-		const createEventLambda = initializeEventLambda('casheye-' + props.STAGE)
+		const createRuleLambda = initializeRuleLambda('casheye-' + props.STAGE)
 
-		const onAddressCreated = createEventLambda(this, 'onAddressCreated', {
-			EventLambdaHandler: onAddressCreatedHandler,
+		const onAddressCreated = createRuleLambda(this, 'onAddressCreated', {
+			RuleLambdaHandler: onAddressCreatedHandler,
 			environment: {
 				STAGE: props.STAGE,
 				QUEUE_URL: queue.queueUrl

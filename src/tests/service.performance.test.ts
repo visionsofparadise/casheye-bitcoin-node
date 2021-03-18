@@ -45,7 +45,7 @@ it(`adds ${n} addresses`, async () => {
 				DetailType: 'addressCreated',
 				Detail: JSON.stringify({
 					pubKey: testAddressGenerator(i + (1000 * 1000)),
-					expiresAt: day().add(15, 'minute').unix()
+					expiresAt: day().add(20, 'minute').unix()
 				})
 			})
 		}

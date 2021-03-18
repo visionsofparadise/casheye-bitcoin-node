@@ -27,7 +27,6 @@
 	},
 	"homepage": "https://github.com/visionsofparadise/casheye-bitcoin-node#readme",
 	"dependencies": {
-		"ajv": "^7.0.0",
 		"aws-sdk": "^2.799.0",
 		"axios": "^0.21.0",
 		"bitcoin-core": "^2.3.0",
@@ -35,8 +34,7 @@
 		"body-parser": "^1.19.0",
 		"cors": "^2.8.5",
 		"express": "^4.17.1",
-		"upick": "^1.0.0",
-		"xkore-lambda-helpers": "^1.1.57"
+		"xkore-lambda-helpers": "^1.1.76"
 	},
 	"devDependencies": {
 		"@abetomo/simply-imitated-sqs": "^1.1.3",
