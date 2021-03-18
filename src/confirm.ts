@@ -2,6 +2,7 @@ import { eventbridge, logger } from './helpers';
 import { jsonObjectSchemaGenerator } from 'xkore-lambda-helpers/dist/jsonObjectSchemaGenerator'
 import { Event } from 'xkore-lambda-helpers/dist/Event'
 import { rpc } from './rpc'
+import chunk from 'lodash/chunk'
 
 interface BtcAddressUsedDetail {
 	txid: string;
@@ -51,11 +52,10 @@ export const confirm = async () => {
 
 		const over6Txs = txs.filter(tx => tx.confirmations >= 6)
 
-		for (let i = 0; i < Math.ceil(txs.length / 10); i++) {
-			const index = i * 10
-			const endIndex = index + 10
-			
-			await btcConfirmationEvent.send(txs.slice(index, endIndex > txs.length ? txs.length : endIndex).map(({ txid, address, confirmations }) => ({ txid, address, confirmations })))
+		const txsBatch = chunk(txs, 10)
+
+		for (const batch of txsBatch) {			
+			await btcConfirmationEvent.send(batch.map(({ txid, address, confirmations }) => ({ txid, address, confirmations })))
 		}
 
 		await rpc.command(over6Txs.map(tx => ({
@@ -63,11 +63,10 @@ export const confirm = async () => {
 			parameters: [tx.address, 'used']
 		})))
 
-		for (let i = 0; i < Math.ceil(over6Txs.length / 10); i++) {
-			const index = i * 10
-			const endIndex = index + 10
-			
-			await btcAddressUsedEvent.send(over6Txs.slice(index, endIndex > txs.length ? txs.length : endIndex).map(({ txid, address, confirmations }) => ({ txid, address, confirmations })))
+		const over6TxsBatch = chunk(over6Txs, 10)
+
+		for (const batch of over6TxsBatch) {			
+			await btcAddressUsedEvent.send(batch.map(({ txid, address, confirmations }) => ({ txid, address, confirmations })))
 		}
 
 		if (txs.length === 100) setTimeout(() => page(pageNumber + 1), 1000)
