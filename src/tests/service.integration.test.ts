@@ -49,7 +49,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		
 			logger.info(generate1Response.status)
 		
-			await udelay(300)
+			await udelay(1000)
 		}
 	
 		const pubKey = testAddressGenerator()
@@ -79,7 +79,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		logger.info(sendToAddressResponse.data)
 	
-		await udelay(3 * 1000)
+		await udelay(5 * 1000)
 	
 		const getAddress1 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
@@ -140,7 +140,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			}]
 		}).promise()
 	
-		await udelay(6 * 1000)
+		await udelay(10 * 1000)
 	
 		const getAddress4 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
@@ -154,7 +154,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			args: [pubKey2, 1]
 		})
 	
-		await udelay(3 * 1000)
+		await udelay(5 * 1000)
 	
 		const getAddress5 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',

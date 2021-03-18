@@ -44,7 +44,7 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 			synthAction
 		});
 
-		const testApp = new CasheyeBitcoinNodeStage(this, serviceName + 'regtest-test', {
+		const testApp = new CasheyeBitcoinNodeStage(this, serviceName + '-regtest-test', {
 			STAGE: 'test',
 			NETWORK: 'regtest'
 		});
