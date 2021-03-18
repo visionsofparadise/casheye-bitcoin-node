@@ -7,7 +7,6 @@ import { masterLambda } from 'xkore-lambda-helpers/dist/cdk/masterLambda'
 import { EventBus } from '@aws-cdk/aws-events';
 import { Runtime, Code } from '@aws-cdk/aws-lambda';
 import { Queue } from '@aws-cdk/aws-sqs';
-import { btcAddressUsedEvent } from '../confirm';
 import { btcAddressExpiredEvent } from '../watchAddress';
 import { btcAddressWatchingEvent } from '../watchAddress';
 import { btcTxDetectedEvent } from '../txDetected';
@@ -63,7 +62,6 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		const isProd = (props.STAGE === 'prod')
 
 		const documented: Array<Documented> = [
-			new EventResource(this, btcAddressUsedEvent), 
 			new EventResource(this, btcAddressExpiredEvent), 
 			new EventResource(this, btcAddressWatchingEvent), 
 			new EventResource(this, btcTxDetectedEvent), 
