@@ -60,7 +60,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string; NETWORK: Network }) {
 		super(scope, id, props);
 		
-		const deploymentName = `${serviceName}-${props.STAGE}`;
+		const deploymentName = `${serviceName}-${props.NETWORK}-${props.STAGE}`;
 		const isProd = (props.STAGE === 'prod')
 
 		const documented: Array<Documented> = [
