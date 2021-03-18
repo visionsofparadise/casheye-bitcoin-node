@@ -2,13 +2,13 @@ import { Stack, Construct, StackProps, SecretValue } from '@aws-cdk/core';
 import { Artifact } from '@aws-cdk/aws-codepipeline';
 import { CdkPipeline, SimpleSynthAction, ShellScriptAction } from '@aws-cdk/pipelines';
 import { GitHubSourceAction } from '@aws-cdk/aws-codepipeline-actions';
-import { CasheyeAddressWatcherStage } from './stack';
+import { CasheyeBitcoinNodeStage } from './stack';
 import { App } from '@aws-cdk/core';
 import { EventBus } from '@aws-cdk/aws-events';
 
-export const serviceName = 'casheye-address-watcher';
+export const serviceName = 'casheye-bitcoin-node';
 
-export class CasheyeAddressWatcherPipelineStack extends Stack {
+export class CasheyeBitcoinNodePipelineStack extends Stack {
 	constructor(scope: Construct, id: string, props?: StackProps) {
 		super(scope, id, props);
 
@@ -44,7 +44,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 			synthAction
 		});
 
-		const testApp = new CasheyeAddressWatcherStage(this, serviceName + '-test', {
+		const testApp = new CasheyeBitcoinNodeStage(this, serviceName + '-test', {
 			STAGE: 'test'
 		});
 
@@ -97,7 +97,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 		EventBus.grantPutEvents(integrationTestAction)
 		EventBus.grantPutEvents(performanceTestAction)
 
-		// const prodApp = new CasheyeAddressWatcherStage(this, serviceName + '-prod', {
+		// const prodApp = new CasheyeBitcoinNodeStage(this, serviceName + '-prod', {
 		// 	STAGE: 'prod'
 		// });
 
@@ -107,7 +107,7 @@ export class CasheyeAddressWatcherPipelineStack extends Stack {
 
 const app = new App();
 
-new CasheyeAddressWatcherPipelineStack(app, `${serviceName}-pipeline-stack`, {
+new CasheyeBitcoinNodePipelineStack(app, `${serviceName}-pipeline-stack`, {
 	env: {
 		account: process.env.CDK_DEFAULT_ACCOUNT,
 		region: 'us-east-1'

@@ -26,13 +26,13 @@ const testEC2Config = {
 	instanceSize: InstanceSize.SMALL
 }
 
-export class CasheyeAddressWatcherStage extends Stage {	
+export class CasheyeBitcoinNodeStage extends Stage {	
 	public readonly instanceUrl?: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string }) {
 		super(scope, id, props);
 
-		const stack = new CasheyeAddressWatcherStack(this, 'stack', {
+		const stack = new CasheyeBitcoinNodeStack(this, 'stack', {
 			STAGE: props.STAGE,
 			env: {
 				account: process.env.CDK_DEFAULT_ACCOUNT,
@@ -49,7 +49,7 @@ const { initializeEventLambda } = masterLambda({
 	code: Code.fromAsset(path.join(__dirname, '../../build')),
 })
 
-export class CasheyeAddressWatcherStack extends Stack {
+export class CasheyeBitcoinNodeStack extends Stack {
 	public readonly instanceUrl?: CfnOutput;
 
 	get availabilityZones(): string[] {
