@@ -7,7 +7,7 @@ export const testAddressGenerator = (n?: number) => {
 
 	const derivedxPubKey = xPubKeyObj.deriveChild(`m/0/${number}`);
 
-	const addressObj = new Address(derivedxPubKey.publicKey, Networks.mainnet);
+	const addressObj = new Address(derivedxPubKey.publicKey, Networks.testnet);
 
 	const address = addressObj.toString()
 
