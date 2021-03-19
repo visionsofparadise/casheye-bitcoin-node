@@ -4,31 +4,11 @@ import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
 import { Source } from '../helpers'
 import day from 'dayjs'
+import chunk from 'lodash/chunk'
+import difference from 'lodash/difference'
 
 const instanceUrl = process.env.INSTANCE_URL!
 const n = process.env.PERFORMANCE_TEST_N ? parseInt(process.env.PERFORMANCE_TEST_N) : 200
-
-it(`initializes funds`, async () => {
-	expect.assertions(1)
-
-	logger.info('Initializing funds...')
-	console.time('initialization')
-
-	for (let i = 0; i < 101; i++ ) {
-		await axios.post(instanceUrl + 'rpc', {
-			command: 'generate',
-			args: [1]
-		})
-	
-		await udelay(500)
-	}
-
-	console.timeEnd('initialization')
-		
-	expect(true).toBeTruthy()
-	
-	return;
-}, 60 * 1000);
 
 it(`adds ${n} addresses`, async () => {
 	try {
@@ -52,21 +32,16 @@ it(`adds ${n} addresses`, async () => {
 		}
 
 		logger.info('Adding addresses')
-	
-		for (let i = 0; i < n / 10; i++) {
-			logger.info('batch number ' + i)
 
-			const index = i * 10
+		const entriesBatched = chunk(entries, 10)
 
-			const itemsLeft = entries.length - index
-			const items = itemsLeft < 10 ? itemsLeft : 10
-	
+		await Promise.all(entriesBatched.map(async batch => {
 			await eventbridge.putEvents({
-				Entries: entries.slice(index, index + items)
+				Entries: batch
 			}).promise().catch(logger.error)
 
 			await udelay(1000)
-		}
+		}))
 	
 		console.timeEnd('entries')
 		logger.info(`${entries.length} entries generated and sent out of ${n}`)
@@ -135,8 +110,10 @@ it(`verifies ${n} addresses have been paid`, async () => {
 
 	const result = response.data.filter(receivedBy => receivedBy.label === 'confirming' && receivedBy.confirmations === 1)
 
+	const diff = difference(response.data, result)
+
 	logger.info(`Verifications ${result.length} out of ${n}`)
-	logger.info({ result })
+	logger.info({ diff })
 
 	expect(result.length).toBe(n)
 	
