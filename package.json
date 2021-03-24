@@ -35,7 +35,7 @@
 		"cors": "^2.8.5",
 		"express": "^4.17.1",
 		"lodash": "^4.17.21",
-		"xkore-lambda-helpers": "^1.1.76"
+		"xkore-lambda-helpers": "^1.1.79"
 	},
 	"devDependencies": {
 		"@abetomo/simply-imitated-sqs": "^1.1.3",
