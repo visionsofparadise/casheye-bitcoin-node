@@ -131,7 +131,7 @@ pm2 save`
 		})
 
 		instance.connections.allowFromAnyIpv4(Port.tcp(4000))
-		instance.connections.allowFromAnyIpv4(Port.tcp(props.NETWORK === 'mainnet' ? 8333 : props.NETWORK === 'testnet' ? 18333 : 18443))
+		instance.connections.allowFromAnyIpv4(Port.tcp(props.NETWORK === 'mainnet' ? 8333 : props.NETWORK === 'testnet' ? 18333 : 18332))
 
 		EventBus.grantAllPutEvents(instance.grantPrincipal)
 		queue.grantConsumeMessages(instance.grantPrincipal)
