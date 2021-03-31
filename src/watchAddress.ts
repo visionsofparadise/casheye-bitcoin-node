@@ -4,16 +4,16 @@ import { logger, eventbridge, networkCurrencies, Network, Currency } from './hel
 import { rpc } from './rpc'
 import day from 'dayjs'
 
-interface BtcAddressWatchingDetail {
+interface NodeAddressWatchingDetail {
 	pubKey: string;
 	currency: Currency
 }
 
-export const btcAddressWatchingEvent = new Event<BtcAddressWatchingDetail>({
+export const nodeAddressWatchingEvent = new Event<NodeAddressWatchingDetail>({
 	source: 'casheye-' + process.env.STAGE,
 	eventbridge,
-	detailType: 'btcAddressWatching',
-	detailJSONSchema: jsonObjectSchemaGenerator<BtcAddressWatchingDetail>({
+	detailType: 'nodeAddressWatching',
+	detailJSONSchema: jsonObjectSchemaGenerator<NodeAddressWatchingDetail>({
 		description: 'Triggered when an address is being watched for transactions and confirmations.',
 		properties: {
 			pubKey: { type: 'string' },
@@ -22,13 +22,13 @@ export const btcAddressWatchingEvent = new Event<BtcAddressWatchingDetail>({
 	})
 });
 
-type BtcAddressExpiredDetail = BtcAddressWatchingDetail
+type NodeAddressExpiredDetail = NodeAddressWatchingDetail
 
-export const btcAddressExpiredEvent = new Event<BtcAddressExpiredDetail>({
+export const nodeAddressExpiredEvent = new Event<NodeAddressExpiredDetail>({
 	source: 'casheye-' + process.env.STAGE,
 	eventbridge,
-	detailType: 'btcAddressExpired',
-	detailJSONSchema: jsonObjectSchemaGenerator<BtcAddressExpiredDetail>({
+	detailType: 'nodeAddressExpired',
+	detailJSONSchema: jsonObjectSchemaGenerator<NodeAddressExpiredDetail>({
 		description: 'Triggered when an address with no transactions expires and stops being watched.',
 		properties: {
 			pubKey: { type: 'string' },
@@ -63,7 +63,7 @@ export const watchAddresses = async (batch: Array<{pubKey: string, expiresAt: nu
 				if (getAddressData.label === 'watching') {
 					logger.info('address expiring ' + pubKey);
 	
-					return rpc.setLabel(pubKey, 'expired').then(() => btcAddressExpiredEvent.send({
+					return rpc.setLabel(pubKey, 'expired').then(() => nodeAddressExpiredEvent.send({
 						pubKey,
 						currency
 					})
@@ -79,7 +79,7 @@ export const watchAddresses = async (batch: Array<{pubKey: string, expiresAt: nu
 		timeouts.push(timeout)
 	}
 
-	await btcAddressWatchingEvent.send(batch.map(item => ({
+	await nodeAddressWatchingEvent.send(batch.map(item => ({
 		pubKey: item.pubKey,
 		currency
 	})))

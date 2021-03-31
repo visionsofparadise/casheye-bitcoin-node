@@ -4,18 +4,18 @@ import { Event } from 'xkore-lambda-helpers/dist/Event'
 import { rpc } from './rpc'
 import chunk from 'lodash/chunk'
 
-type BtcConfirmationDetail = {
+type NodeConfirmationDetail = {
 	txid: string;
 	address: string;
 	confirmations: number
 	currency: Currency
 }
 
-export const btcConfirmationEvent = new Event<BtcConfirmationDetail>({
+export const nodeConfirmationEvent = new Event<NodeConfirmationDetail>({
 	source: 'casheye-' + process.env.STAGE,
 	eventbridge,
-	detailType: 'btcConfirmation',
-	detailJSONSchema: jsonObjectSchemaGenerator<BtcConfirmationDetail>({
+	detailType: 'nodeConfirmation',
+	detailJSONSchema: jsonObjectSchemaGenerator<NodeConfirmationDetail>({
 		description: 'Triggered when a transaction is confirmed.',
 		properties: {
 			txid: { type: 'string' },
@@ -26,7 +26,7 @@ export const btcConfirmationEvent = new Event<BtcConfirmationDetail>({
 	})
 });
 
-type ListTransactionsResponse = Array<BtcConfirmationDetail>;
+type ListTransactionsResponse = Array<NodeConfirmationDetail>;
 
 export const confirm = async () => {
 	const page = async (pageNumber: number): Promise<void> => {
@@ -39,7 +39,7 @@ export const confirm = async () => {
 		const txsBatch = chunk(txs, 10)
 
 		for (const batch of txsBatch) {			
-			await btcConfirmationEvent.send(batch.map(({ txid, address, confirmations }) => ({ txid, address, confirmations, currency: networkCurrencies[process.env.NETWORK! as Network][0] as Currency })))
+			await nodeConfirmationEvent.send(batch.map(({ txid, address, confirmations }) => ({ txid, address, confirmations, currency: networkCurrencies[process.env.NETWORK! as Network][0] as Currency })))
 		}
 
 		const over6Txs = txs.filter(tx => tx.confirmations >= 6)

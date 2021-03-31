@@ -15,20 +15,20 @@ interface GetTransactionResponse {
 	}>;
 }
 
-type BtcTxDetectedDetail = GetTransactionResponse
+type NodeTxDetectedDetail = GetTransactionResponse
 
-export const btcTxDetectedEvent = new Event<BtcTxDetectedDetail>({
+export const nodeTxDetectedEvent = new Event<NodeTxDetectedDetail>({
 	source: 'casheye-' + process.env.STAGE,
 	eventbridge,
-	detailType: 'btcTxDetected',
-	detailJSONSchema: jsonObjectSchemaGenerator<BtcTxDetectedDetail>({
+	detailType: 'nodeTxDetected',
+	detailJSONSchema: jsonObjectSchemaGenerator<NodeTxDetectedDetail>({
 		description: 'Triggered when an address is being watched for transactions and confirmations.',
 		properties: {
 			txid: { type: 'string' },
 			confirmations: { type: 'number' },
 			amount: { type: 'number' },
 			currency: { type: 'string' },
-			details: { type: 'array', items: jsonObjectSchemaGenerator<BtcTxDetectedDetail['details'][number]>({ 
+			details: { type: 'array', items: jsonObjectSchemaGenerator<NodeTxDetectedDetail['details'][number]>({ 
 				properties: {
 					address: { type: 'string' },
 					category: { type: 'string' },
@@ -51,7 +51,7 @@ export const txDetected = async (txId: string) => {
 	await Promise.all(addresses.map(async address => {
 		await rpc.setLabel(address.address, 'confirming');
 
-		await btcTxDetectedEvent.send({
+		await nodeTxDetectedEvent.send({
 			...tx,
 		currency: networkCurrencies[process.env.NETWORK! as Network][0] as Currency
 		})

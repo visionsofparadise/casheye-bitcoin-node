@@ -7,10 +7,10 @@ import { masterLambda } from 'xkore-lambda-helpers/dist/cdk/masterLambda'
 import { EventBus } from '@aws-cdk/aws-events';
 import { Runtime, Code } from '@aws-cdk/aws-lambda';
 import { Queue } from '@aws-cdk/aws-sqs';
-import { btcAddressExpiredEvent } from '../watchAddress';
-import { btcAddressWatchingEvent } from '../watchAddress';
-import { btcTxDetectedEvent } from '../txDetected';
-import { btcConfirmationEvent } from '../confirm';
+import { nodeAddressExpiredEvent } from '../watchAddress';
+import { nodeAddressWatchingEvent } from '../watchAddress';
+import { nodeTxDetectedEvent } from '../txDetected';
+import { nodeConfirmationEvent } from '../confirm';
 import { onAddressCreatedHandler } from '../handlers/onAddressCreated';
 import { DocumentationItems, Documented } from 'xkore-lambda-helpers/dist/cdk/DocumentationItems';
 import path from 'path'
@@ -64,10 +64,10 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		const isProd = (props.STAGE === 'prod')
 
 		const documented: Array<Documented> = [
-			new EventResource(this, btcAddressExpiredEvent), 
-			new EventResource(this, btcAddressWatchingEvent), 
-			new EventResource(this, btcTxDetectedEvent), 
-			new EventResource(this, btcConfirmationEvent)
+			new EventResource(this, nodeAddressExpiredEvent), 
+			new EventResource(this, nodeAddressWatchingEvent), 
+			new EventResource(this, nodeTxDetectedEvent), 
+			new EventResource(this, nodeConfirmationEvent)
 		]
 		
 		const vpc = new Vpc(this, 'VPC', {
@@ -131,7 +131,7 @@ pm2 save`
 		})
 
 		instance.connections.allowFromAnyIpv4(Port.tcp(4000))
-		instance.connections.allowFromAnyIpv4(Port.tcp(isProd ? 8333 : 18333))
+		instance.connections.allowFromAnyIpv4(Port.tcp(props.NETWORK === 'mainnet' ? 8333 : props.NETWORK === 'testnet' ? 18333 : 18443))
 
 		EventBus.grantAllPutEvents(instance.grantPrincipal)
 		queue.grantConsumeMessages(instance.grantPrincipal)
