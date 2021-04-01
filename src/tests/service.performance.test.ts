@@ -1,6 +1,5 @@
-import { eventbridge, logger } from '../helpers';
+import { eventbridge, logger, wait } from '../helpers';
 import axios from 'axios';
-import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
 import { Source } from '../helpers'
 import day from 'dayjs'
@@ -40,7 +39,7 @@ it(`adds ${n} addresses`, async () => {
 				Entries: batch
 			}).promise().catch(logger.error)
 
-			await udelay(1000)
+			await wait(1000)
 		}))
 	
 		console.timeEnd('entries')
@@ -59,7 +58,7 @@ it(`adds ${n} addresses`, async () => {
 it(`pays ${n} addresses`, async () => {
 	expect.assertions(1)
 
-	await udelay(5 * 60 * 1000)
+	await wait(5 * 60 * 1000)
 
 	logger.info('Sending to addresses...')
 	console.time('sending')
@@ -101,7 +100,7 @@ it(`verifies ${n} addresses have been paid`, async () => {
 
 	logger.info('waiting for confirmation 5 minutes...')
 
-	await udelay(5 * 60 * 1000)
+	await wait(5 * 60 * 1000)
 
 	const response = await axios.post<Array<{ label: string; confirmations: number }>>(instanceUrl + 'rpc', {
 		command: 'listReceivedByAddress',

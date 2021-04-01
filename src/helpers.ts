@@ -39,3 +39,8 @@ export const networkCurrencies = {
 	testnet: ['BTC-testnet'],
 	regtest: ['BTC', 'BTC-testnet']
 }
+
+export const wait = async (ms: number) =>
+	new Promise(function (resolve) {
+		setTimeout(resolve, ms);
+	});

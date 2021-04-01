@@ -1,6 +1,5 @@
-import { eventbridge, logger } from '../helpers';
+import { eventbridge, logger, wait } from '../helpers';
 import axios from 'axios';
-import udelay from 'udelay'
 import { testAddressGenerator } from '../testAddressGenerator'
 import day from 'dayjs'
 
@@ -49,7 +48,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		
 			logger.info(generate1Response.status)
 		
-			await udelay(1000)
+			await wait(1000)
 		}
 	
 		const pubKey = testAddressGenerator()
@@ -70,7 +69,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			Entries: [event]
 		}).promise()
 
-		await udelay(5 * 1000)
+		await wait(5 * 1000)
 	
 		const sendToAddressResponse = await axios.post(instanceUrl + 'rpc', {
 			command: 'sendToAddress',
@@ -79,7 +78,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 	
 		logger.info(sendToAddressResponse.data)
 	
-		await udelay(5 * 1000)
+		await wait(5 * 1000)
 	
 		const getAddress1 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
@@ -96,7 +95,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 		
 			logger.info(generate6Response.status)
 		
-			await udelay(3 * 1000)
+			await wait(3 * 1000)
 		}
 	
 		const getAddress2 = await axios.post(instanceUrl + 'rpc', {
@@ -113,7 +112,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			args: [1]
 		})
 	
-		await udelay(10 * 1000)
+		await wait(10 * 1000)
 	
 		const getAddress3 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
@@ -140,7 +139,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			}]
 		}).promise()
 	
-		await udelay(10 * 1000)
+		await wait(10 * 1000)
 	
 		const getAddress4 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
@@ -154,7 +153,7 @@ it('adds an address, detects payment, confirms seven times then completes, then 
 			args: [pubKey2, 1]
 		})
 	
-		await udelay(5 * 1000)
+		await wait(5 * 1000)
 	
 		const getAddress5 = await axios.post(instanceUrl + 'rpc', {
 			command: 'getAddressInfo',
