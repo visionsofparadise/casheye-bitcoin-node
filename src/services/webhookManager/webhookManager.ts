@@ -1,46 +1,9 @@
 import { logger, wait } from '../../helpers'
-import { Event } from 'xkore-lambda-helpers/dist/Event';
-import { jsonObjectSchemaGenerator } from 'xkore-lambda-helpers/dist/jsonObjectSchemaGenerator';
 import { setWebhook } from './setWebhook';
 import { unsetWebhook } from './unsetWebhook';
 import { redis } from '../../redis';
-import { eventbridge } from '../../eventbridge'
 import { sqs } from '../../sqs'
-
-interface WebhookSetDetail {
-	id: string;
-	userId: string;
-	node: number;
-}
-
-export const webhookSetEvent = new Event<WebhookSetDetail>({
-	source: 'casheye-' + process.env.STAGE!,
-	eventbridge,
-	detailType: 'webhookSet',
-	detailJSONSchema: jsonObjectSchemaGenerator<WebhookSetDetail>({
-		description: 'Triggered when a webhook has been set in a node and is actively tracking events',
-		properties: {
-			id: { type: 'string' },
-			userId: { type: 'string' },
-			node: { type: 'number' }
-		}
-	})
-});
-
-type WebhookUnsetDetail = Omit<WebhookSetDetail, 'node'>
-
-export const webhookUnsetEvent = new Event<WebhookUnsetDetail>({
-	source: 'casheye-' + process.env.STAGE!,
-	eventbridge,
-	detailType: 'webhookUnset',
-	detailJSONSchema: jsonObjectSchemaGenerator<WebhookUnsetDetail>({
-		description: 'Triggered when a webhook has been set in a node and is actively tracking events',
-		properties: {
-			id: { type: 'string' },
-			userId: { type: 'string' }
-		}
-	})
-});
+import { webhookSetEvent, webhookUnsetEvent } from './events'
 
 export const webhookManager = async (): Promise<any> => {
 	logger.info('webhook manager started')

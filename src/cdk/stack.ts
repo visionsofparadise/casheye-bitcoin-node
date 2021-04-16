@@ -7,7 +7,7 @@ import { masterLambda } from 'xkore-lambda-helpers/dist/cdk/masterLambda'
 import { EventBus } from '@aws-cdk/aws-events';
 import { Runtime, Code } from '@aws-cdk/aws-lambda';
 import { Queue } from '@aws-cdk/aws-sqs';
-import { webhookSetEvent, webhookUnsetEvent } from '../services/webhookManager/webhookManager';
+import { webhookSetEvent, webhookUnsetEvent } from '../services/webhookManager/events';
 import { onSetWebhookHandler } from '../handlers/onSetWebhook';
 import { onUnsetWebhookHandler } from '../handlers/onUnsetWebhook';
 import { DocumentationItems, Documented } from 'xkore-lambda-helpers/dist/cdk/DocumentationItems';

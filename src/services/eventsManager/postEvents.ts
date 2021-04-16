@@ -54,7 +54,6 @@ export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'curr
 			QueueUrl: process.env.ERROR_QUEUE_URL || 'test',
 			Entries: errors.map(({ hash, retry }) => ({
 				Id: hash!,
-				MessageDeduplicationId: hash!,
 				MessageBody: JSON.stringify(retry!)
 			}))
 		})
