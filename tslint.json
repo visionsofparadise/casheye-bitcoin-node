@@ -1,5 +1,9 @@
 {
-	"extends": ["tslint:latest", "tslint-plugin-prettier", "tslint-config-prettier"],
+	"extends": [
+		"tslint:latest",
+		"tslint-plugin-prettier",
+		"tslint-config-prettier"
+	],
 	"rules": {
 		"prettier": true,
 		"ban-ts-ignore": true,
@@ -10,7 +14,10 @@
 		"only-arrow-functions": true,
 		"prefer-for-of": true,
 		"ban-comma-operator": true,
-		"curly": [true, "ignore-same-line"],
+		"curly": [
+			true,
+			"ignore-same-line"
+		],
 		"no-async-without-await": true,
 		"no-bitwise": true,
 		"no-conditional-assignment": true,
@@ -18,10 +25,17 @@
 		"no-construct": true,
 		"no-duplicate-super": true,
 		"no-duplicate-switch-case": true,
-		"no-duplicate-variable": [true, "check-parameters"],
+		"no-duplicate-variable": [
+			true,
+			"check-parameters"
+		],
+		"no-switch-case-fall-through": false,
 		"no-dynamic-delete": true,
 		"no-eval": true,
-		"no-implicit-dependencies": [true, "dev"],
+		"no-implicit-dependencies": [
+			true,
+			"dev"
+		],
 		"no-invalid-template-strings": true,
 		"no-invalid-this": false,
 		"no-null-keyword": false,
@@ -42,21 +56,36 @@
 		"unnecessary-constructor": true,
 		"use-isnan": true,
 		"cyclomatic-complexity": false,
-		"max-file-line-count": [true, 300],
+		"max-file-line-count": [
+			true,
+			300
+		],
 		"no-duplicate-imports": true,
 		"object-literal-sort-keys": false,
 		"prefer-const": true,
-		"array-type": [true, "generic"],
+		"array-type": [
+			true,
+			"generic"
+		],
 		"arrow-return-shorthand": true,
 		"binary-expression-operand-order": true,
 		"class-name": true,
-		"comment-format": [true, "check-space"],
+		"comment-format": [
+			true,
+			"check-space"
+		],
 		"encoding": true,
-		"interface-name": [true, "always-prefix"],
+		"interface-name": [
+			true,
+			"always-prefix"
+		],
 		"no-reference-import": true,
 		"no-unnecessary-callback-wrapper": true,
 		"no-unnecessary-initializer": true,
-		"one-variable-per-declaration": [true, "ignore-for-loop"],
+		"one-variable-per-declaration": [
+			true,
+			"ignore-for-loop"
+		],
 		"ordered-imports": true,
 		"prefer-function-over-method": true,
 		"prefer-template": true,
@@ -70,7 +99,11 @@
 			"allow-pascal-case",
 			"allow-snake-case"
 		],
-		"indent": [false, "tabs", 2],
+		"indent": [
+			false,
+			"tabs",
+			2
+		],
 		"newline-before-return": true,
 		"no-empty": true,
 		"no-var-requires": false

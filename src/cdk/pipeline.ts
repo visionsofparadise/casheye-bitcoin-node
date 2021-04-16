@@ -77,26 +77,7 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 
 		testAppStage.addActions(integrationTestAction)
 
-		testEnv.push('PERFORMANCE_TEST_N=100')
-
-		const performanceTestAction = new ShellScriptAction({
-			actionName: 'Performance',
-			runOrder: testAppStage.nextSequentialRunOrder(),
-			additionalArtifacts: [sourceArtifact],
-			commands: [
-				'sleep 10s',
-				...testEnv,
-				'npm rm bitcoind',
-				'npm ci',
-				'npm run performance'
-			],
-			useOutputs: outputs
-		})
-
-		testAppStage.addActions(performanceTestAction)
-
 		EventBus.grantAllPutEvents(integrationTestAction)
-		EventBus.grantAllPutEvents(performanceTestAction)
 
 		// const testnetApp = new CasheyeBitcoinNodeStage(this, serviceName + '-testnet-prod', {
 		// 	STAGE: 'prod',

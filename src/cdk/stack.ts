@@ -7,14 +7,13 @@ import { masterLambda } from 'xkore-lambda-helpers/dist/cdk/masterLambda'
 import { EventBus } from '@aws-cdk/aws-events';
 import { Runtime, Code } from '@aws-cdk/aws-lambda';
 import { Queue } from '@aws-cdk/aws-sqs';
-import { nodeAddressExpiredEvent } from '../watchAddress';
-import { nodeAddressWatchingEvent } from '../watchAddress';
-import { nodeTxDetectedEvent } from '../txDetected';
-import { nodeConfirmationEvent } from '../confirm';
-import { onAddressCreatedHandler } from '../handlers/onAddressCreated';
+import { webhookSetEvent, webhookUnsetEvent } from '../services/webhookManager/webhookManager';
+import { onSetWebhookHandler } from '../handlers/onSetWebhook';
+import { onUnsetWebhookHandler } from '../handlers/onUnsetWebhook';
 import { DocumentationItems, Documented } from 'xkore-lambda-helpers/dist/cdk/DocumentationItems';
 import path from 'path'
 import { Network, networkCurrencies } from '../helpers';
+import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -64,10 +63,8 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		const isProd = (props.STAGE === 'prod')
 
 		const documented: Array<Documented> = [
-			new EventResource(this, nodeAddressExpiredEvent), 
-			new EventResource(this, nodeAddressWatchingEvent), 
-			new EventResource(this, nodeTxDetectedEvent), 
-			new EventResource(this, nodeConfirmationEvent)
+			new EventResource(this, webhookSetEvent), 
+			new EventResource(this, webhookUnsetEvent)
 		]
 		
 		const vpc = new Vpc(this, 'VPC', {
@@ -76,70 +73,98 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			maxAzs: 2
 		});
 
-		const queue = new Queue(this, 'Queue', {
+		const setQueue = new Queue(this, 'SetQueue', {
 			fifo: true,
-			visibilityTimeout: Duration.seconds(5)
+			visibilityTimeout: Duration.seconds(3)
 		});
 
+		const errorQueue = Queue.fromQueueArn(this, 'ErrorQueue', Fn.importValue(`casheye-webhook-${props.STAGE}-errorQueueArn`))
+
+		const unsetQueues: Queue[] = []
+
+		const instanceCount = 1
 		const config = isProd ? prodEC2Config : testEC2Config
-		const nodeName = deploymentName + '-node-0'
+		const instances: Instance[] = []	
 
-		const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} NETWORK=${props.NETWORK} QUEUE_URL=${queue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+		for (let i = 0; i < instanceCount; i++) {
+			const unsetQueue = new Queue(this, 'SetQueue', {
+				fifo: true,
+				visibilityTimeout: Duration.seconds(3)
+			});
 
-		const shebang = `#!/bin/bash
+			unsetQueues.push(unsetQueue)
 
-# install
-apt-get update -y
-apt install nodejs npm -y
+			const nodeName = deploymentName + `-node-${i}`
+			const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
-# build
-git clone https://github.com/visionsofparadise/${serviceName}.git
-cd ${serviceName}
-npm i
-npm i -g pm2
-npm run compile
-RPC_USER=$(openssl rand -hex 12)
-RPC_PASSWORD=$(openssl rand -hex 12)
-${instanceEnv} pm2 start dist/startBTC.js
-${instanceEnv} pm2 start dist/startApi.js
-${instanceEnv} pm2 start dist/startWatch.js
-env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-
-pm2 save`
-
-		const instance = new Instance(this, 'Instance', {
-			instanceName: nodeName,
-			vpc,
-			vpcSubnets: {
-				subnets: vpc.publicSubnets
-			},
-			instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
-			machineImage: MachineImage.genericLinux({
-				'us-east-1': 'ami-0885b1f6bd170450c'
-			}),
-			allowAllOutbound: true,
-			blockDevices: [
-				{
-					deviceName: '/dev/sda1',
-					volume: BlockDeviceVolume.ebs(config.storageSize),
+			const shebang = `#!/bin/bash
+	
+	# install
+	sudo add-apt-repository ppa:chris-lea/redis-server
+	sudo apt-get update -y
+	sudo apt install nodejs npm -y
+	sudo apt-get install redis-server -y
+	sed -i "s/^supervised no/supervised systemd/" /etc/redis/redis.conf
+	sudo systemctl enable redis-server.service 
+	
+	# build
+	git clone https://github.com/visionsofparadise/${serviceName}.git
+	cd ${serviceName}
+	npm i
+	npm i -g pm2
+	npm run compile
+	RPC_USER=$(openssl rand -hex 12)
+	RPC_PASSWORD=$(openssl rand -hex 12)
+	${instanceEnv} pm2 start dist/index.js
+	env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+	
+	pm2 save`
+	
+			const instance = new Instance(this, `Instance${i}`, {
+				instanceName: nodeName,
+				vpc,
+				vpcSubnets: {
+					subnets: vpc.publicSubnets
 				},
-			],
-			userData: UserData.forLinux({
-				shebang
-			}),
-			userDataCausesReplacement: true
-		})
+				instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
+				machineImage: MachineImage.genericLinux({
+					'us-east-1': 'ami-0885b1f6bd170450c'
+				}),
+				allowAllOutbound: true,
+				blockDevices: [
+					{
+						deviceName: '/dev/sda1',
+						volume: BlockDeviceVolume.ebs(config.storageSize),
+					},
+				],
+				userData: UserData.forLinux({
+					shebang
+				}),
+				userDataCausesReplacement: true
+			})
+	
+			instance.connections.allowFromAnyIpv4(Port.tcp(4000))
+			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 
-		instance.connections.allowFromAnyIpv4(Port.tcp(4000))
-		instance.connections.allowFromAnyIpv4(Port.tcp(props.NETWORK === 'mainnet' ? 8333 : props.NETWORK === 'testnet' ? 18333 : 18332))
+			instance.addToRolePolicy(new PolicyStatement({
+				actions: ['execute-api:*'],
+				resources: [`arn:aws:execute-api:us-east-1:${Fn.importValue(`casheye-webhook-${props.STAGE}-websocketApiId`)}:*/*/*/*`],
+				effect: Effect.ALLOW
+			}))
+	
+			EventBus.grantAllPutEvents(instance.grantPrincipal)
+			setQueue.grantConsumeMessages(instance.grantPrincipal)
+			setQueue.grantSendMessages(instance.grantPrincipal)
+			unsetQueue.grantConsumeMessages(instance.grantPrincipal)
+			errorQueue.grantSendMessages(instance.grantPrincipal)
 
-		EventBus.grantAllPutEvents(instance.grantPrincipal)
-		queue.grantConsumeMessages(instance.grantPrincipal)
+			instances.push(instance)
+		}
 
 		const createRuleLambda = initializeRuleLambda('casheye-' + props.STAGE)
 
-		const onAddressCreated = createRuleLambda(this, 'onAddressCreated', {
-			RuleLambdaHandler: onAddressCreatedHandler,
+		const onSetWebhook = createRuleLambda(this, 'onSetWebhook', {
+			RuleLambdaHandler: onSetWebhookHandler,
 			eventPattern: {
 				detail: {
 					currency: networkCurrencies[props.NETWORK]
@@ -147,17 +172,37 @@ pm2 save`
 			},
 			environment: {
 				STAGE: props.STAGE,
-				QUEUE_URL: queue.queueUrl
+				SET_QUEUE_URL: setQueue.queueUrl
 			}
 		})
 
-		queue.grantSendMessages(onAddressCreated)
-		documented.push(onAddressCreated)
+		setQueue.grantSendMessages(onSetWebhook)
+		documented.push(onSetWebhook)
+
+		const unsetQueueUrls = unsetQueues.map(queue => queue.queueUrl).join(',')
+
+		const onUnsetWebhook = createRuleLambda(this, 'onUnsetWebhook', {
+			RuleLambdaHandler: onUnsetWebhookHandler,
+			eventPattern: {
+				detail: {
+					currency: networkCurrencies[props.NETWORK]
+				}
+			},
+			environment: {
+				STAGE: props.STAGE,
+				UNSET_QUEUE_URLS: unsetQueueUrls
+			}
+		})
+
+		for (const queue of unsetQueues) {
+			queue.grantSendMessages(onUnsetWebhook)
+		}
+		documented.push(onUnsetWebhook)
 
 		if (props.STAGE !== 'prod') {
 			const createOutput = masterOutput(this, deploymentName)
 
-			this.instanceUrl = createOutput('instanceUrl', 'http://' + instance.instancePublicDnsName + ':4000/');
+			this.instanceUrl = createOutput('instanceUrl', 'http://' + instances[0].instancePublicDnsName + ':4000/');
 		}
 
 		new DocumentationItems(this, 'DocumentationItems', {
@@ -165,7 +210,7 @@ pm2 save`
 			service: serviceName,
 			groups: [
 				{
-					name: 'AddressWatcher',
+					name: 'BitcoinNode',
 					items: documented
 				}
 			]
