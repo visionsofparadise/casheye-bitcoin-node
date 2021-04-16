@@ -7,7 +7,7 @@ it('responds success on health check', async () => {
 })
 
 it('executes bitcoind command', async () => {
-	const response = await axios.post(process.env.INSTANCE_URL! + '/rpc', {
+	const response = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 		command: 'getBlockchainInfo',
 		args: []
 	})
@@ -16,7 +16,7 @@ it('executes bitcoind command', async () => {
 })
 
 it('executes redis command', async () => {
-	const response = await axios.post(process.env.INSTANCE_URL! + '/redis', {
+	const response = await axios.post(process.env.INSTANCE_URL! + 'redis', {
 		command: 'info',
 		args: []
 	})
