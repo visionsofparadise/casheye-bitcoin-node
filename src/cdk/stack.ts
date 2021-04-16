@@ -87,7 +87,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		const instances: Instance[] = []	
 
 		for (let i = 0; i < instanceCount; i++) {
-			const unsetQueue = new Queue(this, 'SetQueue', {
+			const unsetQueue = new Queue(this, `UnsetQueue${i}`, {
 				fifo: true,
 				visibilityTimeout: Duration.seconds(3)
 			});
@@ -145,10 +145,9 @@ export class CasheyeBitcoinNodeStack extends Stack {
 	
 			instance.connections.allowFromAnyIpv4(Port.tcp(4000))
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
-
 			instance.addToRolePolicy(new PolicyStatement({
-				actions: ['execute-api:*'],
-				resources: [`arn:aws:execute-api:us-east-1:${Fn.importValue(`casheye-webhook-${props.STAGE}-websocketApiId`)}:*/*/*/*`],
+				actions: ['execute-api:ManageConnections'],
+				resources: [`${Fn.importValue(`casheye-webhook-${props.STAGE}-websocketApiArn`)}/*`],
 				effect: Effect.ALLOW
 			}))
 	
