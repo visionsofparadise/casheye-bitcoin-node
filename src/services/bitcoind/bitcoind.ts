@@ -2,13 +2,11 @@ import bitcoind from 'bitcoind'
 import { ChildProcess } from 'child_process';
 import { logger } from '../../helpers';
 import Client from 'bitcoin-core';
-import { resolve } from 'path'
  
 const rpcuser = process.env.RPC_USER || 'test';
 const rpcpassword = process.env.RPC_PASSWORD || 'test';
 
 let config: any = {
-	datadir: resolve(__dirname, 'data'),
 	testnet: process.env.NETWORK === 'testnet',
 	regtest: process.env.NETWORK === 'regtest',
 	blocknotify: "redis-cli publish newBlock txid-%s",
@@ -29,9 +27,17 @@ export const rpc = new Client({
  } as any);
 
 export const startBitcoind = () => {
-	bitcoind(config) as ChildProcess & { rpc: any };
+	try {
+		logger.info({ config })
 
-	logger.info('BTC node online')
+		bitcoind(config) as ChildProcess & { rpc: any };
+
+		logger.info('BTC node online')
+	} catch (error) {
+		logger.error(error)
+
+		throw error
+	}
 
 	return
 }
