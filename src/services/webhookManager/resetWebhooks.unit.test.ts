@@ -53,7 +53,7 @@ it('deletes webhooks from redis and adds them to queue and deletes the wallet fi
 
 	rpc.unloadWallet.mockResolvedValue('success')
 
-	fs.writeFileSync(resolve(__dirname, '../bitcoind/data/wallet.dat'), 'test')
+	fs.writeFileSync(resolve(__dirname, '../bitcoind/wallet.dat'), 'test')
 
 	rpc.createWallet.mockResolvedValue('success')
 
@@ -66,5 +66,5 @@ it('deletes webhooks from redis and adds them to queue and deletes the wallet fi
 	expect(await redis.hvals('test3')).toStrictEqual([])
 	expect(await redis.hvals('newBlock')).toStrictEqual([])
 
-	expect(fs.existsSync(resolve(__dirname, '../bitcoind/data/wallet.dat'))).toBe(false)
+	expect(fs.existsSync(resolve(__dirname, '../bitcoind/wallet.dat'))).toBe(false)
 }, 60 * 1000)

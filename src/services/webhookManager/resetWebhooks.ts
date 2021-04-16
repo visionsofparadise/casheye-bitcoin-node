@@ -53,7 +53,7 @@ export const resetWebhooks = async () => {
 	
 	await rpc.unloadWallet('wallet')
 
-	fs.unlinkSync(resolve(__dirname, '../../../dist/services/bitcoind/wallet.dat'));
+	fs.unlinkSync(resolve(__dirname, '../bitcoind/wallet.dat'));
 
 	logger.info('bitcoind reset')
 
