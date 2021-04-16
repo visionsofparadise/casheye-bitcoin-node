@@ -11,7 +11,6 @@ let config: any = {
 	datadir: resolve(__dirname, 'data'),
 	testnet: process.env.NETWORK === 'testnet',
 	regtest: process.env.NETWORK === 'regtest',
-	prune: process.env.NETWORK === 'regtest' ? 550 : 0,
 	blocknotify: "redis-cli publish newBlock txid-%s",
 	walletnotify: "redis-cli publish newTx blockHash-%s",
 };
