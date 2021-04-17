@@ -116,6 +116,7 @@ sudo add-apt-repository ppa:chris-lea/redis-server
 sudo apt-get update -y
 sudo apt install nodejs npm -y
 sudo apt-get install redis-server -y
+sudo systemctl enable redis-server
 git clone https://github.com/visionsofparadise/${serviceName}.git
 cd ${serviceName}
 npm i
