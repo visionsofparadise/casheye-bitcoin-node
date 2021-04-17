@@ -8,6 +8,7 @@
 		"build": "parcel build ./src/handlers/*.ts -d build --target node --bundle-node-modules --no-source-maps",
 		"unit": "STAGE=test jest unit --forceExit",
 		"synth": "cdk synth",
+		"initialize": "jest initialize",
 		"integration": "jest integration",
 		"performance": "jest performance",
 		"start": "node dist/index.js",
@@ -41,6 +42,7 @@
 		"xkore-lambda-helpers": "^1.1.79"
 	},
 	"devDependencies": {
+		"@aws-cdk/aws-apigateway": "^1.98.0",
 		"@aws-cdk/aws-codepipeline": "^1.94.1",
 		"@aws-cdk/aws-codepipeline-actions": "^1.94.1",
 		"@aws-cdk/aws-dynamodb": "^1.94.1",
@@ -61,10 +63,12 @@
 		"@types/md5": "^2.3.0",
 		"@types/node": "^14.14.5",
 		"aws-cdk": "^1.94.1",
+		"aws-lambda": "^1.0.6",
 		"aws-sdk-mock": "^5.1.0",
 		"bitcore-lib": "^8.23.0",
 		"ioredis-mock": "^5.4.1",
 		"jest": "^26.6.0",
+		"kuuid": "^0.6.0",
 		"parcel-bundler": "^1.12.4",
 		"parcel-plugin-externals": "^0.5.2",
 		"ts-jest": "^26.4.1",

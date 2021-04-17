@@ -14,6 +14,7 @@ import { DocumentationItems, Documented } from 'xkore-lambda-helpers/dist/cdk/Do
 import path from 'path'
 import { Network, networkCurrencies } from '../helpers';
 import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
+import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -27,6 +28,9 @@ const testEC2Config = {
 
 export class CasheyeBitcoinNodeStage extends Stage {	
 	public readonly instanceUrl?: CfnOutput;
+	public readonly setQueueUrl: CfnOutput;
+	public readonly unsetQueueUrl0?: CfnOutput;
+	public readonly testUrl?: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string; NETWORK: Network }) {
 		super(scope, id, props);
@@ -41,16 +45,22 @@ export class CasheyeBitcoinNodeStage extends Stage {
 		});
 
 		this.instanceUrl = stack.instanceUrl
+		this.setQueueUrl = stack.setQueueUrl
+		this.unsetQueueUrl0 = stack.unsetQueueUrl0
+		this.testUrl = stack.testUrl
 	}
 }
 
-const { initializeRuleLambda } = masterLambda({
+const { createLambda, initializeRuleLambda } = masterLambda({
 	runtime: Runtime.NODEJS_12_X,
 	code: Code.fromAsset(path.join(__dirname, '../../build')),
 })
 
 export class CasheyeBitcoinNodeStack extends Stack {
 	public readonly instanceUrl?: CfnOutput;
+	public readonly setQueueUrl: CfnOutput;
+	public readonly unsetQueueUrl0?: CfnOutput;
+	public readonly testUrl?: CfnOutput;
 
 	get availabilityZones(): string[] {
     return ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1e', 'us-east-1f'];
@@ -61,6 +71,8 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		
 		const deploymentName = `${serviceName}-${props.NETWORK}-${props.STAGE}`;
 		const isProd = (props.STAGE === 'prod')
+
+		const createOutput = masterOutput(this, deploymentName)
 
 		const documented: Array<Documented> = [
 			new EventResource(this, webhookSetEvent), 
@@ -74,9 +86,10 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		});
 
 		const setQueue = new Queue(this, 'SetQueue', {
-			fifo: true,
 			visibilityTimeout: Duration.seconds(3)
 		});
+
+		this.setQueueUrl = createOutput('setQueueUrl', setQueue.queueUrl)
 
 		const errorQueue = Queue.fromQueueArn(this, 'ErrorQueue', Fn.importValue(`casheye-webhook-${props.STAGE}-errorQueueArn`))
 
@@ -88,9 +101,10 @@ export class CasheyeBitcoinNodeStack extends Stack {
 
 		for (let i = 0; i < instanceCount; i++) {
 			const unsetQueue = new Queue(this, `UnsetQueue${i}`, {
-				fifo: true,
 				visibilityTimeout: Duration.seconds(3)
 			});
+
+			if (i === 0) this.unsetQueueUrl0 = createOutput('unsetQueueUrl0', unsetQueue.queueUrl)
 
 			unsetQueues.push(unsetQueue)
 
@@ -199,9 +213,28 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		documented.push(onUnsetWebhook)
 
 		if (props.STAGE !== 'prod') {
-			const createOutput = masterOutput(this, deploymentName)
+			const instanceUrl = 'http://' + instances[0].instancePublicDnsName + ':4000/'
+			this.instanceUrl = createOutput('instanceUrl', instanceUrl);
 
-			this.instanceUrl = createOutput('instanceUrl', 'http://' + instances[0].instancePublicDnsName + ':4000/');
+			const api = new RestApi(this, 'testApi', {
+				restApiName: deploymentName + '-testApi',
+				description: deploymentName,
+				defaultCorsPreflightOptions: {
+					allowOrigins: Cors.ALL_ORIGINS
+				}
+			});
+			
+			const webhookTestResource = api.root.addResource('test');
+
+			const testEndpoint = createLambda(this, 'testEndpoint', {
+				environment: {
+					INSTANCE_URL: instanceUrl
+				}
+			});
+
+			webhookTestResource.addMethod('POST', new LambdaIntegration(testEndpoint))
+
+			this.testUrl = createOutput('testUrl', api.url);
 		}
 
 		new DocumentationItems(this, 'DocumentationItems', {

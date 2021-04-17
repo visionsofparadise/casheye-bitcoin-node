@@ -1,8 +1,8 @@
-import { redis } from '../../redis'
-import { rpc } from "../bitcoind/bitcoind"
-import { unsetWebhook } from './unsetWebhook'
+import { redis } from '../../../redis'
+import { rpc } from "../../bitcoind/bitcoind"
+import { unsetWebhook } from '../unsetWebhook'
 
-jest.mock('../bitcoind/bitcoind')
+jest.mock('../../bitcoind/bitcoind')
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
 beforeEach(() => redis.flushall())

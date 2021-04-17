@@ -1,7 +1,6 @@
 import { EventLambdaHandler } from 'xkore-lambda-helpers/dist/EventLambdaHandler'
 import { jsonObjectSchemaGenerator } from 'xkore-lambda-helpers/dist/jsonObjectSchemaGenerator'
 import { logger } from '../helpers'
-import md5 from 'md5'
 import { IWebhook } from '../types/IWebhook'
 import { sqs } from '../sqs'
 
@@ -27,13 +26,9 @@ export const onUnsetWebhookHandler = new EventLambdaHandler<'unsetWebhook', OnUn
 		const QueueUrl = unsetQueueUrls[detail.node]
 		const JSONDetail = JSON.stringify(detail)
 
-		const hash = md5(JSONDetail)
-
 		const response = await sqs
 			.sendMessage({
 				QueueUrl,
-				MessageGroupId: hash,
-				MessageDeduplicationId: hash,
 				MessageBody: JSONDetail
 			})
 			.promise();

@@ -1,8 +1,8 @@
 import axios from "axios"
-import { apiGatewaySockets } from "../../apiGatewaySockets"
-import { sqs } from "../../sqs"
-import { IWebhook } from "../../types/IWebhook"
-import { postEvents } from "./postEvents"
+import { apiGatewaySockets } from "../../../apiGatewaySockets"
+import { sqs } from "../../../sqs"
+import { IWebhook } from "../../../types/IWebhook"
+import { postEvents } from "../postEvents"
 
 jest.mock('axios', () => ({
 	post: jest.fn()
@@ -13,7 +13,7 @@ jest.mock('axios', () => ({
 			status: 500
 		})
 }))
-jest.mock('../../apiGatewaySockets', () => ({
+jest.mock('../../../apiGatewaySockets', () => ({
 	apiGatewaySockets: {
 		postToConnection: jest.fn()
 		.mockReturnValue({
@@ -23,7 +23,7 @@ jest.mock('../../apiGatewaySockets', () => ({
 		})
 	}
 }))
-jest.mock('../../sqs', () => ({
+jest.mock('../../../sqs', () => ({
 	sqs: {
 		sendMessageBatch: jest.fn().mockReturnValue({
 			promise: jest.fn().mockResolvedValue('success')

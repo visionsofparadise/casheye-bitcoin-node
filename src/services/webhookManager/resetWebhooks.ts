@@ -34,7 +34,6 @@ export const resetWebhooks = async () => {
 		
 			return {
 				Id: hash,
-				MessageDeduplicationId: hash,
 				MessageBody: encodedWebhook
 			}
 		})

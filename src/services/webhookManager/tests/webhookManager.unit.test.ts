@@ -1,23 +1,23 @@
-import { wait } from '../../helpers'
-import { redis } from '../../redis'
-import { setWebhook } from './setWebhook'
-import { unsetWebhook } from './unsetWebhook'
-import { webhookManager } from './webhookManager'
+import { wait } from '../../../helpers'
+import { redis } from '../../../redis'
+import { setWebhook } from '../setWebhook'
+import { unsetWebhook } from '../unsetWebhook'
+import { webhookManager } from '../webhookManager'
 
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
-jest.mock('./setWebhook', () => ({
+jest.mock('../setWebhook', () => ({
 	setWebhook: jest.fn().mockResolvedValue({
 		eventEntry: {},
 		queueEntry: {}
 	})
 }))
-jest.mock('./unsetWebhook', () => ({
+jest.mock('../unsetWebhook', () => ({
 	unsetWebhook: jest.fn().mockResolvedValue({
 		eventEntry: {},
 		queueEntry: {}
 	})
 }))
-jest.mock('../../sqs', () => ({
+jest.mock('../../../sqs', () => ({
 	sqs: {
 		receiveMessage: jest.fn().mockReturnValue({
 			promise: jest.fn().mockResolvedValue({
@@ -36,7 +36,7 @@ jest.mock('../../sqs', () => ({
 		})
 	}
 }))
-jest.mock('../../eventbridge', () => ({
+jest.mock('../../../eventbridge', () => ({
 	eventbridge: {
 		putEvents: jest.fn().mockReturnValue({
 			promise: jest.fn().mockResolvedValue('success')
