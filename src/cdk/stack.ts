@@ -112,27 +112,20 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 			const shebang = `#!/bin/bash
-	
-	# install
-	sudo add-apt-repository ppa:chris-lea/redis-server
-	sudo apt-get update -y
-	sudo apt install nodejs npm -y
-	sudo apt-get install redis-server -y
-	sed -i "s/^supervised no/supervised systemd/" /etc/redis/redis.conf
-	sudo systemctl enable redis-server.service 
-	
-	# build
-	git clone https://github.com/visionsofparadise/${serviceName}.git
-	cd ${serviceName}
-	npm i
-	npm i -g pm2
-	npm run compile
-	RPC_USER=$(openssl rand -hex 12)
-	RPC_PASSWORD=$(openssl rand -hex 12)
-	${instanceEnv} pm2 start dist/index.js
-	env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-	
-	pm2 save`
+sudo add-apt-repository ppa:chris-lea/redis-server
+sudo apt-get update -y
+sudo apt install nodejs npm -y
+sudo apt-get install redis-server -y
+git clone https://github.com/visionsofparadise/${serviceName}.git
+cd ${serviceName}
+npm i
+npm i -g pm2
+npm run compile
+RPC_USER=$(openssl rand -hex 12)
+RPC_PASSWORD=$(openssl rand -hex 12)
+${instanceEnv} pm2 start dist/index.js
+env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+pm2 save`
 	
 			const instance = new Instance(this, `Instance${i}`, {
 				instanceName: nodeName,
