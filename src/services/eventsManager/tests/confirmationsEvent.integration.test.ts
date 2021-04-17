@@ -1,6 +1,6 @@
 import kuuid from 'kuuid'
 import axios from "axios"
-import { encode } from '../../../services/webhookManager/webhookEncoder'
+import { encode } from '../../webhookManager/webhookEncoder'
 import { logger, wait } from '../../../helpers'
 import { testAddressGenerator } from '../../../testAddressGenerator'
 
@@ -35,7 +35,7 @@ it('triggers confirmations event', async () => {
 
 	const sendToAddress = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 		command: 'sendToAddress',
-		args: [webhook.address, 1]
+		args: [webhook.address, '0.001']
 	})
 
 	expect(sendToAddress.status).toBe(200)
@@ -48,7 +48,7 @@ it('triggers confirmations event', async () => {
 	
 		logger.info(generate1Response.status)
 	
-		await wait(300)
+		await wait(1000)
 	}
 
 	await wait(10 * 1000)

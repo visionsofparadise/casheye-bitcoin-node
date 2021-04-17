@@ -5,6 +5,7 @@ import { GitHubSourceAction } from '@aws-cdk/aws-codepipeline-actions';
 import { CasheyeBitcoinNodeStage } from './stack';
 import { App } from '@aws-cdk/core';
 import { EventBus } from '@aws-cdk/aws-events';
+import { PolicyStatement } from '@aws-cdk/aws-iam';
 
 export const serviceName = 'casheye-bitcoin-node';
 
@@ -76,7 +77,13 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 				'npm run initialize',
 				'npm run integration'
 			],
-			useOutputs: outputs
+			useOutputs: outputs,
+			rolePolicyStatements: [
+				new PolicyStatement({
+					resources: ['*'],
+					actions: ['sqs:*']
+				})
+			]
 		})
 
 		testAppStage.addActions(integrationTestAction)

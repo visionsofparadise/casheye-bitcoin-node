@@ -1,6 +1,6 @@
 import kuuid from 'kuuid'
 import axios from "axios"
-import { encode } from '../../../services/webhookManager/webhookEncoder'
+import { encode } from '../../webhookManager/webhookEncoder'
 import { wait } from '../../../helpers'
 
 it('triggers newBlock event', async () => {
