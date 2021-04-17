@@ -17,5 +17,5 @@ it('initializes funds in regtest bitcoin wallet', async () => {
 	}
 
 	expect(true).toBe(true)
-})
+}, 5 * 60 * 1000)
 

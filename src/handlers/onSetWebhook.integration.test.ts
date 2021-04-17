@@ -48,4 +48,4 @@ it('sets a webhook', async () => {
 
 	expect(bitcoinResponse.data.iswatchonly).toBe(true)
 	expect(bitcoinResponse.data.labels[0]).toBe('set')
-})
+}, 60 * 1000)

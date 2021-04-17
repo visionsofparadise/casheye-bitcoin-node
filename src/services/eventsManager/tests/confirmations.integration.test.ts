@@ -71,4 +71,4 @@ it('triggers confirmations event', async () => {
 				data.confirmations > 0)
 
 	expect(testData.length).toBe(6)
-})
+}, 60 * 1000)

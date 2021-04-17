@@ -58,4 +58,4 @@ it('unsets a webhook', async () => {
 
 	expect(bitcoinResponse.status).toBe(200)
 	expect(bitcoinResponse.data.labels[0]).toBe('unset')
-})
+}, 60 * 1000)

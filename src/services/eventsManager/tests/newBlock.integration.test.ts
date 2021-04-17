@@ -44,4 +44,4 @@ it('triggers newBlock event', async () => {
 		.filter(data => data.tx ? true : false)
 
 	expect(testData.length).toBe(1)
-})
+}, 60 * 1000)
