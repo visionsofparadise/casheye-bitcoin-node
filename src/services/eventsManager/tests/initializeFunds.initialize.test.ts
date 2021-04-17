@@ -13,7 +13,7 @@ it('initializes funds in regtest bitcoin wallet', async () => {
 	
 		logger.info(generate1Response.status)
 	
-		await wait(300)
+		await wait(500)
 	}
 
 	expect(true).toBe(true)
