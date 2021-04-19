@@ -59,4 +59,4 @@ it('triggers addressTx event', async () => {
 				data.vout[0].scriptPubKey.addresses.includes(webhook.address))
 
 	expect(testData.length).toBe(1)
-}, 60 * 1000)
+}, 5 * 60 * 1000)
