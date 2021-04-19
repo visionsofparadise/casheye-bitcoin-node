@@ -7,6 +7,7 @@ import { api } from './services/api/api'
 import { addressTxSubscriber } from './services/eventsManager/addressTxEvent'
 import { confirmationsSubscriber } from './services/eventsManager/confirmationsEvent'
 import { newBlockSubscriber } from './services/eventsManager/newBlockEvent'
+import { redis } from './redis';
 
 const jobs = ['bitcoind', 'webhookManager', 'api', 'addressTx', 'confirmations', 'newBlock']
 
@@ -46,7 +47,7 @@ if (cluster.isWorker) {
 	const job = process.env.JOB
 	
 	if (job === 'bitcoind') startBitcoind()
-	if (job === 'webhookManager') webhookManager()
+	if (job === 'webhookManager') redis.set('webhookManagerState', '1').then(() => webhookManager())
 	if (job === 'api') api.listen(process.env.PORT || 4000, () => console.log(`Server listening on port ${process.env.PORT || 4000}`))
 
 	if (job === 'addressTx') addressTxSubscriber()

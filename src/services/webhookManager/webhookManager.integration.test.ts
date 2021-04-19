@@ -2,9 +2,9 @@ import kuuid from 'kuuid'
 import axios from "axios"
 import omit from "lodash/omit"
 import { wait, logger } from '../../helpers'
-import { sqs } from '../../sqs'
 import { testAddressGenerator } from '../../testAddressGenerator'
 import { IWebhook } from '../../types/IWebhook'
+import { eventbridge } from '../../eventbridge'
 
 it('it sets and unsets a webhook', async () => {
 	jest.useRealTimers()
@@ -20,9 +20,13 @@ it('it sets and unsets a webhook', async () => {
 		url: 'http://localhost/'
 	}
 
-	await sqs.sendMessage({
-		QueueUrl: process.env.SET_QUEUE_URL!,
-		MessageBody: JSON.stringify(webhook),
+	await eventbridge.putEvents({
+		Entries: [
+			{
+				DetailType: 'setWebhook',
+				Detail: JSON.stringify(webhook)
+			}
+		]
 	}).promise()
 
 	await wait(10 * 1000)
@@ -46,9 +50,16 @@ it('it sets and unsets a webhook', async () => {
 	expect(bitcoinResponse1.data.iswatchonly).toBe(true)
 	expect(bitcoinResponse1.data.labels[0].name).toBe('set')
 
-	await sqs.sendMessage({
-		QueueUrl: process.env.UNSET_QUEUE_URL_0!,
-		MessageBody: JSON.stringify(webhook)
+	await eventbridge.putEvents({
+		Entries: [
+			{
+				DetailType: 'unsetWebhook',
+				Detail: JSON.stringify({
+					...webhook,
+					node: 0
+				})
+			}
+		]
 	}).promise()
 
 	await wait(10 * 1000)

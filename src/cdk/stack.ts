@@ -28,8 +28,6 @@ const testEC2Config = {
 
 export class CasheyeBitcoinNodeStage extends Stage {	
 	public readonly instanceUrl?: CfnOutput;
-	public readonly setQueueUrl: CfnOutput;
-	public readonly unsetQueueUrl0?: CfnOutput;
 	public readonly testUrl?: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string; NETWORK: Network }) {
@@ -45,8 +43,6 @@ export class CasheyeBitcoinNodeStage extends Stage {
 		});
 
 		this.instanceUrl = stack.instanceUrl
-		this.setQueueUrl = stack.setQueueUrl
-		this.unsetQueueUrl0 = stack.unsetQueueUrl0
 		this.testUrl = stack.testUrl
 	}
 }
@@ -58,8 +54,6 @@ const { createLambda, initializeRuleLambda } = masterLambda({
 
 export class CasheyeBitcoinNodeStack extends Stack {
 	public readonly instanceUrl?: CfnOutput;
-	public readonly setQueueUrl: CfnOutput;
-	public readonly unsetQueueUrl0?: CfnOutput;
 	public readonly testUrl?: CfnOutput;
 
 	get availabilityZones(): string[] {
@@ -89,7 +83,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			visibilityTimeout: Duration.seconds(3)
 		});
 
-		this.setQueueUrl = createOutput('setQueueUrl', setQueue.queueUrl)
+		createOutput('setQueueUrl', setQueue.queueUrl)
 
 		const errorQueue = Queue.fromQueueArn(this, 'ErrorQueue', Fn.importValue(`casheye-webhook-${props.STAGE}-errorQueueArn`))
 
@@ -104,7 +98,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 				visibilityTimeout: Duration.seconds(3)
 			});
 
-			if (i === 0) this.unsetQueueUrl0 = createOutput('unsetQueueUrl0', unsetQueue.queueUrl)
+			createOutput(`unsetQueueUrl${i}`, unsetQueue.queueUrl)
 
 			unsetQueues.push(unsetQueue)
 

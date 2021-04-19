@@ -60,8 +60,6 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 
 		const outputs = {
 			INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl!),
-			SET_QUEUE_URL: pipeline.stackOutput(testApp.setQueueUrl),
-			UNSET_QUEUE_URL_0: pipeline.stackOutput(testApp.unsetQueueUrl0!),
 			TEST_URL: pipeline.stackOutput(testApp.testUrl!),
 		}
 
