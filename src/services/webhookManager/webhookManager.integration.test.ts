@@ -6,7 +6,7 @@ import { sqs } from '../../sqs'
 import { testAddressGenerator } from '../../testAddressGenerator'
 import { IWebhook } from '../../types/IWebhook'
 
-describe('it sets and unsets a webhook', async () => {
+it('it sets and unsets a webhook', async () => {
 	jest.useRealTimers()
 	expect.assertions(9)
 
@@ -70,4 +70,4 @@ describe('it sets and unsets a webhook', async () => {
 	logger.info(bitcoinResponse2.data)
 	expect(bitcoinResponse2.status).toBe(200)
 	expect(bitcoinResponse2.data.labels[0].name).toBe('unset')
-})
+}, 5 * 60 * 1000)
