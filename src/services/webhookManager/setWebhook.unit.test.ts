@@ -1,9 +1,9 @@
-import { rpc } from "../../bitcoind/bitcoind"
-import { setWebhook } from '../setWebhook'
-import { redis } from '../../../redis'
-import { decode } from "../webhookEncoder"
+import { rpc } from "../bitcoind/bitcoind"
+import { setWebhook } from './setWebhook'
+import { redis } from '../../redis'
+import { decode } from "./webhookEncoder"
 
-jest.mock('../../bitcoind/bitcoind')
+jest.mock('../bitcoind/bitcoind')
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
 beforeEach(() => redis.flushall())

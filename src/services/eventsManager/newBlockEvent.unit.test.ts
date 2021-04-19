@@ -1,10 +1,10 @@
-import { postEvents } from "../postEvents"
-import { rpc } from "../../bitcoind/bitcoind"
-import { newBlockEvent } from "../newBlockEvent"
-import { redis } from '../../../redis'
+import { postEvents } from "./postEvents"
+import { rpc } from "../bitcoind/bitcoind"
+import { newBlockEvent } from "./newBlockEvent"
+import { redis } from '../../redis'
 
-jest.mock('../../bitcoind/bitcoind')
-jest.mock('../postEvents')
+jest.mock('../bitcoind/bitcoind')
+jest.mock('./postEvents')
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
 beforeEach(() => redis.flushall())

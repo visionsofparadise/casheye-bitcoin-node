@@ -1,7 +1,7 @@
 import { sqs } from "../sqs"
 import kuuid from 'kuuid'
 import { testAddressGenerator } from '../testAddressGenerator'
-import { wait } from "../helpers"
+import { logger, wait } from "../helpers"
 import axios from "axios"
 import { encode } from "../services/webhookManager/webhookEncoder"
 
@@ -27,6 +27,7 @@ it('unsets a webhook', async () => {
 		args: [webhook.address, webhook.id, encode(webhook)]
 	})
 
+	logger.info(redisPut.data)
 	expect(redisPut.status).toBe(200)
 
 	const bitcoinPut = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
@@ -34,6 +35,7 @@ it('unsets a webhook', async () => {
 		args: [webhook.address, 'set', false]
 	})
 
+	logger.info(bitcoinPut.data)
 	expect(bitcoinPut.status).toBe(200)
 
 	await sqs.sendMessage({
@@ -48,6 +50,7 @@ it('unsets a webhook', async () => {
 		args: [webhook.address, webhook.id]
 	})
 
+	logger.info(redisResponse.data)
 	expect(redisResponse.status).toBe(200)
 	expect(redisResponse.data).toBe(null)
 
@@ -56,6 +59,7 @@ it('unsets a webhook', async () => {
 		args: [webhook.address]
 	})
 
+	logger.info(bitcoinResponse.data)
 	expect(bitcoinResponse.status).toBe(200)
 	expect(bitcoinResponse.data.labels[0]).toBe('unset')
 }, 5 * 60 * 1000)

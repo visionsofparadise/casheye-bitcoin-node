@@ -1,6 +1,6 @@
 import omit from "lodash/omit"
-import { IWebhook } from "../../../types/IWebhook"
-import { decode, encode } from "../webhookEncoder"
+import { IWebhook } from "../../types/IWebhook"
+import { decode, encode } from "./webhookEncoder"
 
 it('encodes then decodes webhook to get original back', () => {
 	const webhook = {

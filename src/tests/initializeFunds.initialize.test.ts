@@ -1,5 +1,5 @@
 import axios from "axios"
-import { logger, wait } from "../../../helpers"
+import { logger, wait } from "../helpers"
 
 it('initializes funds in regtest bitcoin wallet', async () => {
 	jest.useRealTimers()

@@ -1,11 +1,11 @@
 
-import { rpc } from "../../bitcoind/bitcoind"
-import { confirmationsEvent } from "../confirmationsEvent"
-import { redis } from '../../../redis'
-import { postEvents } from "../postEvents"
+import { rpc } from "../bitcoind/bitcoind"
+import { confirmationsEvent } from "./confirmationsEvent"
+import { redis } from '../../redis'
+import { postEvents } from "./postEvents"
 
-jest.mock('../../bitcoind/bitcoind')
-jest.mock('../postEvents')
+jest.mock('../bitcoind/bitcoind')
+jest.mock('./postEvents')
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
 rpc.getBlockCount.mockResolvedValue(100)

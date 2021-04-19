@@ -1,7 +1,7 @@
 import { sqs } from "../sqs"
 import kuuid from 'kuuid'
 import { testAddressGenerator } from '../testAddressGenerator'
-import { wait } from "../helpers"
+import { logger, wait } from "../helpers"
 import axios from "axios"
 import omit from "lodash/omit"
 
@@ -33,10 +33,12 @@ it('sets a webhook', async () => {
 		args: [webhook.address, webhook.id]
 	})
 
+	logger.info(redisResponse.data)
 	expect(redisResponse.status).toBe(200)
 	
 	const getWebhook = JSON.parse(redisResponse.data)
 
+	logger.info(getWebhook.data)
 	expect(getWebhook).toStrictEqual(omit(webhook, ['currency']))
 
 	const bitcoinResponse = await axios.post<{ iswatchonly: boolean; labels: string[] }>(process.env.INSTANCE_URL! + 'rpc', {
@@ -44,6 +46,7 @@ it('sets a webhook', async () => {
 		args: [webhook.address]
 	})
 
+	logger.info(bitcoinResponse.data)
 	expect(bitcoinResponse.status).toBe(200)
 
 	expect(bitcoinResponse.data.iswatchonly).toBe(true)
