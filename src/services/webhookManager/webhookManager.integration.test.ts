@@ -72,7 +72,7 @@ it('it sets and unsets a webhook', async () => {
 	})
 
 	logger.info(redisResponse2.data)
-	expect(redisResponse2.status).toBe(200)
+	expect(redisResponse2.status).toBe(204)
 	expect(redisResponse2.data).toBe(null)
 
 	const bitcoinResponse2 = await axios.post<{ labels: Array<{ name: string; purpose: string; }> }>(process.env.INSTANCE_URL! + 'rpc', {
