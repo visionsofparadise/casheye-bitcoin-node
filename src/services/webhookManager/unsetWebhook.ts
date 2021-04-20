@@ -15,7 +15,7 @@ export const unsetWebhook = async (msg: SQS.Message): Promise<any> => {
 			const dbPromise = redis.hdel('newBlock', webhook.id)
 			promises.push(dbPromise)
 		} else {
-			const rpcPromise = rpc.setLabel(webhook.address, 'unset', false)
+			const rpcPromise = rpc.setLabel(webhook.address!, 'unset')
 			promises.push(rpcPromise)
 
 			const dbPromise = redis.hdel(webhook.address!, webhook.id)
