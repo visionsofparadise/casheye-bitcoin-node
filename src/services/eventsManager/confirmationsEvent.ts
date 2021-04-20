@@ -15,8 +15,22 @@ type ListSinceBlockResponse = Array<{
 
 export const confirmationsEvent = async () => {
 	const blockCount = await rpc.getBlockCount() as number
-	const lastBlockHash = await rpc.getBlockHash(blockCount - 20)
-	const unfilteredTransactions = await rpc.listSinceBlock(lastBlockHash, undefined, true, false) as ListSinceBlockResponse
+
+	if (blockCount === 0) return
+
+	const lastBlockHash = await rpc.getBlockHash(blockCount > 20 ? blockCount - 20 : 0)
+
+	if (!lastBlockHash) return
+
+	const unfilteredTransactions: ListSinceBlockResponse = []
+	
+	try {
+		const txs = await rpc.listSinceBlock(lastBlockHash, undefined, true, false) as ListSinceBlockResponse
+
+		unfilteredTransactions.concat(txs)
+	} catch (err) {
+		return
+	}
 
 	const transactions = unfilteredTransactions.filter(tx => 
 		tx.label === 'set' && 
@@ -54,15 +68,3 @@ export const confirmationsEvent = async () => {
 
 	await postEvents(events)
 };
-
-export const confirmationsSubscriber = async () => {
-	redis.on("message", () => {
-		confirmationsEvent().catch(logger.error)
-	})
-
-	redis.subscribe("newBlock")
-
-	logger.info('confirmations listening')
-
-	return
-}

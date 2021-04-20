@@ -3,7 +3,6 @@ import { postEvents } from './postEvents';
 import { redis } from '../../redis';
 import { decode } from '../webhookManager/webhookEncoder';
 import { Transaction } from 'bitcore-lib'
-import { logger } from '../../helpers';
 
 export interface GetTransactionResponse {
 	confirmations: number;
@@ -16,9 +15,15 @@ export interface GetTransactionResponse {
 }
 
 export const addressTxEvent = async (txId: string) => {
-	const tx = (await rpc.getTransaction(txId, true)) as GetTransactionResponse;
+	let tx
 
-	if (tx.confirmations !== 0) return 
+	try {
+		tx = (await rpc.getTransaction(txId, true)) as GetTransactionResponse;
+	} catch (err) {
+		return
+	}	
+
+	if (!tx || tx.confirmations !== 0) return 
 
 	const rawTx = new Transaction(tx.hex)
 
@@ -44,15 +49,3 @@ export const addressTxEvent = async (txId: string) => {
 
 	await postEvents(events)
 };
-
-export const addressTxSubscriber = async () => {
-	redis.on("message", (_: any, message: string) => {
-		addressTxEvent(message).catch(logger.error)
-	})
-
-	redis.subscribe("newTx")
-
-	logger.info('addressTx listening')
-
-	return
-}

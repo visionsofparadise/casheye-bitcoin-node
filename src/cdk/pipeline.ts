@@ -69,11 +69,10 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 			runOrder: testAppStage.nextSequentialRunOrder(),
 			additionalArtifacts: [sourceArtifact],
 			commands: [
-				'sleep 300s',
+				'sleep 200s',
 				...testEnv,
 				'npm rm bitcoind',
 				'npm ci',
-				'npm run initialize',
 				'npm run integration'
 			],
 			useOutputs: outputs,

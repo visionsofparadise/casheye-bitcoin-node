@@ -1,15 +1,12 @@
 
 import cluster from 'cluster'
-import { logger } from './helpers'
-import { startBitcoind } from './services/bitcoind/bitcoind'
+import { logger, wait } from './helpers'
+import { rpc, startBitcoind } from './services/bitcoind/bitcoind'
 import { webhookManager } from './services/webhookManager/webhookManager';
 import { api } from './services/api/api'
-import { addressTxSubscriber } from './services/eventsManager/addressTxEvent'
-import { confirmationsSubscriber } from './services/eventsManager/confirmationsEvent'
-import { newBlockSubscriber } from './services/eventsManager/newBlockEvent'
 import { redis } from './redis';
 
-const jobs = ['bitcoind', 'webhookManager', 'api', 'addressTx', 'confirmations', 'newBlock']
+const jobs = ['bitcoind', 'webhookManager', 'api']
 
 if (cluster.isMaster) {
 	logger.info(`Master ${process.pid} is running`);
@@ -46,11 +43,21 @@ if (cluster.isWorker) {
 
 	const job = process.env.JOB
 	
-	if (job === 'bitcoind') startBitcoind()
-	if (job === 'webhookManager') redis.set('webhookManagerState', '1').then(() => webhookManager())
-	if (job === 'api') api.listen(process.env.PORT || 4000, () => console.log(`Server listening on port ${process.env.PORT || 4000}`))
+	if (job === 'bitcoind') {
+		startBitcoind()
 
-	if (job === 'addressTx') addressTxSubscriber()
-	if (job === 'confirmations') confirmationsSubscriber()
-	if (job === 'newBlock') newBlockSubscriber()
+		if (process.env.NETWORK === 'regtest') {
+			const generator = async () => {
+				await wait(5 * 1000)
+
+				const response = await rpc.generate(101)
+
+				logger.info(response)
+			}
+
+			generator()
+		}
+	}
+	if (job === 'webhookManager') redis.set('webhookManagerState', '1').then(() => webhookManager())
+	if (job === 'api') api.listen(process.env.PORT || 4000, () => logger.info(`Server listening on port ${process.env.PORT || 4000}`))
 }
