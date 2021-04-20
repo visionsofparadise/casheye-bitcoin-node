@@ -73,7 +73,7 @@ describe('tests url and connectionId endpoints', () => {
 		
 			const bitcoinSend = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 				command: 'sendToAddress',
-				args: [anyTxWebhook.address, 1]
+				args: [anyTxWebhook.address, "0.01"]
 			})
 		
 			logger.info(bitcoinSend.data)
