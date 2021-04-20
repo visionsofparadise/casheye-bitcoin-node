@@ -28,7 +28,7 @@ export const unsetWebhook = async (msg: SQS.Message): Promise<any> => {
 
 		return {
 			queueEntry: {
-				MessageId: msg.MessageId,
+				Id: msg.MessageId,
 				ReceiptHandle: msg.ReceiptHandle
 			},
 				eventEntry: {

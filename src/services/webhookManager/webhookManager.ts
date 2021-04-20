@@ -68,9 +68,9 @@ export const webhookManager = async (): Promise<any> => {
 				}).promise()
 	
 				promises.push(sqsPromise)
-		
-				await Promise.all(promises)
 			}
+
+			await Promise.all(promises)
 		}
 
 		await wait(1000)
