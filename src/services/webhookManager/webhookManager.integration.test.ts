@@ -23,6 +23,7 @@ it('it sets and unsets a webhook', async () => {
 	await eventbridge.putEvents({
 		Entries: [
 			{
+				Source: 'casheye-' + process.env.STAGE!,
 				DetailType: 'setWebhook',
 				Detail: JSON.stringify(webhook)
 			}
@@ -53,6 +54,7 @@ it('it sets and unsets a webhook', async () => {
 	await eventbridge.putEvents({
 		Entries: [
 			{
+				Source: 'casheye-' + process.env.STAGE!,
 				DetailType: 'unsetWebhook',
 				Detail: JSON.stringify({
 					...webhook,
