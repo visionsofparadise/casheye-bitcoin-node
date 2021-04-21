@@ -11,7 +11,7 @@ describe('tests url and connectionId endpoints', () => {
 	jest.useRealTimers()
 
 	it('it sets and unsets a webhook and posts events to a url', async () => {
-		expect.assertions(17)
+		expect.assertions(16)
 
 		try {
 			const anyTxWebhook = {
@@ -97,7 +97,7 @@ describe('tests url and connectionId endpoints', () => {
 			await wait(3 * 1000)
 		
 			const redisTestData = await axios.post(process.env.INSTANCE_URL! + 'redis', {
-				command: 'hvals',
+				command: 'hkeys',
 				args: ['testData']
 			})
 		
@@ -105,12 +105,12 @@ describe('tests url and connectionId endpoints', () => {
 			expect(redisTestData.status).toBe(200)
 			expect(redisTestData.data.length).toBeGreaterThan(0)
 
-			const redisDeleteTestData = await axios.post(process.env.INSTANCE_URL! + 'redis', {
-				command: 'del',
-				args: ['testData']
-			})
-
-			expect(redisDeleteTestData.status).toBe(200)
+			for (const key of redisTestData.data) {
+				await axios.post(process.env.INSTANCE_URL! + 'redis', {
+					command: 'del',
+					args: ['testData', key]
+				})
+			}
 		
 			await eventbridge.putEvents({
 				Entries: webhooks.map(webhook => ({
@@ -159,7 +159,7 @@ describe('tests url and connectionId endpoints', () => {
 	}, 10 * 60 * 1000)
 
 	it('it sets and unsets a webhook and posts events to a url', async () => {
-		expect.assertions(18)
+		expect.assertions(17)
 
 		try {
 			const client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
@@ -283,12 +283,12 @@ describe('tests url and connectionId endpoints', () => {
 			expect(redisTestData.status).toBe(200)
 			expect(redisTestData.data.length).toBeGreaterThan(0)
 
-			const redisDeleteTestData = await axios.post(process.env.INSTANCE_URL! + 'redis', {
-				command: 'del',
-				args: ['testData']
-			})
-
-			expect(redisDeleteTestData.status).toBe(200)
+			for (const key of redisTestData.data) {
+				await axios.post(process.env.INSTANCE_URL! + 'redis', {
+					command: 'del',
+					args: ['testData', key]
+				})
+			}
 		
 			await eventbridge.putEvents({
 				Entries: webhooks.map(webhook => ({
