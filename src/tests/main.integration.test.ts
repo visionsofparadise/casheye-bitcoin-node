@@ -104,8 +104,8 @@ it('tests url and connectionId endpoints', async () => {
 		expect(redisTestData.data.length).toBeGreaterThan(0)
 
 		const redisDelTestData = await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'hdel',
-			args: ['testData', ...redisTestData.data]
+			command: 'del',
+			args: ['testData']
 		})
 
 		expect(redisDelTestData.status).toBe(200)
@@ -272,8 +272,8 @@ it('tests url and connectionId endpoints', async () => {
 		expect(redisTestData2.data.length).toBeGreaterThan(0)
 
 		const redisDelTestData2 = await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'hdel',
-			args: ['testData', ...redisTestData2.data]
+			command: 'del',
+			args: ['testData']
 		})
 
 		expect(redisDelTestData2.status).toBe(200)
