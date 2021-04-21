@@ -11,7 +11,7 @@ describe('tests url and connectionId endpoints', () => {
 	jest.useRealTimers()
 
 	it('it sets and unsets a webhook and posts events to a url', async () => {
-		expect.assertions(16)
+		expect.assertions(17)
 
 		try {
 			const anyTxWebhook = {
@@ -105,12 +105,12 @@ describe('tests url and connectionId endpoints', () => {
 			expect(redisTestData.status).toBe(200)
 			expect(redisTestData.data.length).toBeGreaterThan(0)
 
-			for (const key of redisTestData.data) {
-				await axios.post(process.env.INSTANCE_URL! + 'redis', {
-					command: 'del',
-					args: ['testData', key]
-				})
-			}
+			const redisDelTestData = await axios.post(process.env.INSTANCE_URL! + 'redis', {
+				command: 'hdel',
+				args: ['testData', ...redisTestData.data]
+			})
+
+			expect(redisDelTestData.status).toBe(200)
 		
 			await eventbridge.putEvents({
 				Entries: webhooks.map(webhook => ({
@@ -159,7 +159,7 @@ describe('tests url and connectionId endpoints', () => {
 	}, 10 * 60 * 1000)
 
 	it('it sets and unsets a webhook and posts events to a url', async () => {
-		expect.assertions(17)
+		expect.assertions(18)
 
 		try {
 			const client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
@@ -283,12 +283,12 @@ describe('tests url and connectionId endpoints', () => {
 			expect(redisTestData.status).toBe(200)
 			expect(redisTestData.data.length).toBeGreaterThan(0)
 
-			for (const key of redisTestData.data) {
-				await axios.post(process.env.INSTANCE_URL! + 'redis', {
-					command: 'del',
-					args: ['testData', key]
-				})
-			}
+			const redisDelTestData = await axios.post(process.env.INSTANCE_URL! + 'redis', {
+				command: 'hdel',
+				args: ['testData', ...redisTestData.data]
+			})
+
+			expect(redisDelTestData.status).toBe(200)
 		
 			await eventbridge.putEvents({
 				Entries: webhooks.map(webhook => ({
