@@ -15,6 +15,8 @@ import path from 'path'
 import { Network, networkCurrencies } from '../helpers';
 import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
+import { WebSocketApi, WebSocketStage } from '@aws-cdk/aws-apigatewayv2';
+import { LambdaWebSocketIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -29,6 +31,7 @@ const testEC2Config = {
 export class CasheyeBitcoinNodeStage extends Stage {	
 	public readonly instanceUrl?: CfnOutput;
 	public readonly testUrl?: CfnOutput;
+	public readonly websocketTestUrl?: CfnOutput;
 
 		constructor(scope: Construct, id: string, props: StageProps & { STAGE: string; NETWORK: Network }) {
 		super(scope, id, props);
@@ -44,6 +47,7 @@ export class CasheyeBitcoinNodeStage extends Stage {
 
 		this.instanceUrl = stack.instanceUrl
 		this.testUrl = stack.testUrl
+		this.websocketTestUrl = stack.websocketTestUrl
 	}
 }
 
@@ -55,6 +59,7 @@ const { createLambda, initializeRuleLambda } = masterLambda({
 export class CasheyeBitcoinNodeStack extends Stack {
 	public readonly instanceUrl?: CfnOutput;
 	public readonly testUrl?: CfnOutput;
+	public readonly websocketTestUrl?: CfnOutput;
 
 	get availabilityZones(): string[] {
     return ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1e', 'us-east-1f'];
@@ -78,6 +83,37 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			cidr: "10.0.0.0/16",
 			maxAzs: 2
 		});
+
+		let websocketConnectionUrl: string | undefined
+
+		if (props.STAGE !== 'prod') {
+			const testWebsocketHandler = createLambda(this, 'testWebsocket', {});
+
+			const integration = new LambdaWebSocketIntegration({
+				handler: testWebsocketHandler
+			});
+	
+			const websocketApi = new WebSocketApi(this, `api`, {
+				connectRouteOptions: {
+					integration
+				},
+				disconnectRouteOptions: {
+					integration
+				},
+				defaultRouteOptions: {
+					integration
+				}
+			});
+	
+			new WebSocketStage(this, `stage`, {
+				webSocketApi: websocketApi,
+				stageName: 'test',
+				autoDeploy: true
+			});
+
+			this.websocketTestUrl = createOutput('websocketTestUrl', websocketApi.apiEndpoint);
+			websocketConnectionUrl = `https://${websocketApi.apiEndpoint.slice(6)}/@connections`
+		}
 
 		const setQueue = new Queue(this, 'SetQueue', {
 			visibilityTimeout: Duration.seconds(3)
@@ -103,7 +139,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			unsetQueues.push(unsetQueue)
 
 			const nodeName = deploymentName + `-node-${i}`
-			const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_CONNECTION_URL=${Fn.importValue(`casheye-webhook-${props.STAGE}-websocketConnectionUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+			const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_CONNECTION_URL=${websocketConnectionUrl ? websocketConnectionUrl : Fn.importValue(`casheye-webhook-${props.STAGE}-websocketConnectionUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 			const shebang = `#!/bin/bash
 sudo add-apt-repository ppa:chris-lea/redis-server

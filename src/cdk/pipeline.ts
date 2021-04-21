@@ -62,6 +62,7 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 		const outputs = {
 			INSTANCE_URL: pipeline.stackOutput(testApp.instanceUrl!),
 			TEST_URL: pipeline.stackOutput(testApp.testUrl!),
+			WEBSOCKET_TEST_URL: pipeline.stackOutput(testApp.websocketTestUrl!)
 		}
 
 		const integrationTestAction = new ShellScriptAction({
