@@ -4,6 +4,8 @@ import { logger } from "../../helpers";
 import { sqs } from "../../sqs";
 import { IWebhook } from "../../types/IWebhook";
 import { apiGatewaySockets } from '../../apiGatewaySockets'
+import kuuid from "kuuid";
+import { redis } from "../../redis";
 
 export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>) => {
 	const results = await Promise.all(webhooks.map(async ({ webhook, payload }) => {
@@ -26,6 +28,10 @@ export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'curr
 			return { status: 'success' }
 		} catch (error) {
 			logger.error({ error })
+
+			if (process.env.STAGE !== 'prod') {
+				await redis.hset('errors', kuuid.id(), JSON.stringify(error))
+			}
 	
 			const retry = {
 				id: webhook.id,

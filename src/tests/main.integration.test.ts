@@ -306,6 +306,13 @@ it('tests url and connectionId endpoints', async () => {
 	} catch (error) {
 		logger.error(error)
 
+		const redisErrors = await axios.post(process.env.INSTANCE_URL! + 'redis', {
+			command: 'hvals',
+			args: ['errors']
+		})
+	
+		logger.info(redisErrors.data)
+
 		throw error
 	}
 }, 10 * 60 * 1000)
