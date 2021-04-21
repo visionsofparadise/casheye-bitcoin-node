@@ -87,7 +87,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		let websocketConnectionUrl: string | undefined
 
 		if (props.STAGE !== 'prod') {
-			const testWebsocketHandler = createLambda(this, 'testWebsocket', {});
+			const testWebsocketHandler = createLambda(this, 'testWebsocketApi', {});
 
 			const integration = new LambdaWebSocketIntegration({
 				handler: testWebsocketHandler
