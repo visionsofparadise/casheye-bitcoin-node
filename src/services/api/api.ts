@@ -39,9 +39,9 @@ api.post('/new-block/:blockhash', async (req, res) => {
 
 	const argsArray = args || [] 
 
-	const result = await rpc[command](...argsArray).catch(next)
-
-	result ? res.status(200).send(result) : res.sendStatus(204)
+	await rpc[command](...argsArray)
+		.then((result: any) => result ? res.status(200).send(result) : res.sendStatus(204))
+		.catch(next)
 })
 
 !isProd && api.post('/redis', async (req, res, next) => {	
@@ -51,15 +51,13 @@ api.post('/new-block/:blockhash', async (req, res) => {
 
 	const redisCast = redis as any
 
-	const result = await redisCast[command](...argsArray).catch(next)
-
-	result ? res.status(200).send(result) : res.sendStatus(204)
+	await redisCast[command](...argsArray)
+		.then((result: any) => result ? res.status(200).send(result) : res.sendStatus(204))
+		.catch(next)
 })
 
 !isProd && api.post('/reset', async (_, res, next) => {	
-	await resetWebhooks().catch(next)
-
-	res.sendStatus(204)
+	await resetWebhooks().then(() => res.sendStatus(204)).catch(next)
 })
 
 !isProd && api.use((err: any, _: any, res: Response<any>, __: any) => {
