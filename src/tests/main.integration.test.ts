@@ -164,7 +164,7 @@ describe('tests url and connectionId endpoints', () => {
 		try {
 			const client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
 
-			await new Promise(resolve => {
+			await new Promise<void>(resolve => {
 				client.on('open', () => {
 					logger.info('is open');
 
