@@ -35,25 +35,33 @@ api.post('/new-block/:blockhash', async (req, res) => {
 })
 
 !isProd && api.post('/rpc', async (req, res) => {	
-	const { command, args } = req.body as { command: string; args?: Array<any> };
+	try {
+		const { command, args } = req.body as { command: string; args?: Array<any> };
 
-	const argsArray = args || [] 
-
-	await rpc[command](...argsArray)
-		.then((result: any) => result ? res.status(200).send(result) : res.sendStatus(204))
-		.catch(res.status(500).send)
+		const argsArray = args || [] 
+	
+		const result = await rpc[command](...argsArray)
+		
+		result ? res.status(200).send(result) : res.sendStatus(204)
+	} catch (err) {
+		res.status(500).send(err)
+	}
 })
 
 !isProd && api.post('/redis', async (req, res) => {	
-	const { command, args } = req.body as { command: string; args?: Array<any> };
+	try {
+		const { command, args } = req.body as { command: string; args?: Array<any> };
 
-	const argsArray = args || [] 
-
-	const redisCast = redis as any
-
-	await redisCast[command](...argsArray)
-		.then((result: any) => result ? res.status(200).send(result) : res.sendStatus(204))
-		.catch(res.status(500).send)
+		const argsArray = args || [] 
+	
+		const redisCast = redis as any
+	
+		const result = await redisCast[command](...argsArray)
+		
+		result ? res.status(200).send(result) : res.sendStatus(204)
+	} catch (err) {
+		res.status(500).send(err)
+	}
 })
 
 !isProd && api.post('/reset', async (_, res) => {	
