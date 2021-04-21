@@ -1,4 +1,4 @@
-import { Stack, Construct, StackProps, SecretValue, Fn } from '@aws-cdk/core';
+import { Stack, Construct, StackProps, SecretValue } from '@aws-cdk/core';
 import { Artifact } from '@aws-cdk/aws-codepipeline';
 import { CdkPipeline, SimpleSynthAction, ShellScriptAction } from '@aws-cdk/pipelines';
 import { GitHubSourceAction } from '@aws-cdk/aws-codepipeline-actions';
@@ -55,8 +55,7 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 		const testEnv = [
 			'STAGE=test',
 			`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
-			`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY_BTC')}`,
-			`WEBSOCKET_URL=${Fn.importValue(`casheye-webhook-test-websocketUrl`)}`
+			`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY_BTC')}`
 		]
 
 		const outputs = {

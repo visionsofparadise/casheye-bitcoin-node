@@ -143,6 +143,8 @@ it('tests url and connectionId endpoints', async () => {
 		expect(bitcoinGet2.status).toBe(200)
 		expect(bitcoinGet2.data.labels[0].name).toBe('unset')
 
+		logger.info(process.env.WEBSOCKET_TEST_URL!)
+
 		const client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
 
 		await new Promise<void>(resolve => {

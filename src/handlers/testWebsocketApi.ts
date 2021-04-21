@@ -15,8 +15,8 @@ export const testWebsocketHandler = new HttpLambdaHandler(
 			case '$disconnect':
 				logger.info(connectionId + ' disconnected');
 				break;
-			case '$default':
-				logger.info(connectionId + ' hit default route');
+			case 'message':
+				logger.info(connectionId + ' hit message route');
 
 				const { data } = JSON.parse(event.body!)
 
@@ -26,6 +26,10 @@ export const testWebsocketHandler = new HttpLambdaHandler(
 				})
 				
 				break;
+			case '$default':
+					logger.info(connectionId + ' hit default route');
+					
+					break;
 		}
 
 		return new Response(SUCCESS_NO_CONTENT_204);
