@@ -15,7 +15,7 @@ import path from 'path'
 import { Network, networkCurrencies } from '../helpers';
 import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
-import { WebSocketApi, WebSocketStage } from '@aws-cdk/aws-apigatewayv2';
+import { CfnApi, WebSocketApi, WebSocketStage } from '@aws-cdk/aws-apigatewayv2';
 import { LambdaWebSocketIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
 
 const prodEC2Config = {
@@ -85,6 +85,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		});
 
 		let websocketConnectionUrl: string | undefined
+		let websocketApiArn: string | undefined
 
 		if (props.STAGE !== 'prod') {
 			const testWebsocketHandler = createLambda(this, 'testWebsocketApi', {
@@ -108,6 +109,10 @@ export class CasheyeBitcoinNodeStack extends Stack {
 					integration
 				}
 			});
+
+			websocketApi.addRoute('message', {
+				integration
+			})
 	
 			new WebSocketStage(this, `stage`, {
 				webSocketApi: websocketApi,
@@ -117,6 +122,11 @@ export class CasheyeBitcoinNodeStack extends Stack {
 
 			this.websocketTestUrl = createOutput('websocketTestUrl', websocketApi.apiEndpoint + '/test');
 			websocketConnectionUrl = `https://${websocketApi.apiEndpoint.slice(6)}/test/@connections`
+
+			websocketApiArn = Stack.of(this).formatArn({
+				service: 'execute-api',
+				resource: (websocketApi.node.defaultChild as CfnApi).ref
+			});
 		}
 
 		const setQueue = new Queue(this, 'SetQueue', {
@@ -143,7 +153,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			unsetQueues.push(unsetQueue)
 
 			const nodeName = deploymentName + `-node-${i}`
-			const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_CONNECTION_URL=${websocketConnectionUrl ? websocketConnectionUrl : Fn.importValue(`casheye-webhook-${props.STAGE}-websocketConnectionUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+			const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_CONNECTION_URL=${websocketConnectionUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketConnectionUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 			const shebang = `#!/bin/bash
 sudo add-apt-repository ppa:chris-lea/redis-server
@@ -250,7 +260,7 @@ pm2 save`
 			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 			instance.addToRolePolicy(new PolicyStatement({
 				actions: ['execute-api:ManageConnections'],
-				resources: [`${Fn.importValue(`casheye-webhook-${props.STAGE}-websocketApiArn`)}/*`],
+				resources: [`${websocketApiArn || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketApiArn`)}/*`],
 				effect: Effect.ALLOW
 			}))
 	
