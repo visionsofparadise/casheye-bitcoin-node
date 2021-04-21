@@ -18,7 +18,7 @@ export const testWebsocketHandler = new HttpLambdaHandler(
 			case '$default':
 				logger.info(connectionId + ' hit default route');
 
-				const { data } = JSON.parse(event.body)
+				const { data } = JSON.parse(event.body!)
 
 				await axios.post<string>(data.instanceUrl + 'redis', {
 					command: 'set',
