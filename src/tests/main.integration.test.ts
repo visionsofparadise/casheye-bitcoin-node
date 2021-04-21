@@ -9,7 +9,7 @@ import WebSocket from 'ws';
 
 it('tests url and connectionId endpoints', async () => {
 	jest.useRealTimers()
-	expect.assertions(35)
+	expect.assertions(33)
 
 	try {
 		const anyTxWebhook = {
@@ -102,13 +102,6 @@ it('tests url and connectionId endpoints', async () => {
 		logger.info(redisTestData.data)
 		expect(redisTestData.status).toBe(200)
 		expect(redisTestData.data.length).toBeGreaterThan(0)
-
-		const redisDelTestData = await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'del',
-			args: ['testData']
-		})
-
-		expect(redisDelTestData.status).toBe(200)
 	
 		await eventbridge.putEvents({
 			Entries: webhooks.map(webhook => ({
@@ -269,14 +262,7 @@ it('tests url and connectionId endpoints', async () => {
 	
 		logger.info(redisTestData2.data)
 		expect(redisTestData2.status).toBe(200)
-		expect(redisTestData2.data.length).toBeGreaterThan(0)
-
-		const redisDelTestData2 = await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'del',
-			args: ['testData']
-		})
-
-		expect(redisDelTestData2.status).toBe(200)
+		expect(redisTestData2.data.length).toBeGreaterThan(redisTestData.data.length)
 	
 		await eventbridge.putEvents({
 			Entries: webhooks2.map(webhook => ({
