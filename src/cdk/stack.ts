@@ -111,8 +111,8 @@ export class CasheyeBitcoinNodeStack extends Stack {
 				autoDeploy: true
 			});
 
-			this.websocketTestUrl = createOutput('websocketTestUrl', websocketApi.apiEndpoint);
-			websocketConnectionUrl = `https://${websocketApi.apiEndpoint.slice(6)}/@connections`
+			this.websocketTestUrl = createOutput('websocketTestUrl', websocketApi.apiEndpoint + '/test');
+			websocketConnectionUrl = `https://${websocketApi.apiEndpoint.slice(6)}/test/@connections`
 		}
 
 		const setQueue = new Queue(this, 'SetQueue', {
