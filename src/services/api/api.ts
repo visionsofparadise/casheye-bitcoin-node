@@ -1,7 +1,7 @@
-import express, { Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { isProd, logger } from '../../helpers';
+import { isProd } from '../../helpers';
 import { rpc } from '../bitcoind/bitcoind'
 import { resetWebhooks } from '../webhookManager/resetWebhooks';
 import { redis } from '../../redis';
@@ -34,17 +34,17 @@ api.post('/new-block/:blockhash', async (req, res) => {
 	res.sendStatus(204)
 })
 
-!isProd && api.post('/rpc', async (req, res, next) => {	
+!isProd && api.post('/rpc', async (req, res) => {	
 	const { command, args } = req.body as { command: string; args?: Array<any> };
 
 	const argsArray = args || [] 
 
 	await rpc[command](...argsArray)
 		.then((result: any) => result ? res.status(200).send(result) : res.sendStatus(204))
-		.catch(next)
+		.catch(res.status(500).send)
 })
 
-!isProd && api.post('/redis', async (req, res, next) => {	
+!isProd && api.post('/redis', async (req, res) => {	
 	const { command, args } = req.body as { command: string; args?: Array<any> };
 
 	const argsArray = args || [] 
@@ -53,17 +53,11 @@ api.post('/new-block/:blockhash', async (req, res) => {
 
 	await redisCast[command](...argsArray)
 		.then((result: any) => result ? res.status(200).send(result) : res.sendStatus(204))
-		.catch(next)
+		.catch(res.status(500).send)
 })
 
-!isProd && api.post('/reset', async (_, res, next) => {	
-	await resetWebhooks().then(() => res.sendStatus(204)).catch(next)
-})
-
-!isProd && api.use((err: any, _: any, res: Response<any>, __: any) => {
-	logger.error(err.stack)
-	
-  res.status(500).send(JSON.stringify(err))
+!isProd && api.post('/reset', async (_, res) => {	
+	await resetWebhooks().then(() => res.sendStatus(204)).catch(res.status(500).send)
 })
 
 export { api }
