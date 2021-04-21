@@ -19,7 +19,7 @@ describe('tests url and connectionId endpoints', () => {
 				currency: 'BTC',
 				confirmations: 6,
 				event: 'anyTx',
-				url: process.env.API_URL! + 'test'
+				url: process.env.TEST_URL! + 'test'
 			}
 		
 			const newBlockWebhook = {
@@ -28,7 +28,7 @@ describe('tests url and connectionId endpoints', () => {
 				currency: 'BTC',
 				confirmations: 6,
 				event: 'newBlock',
-				url: process.env.API_URL! + 'test'
+				url: process.env.TEST_URL! + 'test'
 			}
 		
 			const webhooks = [anyTxWebhook, newBlockWebhook]
