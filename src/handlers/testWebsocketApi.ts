@@ -6,6 +6,7 @@ import axios from 'axios';
 export const testWebsocketHandler = new HttpLambdaHandler(
 	{ method: 'POST' },
 	async ({ event }) => {
+		logger.info({ event })
 		const { routeKey, connectionId } = event.requestContext;
 		
 		switch (routeKey!) {

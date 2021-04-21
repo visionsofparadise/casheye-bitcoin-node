@@ -143,8 +143,6 @@ it('tests url and connectionId endpoints', async () => {
 		expect(bitcoinGet2.status).toBe(200)
 		expect(bitcoinGet2.data.labels[0].name).toBe('unset')
 
-		logger.info(process.env.WEBSOCKET_TEST_URL!)
-
 		const client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
 
 		await new Promise<void>(resolve => {
@@ -165,7 +163,7 @@ it('tests url and connectionId endpoints', async () => {
 			});
 		})
 
-		await wait(3 * 1000)
+		await wait(5 * 1000)
 
 		const redisGetConnectionId = await axios.post<string>(process.env.INSTANCE_URL! + 'redis', {
 			command: 'get',
