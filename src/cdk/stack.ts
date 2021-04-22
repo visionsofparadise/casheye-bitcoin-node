@@ -116,7 +116,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 	
 			new WebSocketStage(this, `stage`, {
 				webSocketApi: websocketApi,
-				stageName: 'test',
+				stageName: props.STAGE,
 				autoDeploy: true
 			});
 
@@ -255,15 +255,15 @@ pm2 save`
 					"logs:CreateLogGroup"
 				]
 			}))
-	
-			instance.connections.allowFromAnyIpv4(Port.tcp(4000))
-			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
+
 			instance.addToRolePolicy(new PolicyStatement({
 				actions: ['execute-api:ManageConnections'],
 				resources: [`${websocketApiArn || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketApiArn`)}/*`],
 				effect: Effect.ALLOW
 			}))
 	
+			instance.connections.allowFromAnyIpv4(Port.tcp(4000))
+			instance.connections.allowFromAnyIpv4(Port.tcp(8333))
 			EventBus.grantAllPutEvents(instance.grantPrincipal)
 			setQueue.grantConsumeMessages(instance.grantPrincipal)
 			setQueue.grantSendMessages(instance.grantPrincipal)

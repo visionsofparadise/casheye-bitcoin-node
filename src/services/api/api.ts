@@ -8,6 +8,7 @@ import { redis } from '../../redis';
 import { addressTxEvent } from '../eventsManager/addressTxEvent';
 import { confirmationsEvent } from '../eventsManager/confirmationsEvent';
 import { newBlockEvent } from '../eventsManager/newBlockEvent';
+import kuuid from 'kuuid';
 
 const api = express();
 
@@ -20,18 +21,32 @@ api.get('/', async (_, res) => res.sendStatus(200));
 api.post('/new-tx/:txid', async (req, res) => {	
 	const { txid } = req.params
 
-	addressTxEvent(txid)
-
 	res.sendStatus(204)
+
+	addressTxEvent(txid).catch(async error => {
+		if (process.env.STAGE !== 'prod') {
+			await redis.hset('errors', kuuid.id(), JSON.stringify(error))
+		}
+
+		throw error
+	})
 })
 
 api.post('/new-block/:blockhash', async (req, res) => {	
 	const { blockhash } = req.params
 
-	confirmationsEvent()
-	newBlockEvent(blockhash)
-
 	res.sendStatus(204)
+
+	try {
+		confirmationsEvent()
+		newBlockEvent(blockhash)
+	} catch (error) {
+		if (process.env.STAGE !== 'prod') {
+			await redis.hset('errors', kuuid.id(), JSON.stringify(error))
+		}
+
+		throw error
+	}
 })
 
 !isProd && api.post('/rpc', async (req, res) => {	

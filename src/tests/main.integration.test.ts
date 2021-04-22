@@ -26,7 +26,6 @@ it('tests url and connectionId endpoints', async () => {
 			id: kuuid.id(),
 			userId: kuuid.id(),
 			currency: 'BTC',
-			confirmations: 6,
 			event: 'newBlock',
 			url: process.env.TEST_URL! + 'test'
 		}
@@ -187,7 +186,6 @@ it('tests url and connectionId endpoints', async () => {
 			id: kuuid.id(),
 			userId: kuuid.id(),
 			currency: 'BTC',
-			confirmations: 6,
 			event: 'newBlock',
 			connectionId: redisGetConnectionId.data
 		}
@@ -305,6 +303,8 @@ it('tests url and connectionId endpoints', async () => {
 		expect(bitcoinGet4.data.labels[0].name).toBe('unset')
 	} catch (error) {
 		logger.error(error)
+
+		await wait(10 * 1000)
 
 		const redisErrors = await axios.post(process.env.INSTANCE_URL! + 'redis', {
 			command: 'hvals',

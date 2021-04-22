@@ -4,6 +4,7 @@ import { sqs } from "../../sqs"
 import { IWebhook } from "../../types/IWebhook"
 import { postEvents } from "./postEvents"
 
+jest.mock('ioredis', () => require('ioredis-mock/jest'));
 jest.mock('axios', () => ({
 	post: jest.fn()
 		.mockResolvedValueOnce({
