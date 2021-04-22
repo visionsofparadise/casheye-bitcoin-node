@@ -16,12 +16,10 @@ describe('integration tests', () => {
 	beforeAll((done) => {
 		client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
 
-		if (!client) done()
-
-		client.on('open', () => {
+		client!.on('open', () => {
 			logger.info('is open');
 
-			client.send(
+			client!.send(
 				JSON.stringify({
 					action: 'message',
 					data: {
@@ -34,7 +32,7 @@ describe('integration tests', () => {
 			done()
 		});
 
-		client.on("message", async (data: any) => {
+		client!.on("message", async (data: any) => {
 			logger.info(data)
 			wsMessages.push(data)
 		})
@@ -43,7 +41,7 @@ describe('integration tests', () => {
 	afterAll(() => {
 		if (client && client.OPEN) {
 				console.log('disconnecting...');
-				client.close();
+				client!.close();
 		}
 	});
 
