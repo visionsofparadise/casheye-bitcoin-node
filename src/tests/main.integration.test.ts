@@ -147,12 +147,6 @@ it('tests url and connectionId endpoints', async () => {
 		const websocketTestData: any[] = []
 
 		await new Promise<void>(resolve => {
-			client.addEventListener("message", async (data: any) => {
-				logger.info(data)
-	
-				websocketTestData.push(data)
-			})
-
 			client.on('open', () => {
 				logger.info('is open');
 
@@ -169,6 +163,11 @@ it('tests url and connectionId endpoints', async () => {
 				resolve()
 			});
 		})
+
+		const websocketTestDataPromise = new Promise<any>(resolve => client.addEventListener("message", async (data: any) => {
+			logger.info(data)
+			resolve(data)
+		}))
 
 		await wait(5 * 1000)
 
@@ -260,9 +259,11 @@ it('tests url and connectionId endpoints', async () => {
 		}
 	
 		await wait(3 * 1000)
+
+		const testData = await websocketTestDataPromise
 	
-		logger.info(websocketTestData)
-		expect(websocketTestData.length).toBeGreaterThan(0)
+		logger.info(testData)
+		expect(testData).toBeDefined()
 	
 		await eventbridge.putEvents({
 			Entries: webhooks2.map(webhook => ({
