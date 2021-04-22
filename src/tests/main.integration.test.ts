@@ -164,7 +164,7 @@ it('tests url and connectionId endpoints', async () => {
 			});
 		})
 
-		client.on("message", async (_: any, data: any) => {
+		client.addEventListener("message", async (data: any) => {
 			logger.info(data)
 
 			websocketTestData.push(data)
