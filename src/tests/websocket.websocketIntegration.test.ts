@@ -46,7 +46,7 @@ describe('integration tests', () => {
 	});
 
 	it('tests webhooks with connectionId', async () => {
-		expect.assertions(15)
+		expect.assertions(16)
 		await wait(5 * 1000)
 	
 		try {
