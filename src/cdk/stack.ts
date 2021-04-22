@@ -15,7 +15,7 @@ import path from 'path'
 import { Network, networkCurrencies } from '../helpers';
 import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
-import { CfnApi, WebSocketApi, WebSocketStage } from '@aws-cdk/aws-apigatewayv2';
+import { WebSocketApi, WebSocketStage } from '@aws-cdk/aws-apigatewayv2';
 import { LambdaWebSocketIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
 
 const prodEC2Config = {
@@ -85,7 +85,6 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		});
 
 		let websocketTestUrl: string | undefined
-		let websocketApiArn: string | undefined
 
 		if (props.STAGE !== 'prod') {
 			const testWebsocketHandler = createLambda(this, 'testWebsocketApi', {
@@ -122,11 +121,6 @@ export class CasheyeBitcoinNodeStack extends Stack {
 
 			websocketTestUrl = websocketApi.apiEndpoint + '/test'
 			this.websocketTestUrl = createOutput('websocketTestUrl', websocketTestUrl);
-
-			websocketApiArn = Stack.of(this).formatArn({
-				service: 'execute-api',
-				resource: (websocketApi.node.defaultChild as CfnApi).ref
-			});
 		}
 
 		const setQueue = new Queue(this, 'SetQueue', {
@@ -258,7 +252,7 @@ pm2 save`
 
 			instance.addToRolePolicy(new PolicyStatement({
 				actions: ['execute-api:*'],
-				resources: [`${websocketApiArn || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketApiArn`)}/*`],
+				resources: [`arn:aws:execute-api:*:*:**/@connections/*`],
 				effect: Effect.ALLOW
 			}))
 	
