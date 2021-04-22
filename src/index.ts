@@ -14,9 +14,14 @@ if (cluster.isMaster) {
 	const workerConfigs: Array<{ job: string; worker: cluster.Worker }> = []
 	
 	for (const job of jobs) {
-		const worker = cluster.fork({
-			JOB: job
-		});
+		const env: any = {
+			JOB: job,
+			UV_THREADPOOL_SIZE: 4
+		}
+
+		if (job === 'api') env.UV_THREADPOOL_SIZE = 128
+
+		const worker = cluster.fork(env);
 
 		workerConfigs.push({
 			job, worker

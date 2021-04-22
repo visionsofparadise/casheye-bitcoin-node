@@ -73,7 +73,8 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 				...testEnv,
 				'npm rm bitcoind',
 				'npm ci',
-				'npm run integration'
+				'npm run httpIntegration',
+				'npm run websocketIntegration'
 			],
 			useOutputs: outputs,
 			rolePolicyStatements: [
