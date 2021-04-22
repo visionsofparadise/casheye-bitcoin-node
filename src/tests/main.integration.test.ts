@@ -144,8 +144,6 @@ it('tests url and connectionId endpoints', async () => {
 		expect(bitcoinGet2.status).toBe(200)
 		expect(bitcoinGet2.data.labels[0].name).toBe('unset')
 
-		const websocketTestData: any[] = []
-
 		await new Promise<void>(resolve => {
 			client.on('open', () => {
 				logger.info('is open');
