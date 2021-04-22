@@ -257,7 +257,7 @@ pm2 save`
 			}))
 
 			instance.addToRolePolicy(new PolicyStatement({
-				actions: ['execute-api:ManageConnections'],
+				actions: ['execute-api:*'],
 				resources: [`${websocketApiArn || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketApiArn`)}/*`],
 				effect: Effect.ALLOW
 			}))
