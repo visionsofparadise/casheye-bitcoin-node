@@ -20,7 +20,7 @@ export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'curr
 				await apiGatewaySockets
 					.postToConnection({
 						ConnectionId: webhook.connectionId,
-						Data: payload
+						Data: JSON.stringify(payload)
 					})
 					.promise();
 			}

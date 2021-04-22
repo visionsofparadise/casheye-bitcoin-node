@@ -42,16 +42,18 @@ export const webhookManager = async (): Promise<any> => {
 					const results = await Promise.all(messages.map(async msg => setWebhook(msg)))
 			
 					const successes = results.filter(result => result !== undefined)
-				
-					const eventPromise = webhookSetEvent.send(successes.map(success => success!.eventEntry))
-					promises.push(eventPromise)
-	
-					const sqsPromise = sqs.deleteMessageBatch({
-						QueueUrl: SetQueueUrl,
-						Entries: successes.map(success => (success!.queueEntry as any))
-					}).promise()
+
+					if (successes.length > 0) {
+						const eventPromise = webhookSetEvent.send(successes.map(success => success!.eventEntry))
+						promises.push(eventPromise)
 		
-					promises.push(sqsPromise)
+						const sqsPromise = sqs.deleteMessageBatch({
+							QueueUrl: SetQueueUrl,
+							Entries: successes.map(success => (success!.queueEntry as any))
+						}).promise()
+			
+						promises.push(sqsPromise)
+					}
 				}
 			
 				if (unsetQueueResponse.Messages) {
@@ -60,16 +62,18 @@ export const webhookManager = async (): Promise<any> => {
 					const results = await Promise.all(messages.map(async msg => unsetWebhook(msg)))
 			
 					const successes = results.filter(result => result !== undefined)
-		
-					const eventPromise = webhookUnsetEvent.send(successes.map(success => success!.eventEntry))
-					promises.push(eventPromise)
+
+					if (successes.length > 0) {
+						const eventPromise = webhookUnsetEvent.send(successes.map(success => success!.eventEntry))
+						promises.push(eventPromise)
+				
+						const sqsPromise = sqs.deleteMessageBatch({
+							QueueUrl: UnsetQueueUrl,
+							Entries: successes.map(success => (success!.queueEntry as any))
+						}).promise()
 			
-					const sqsPromise = sqs.deleteMessageBatch({
-						QueueUrl: UnsetQueueUrl,
-						Entries: successes.map(success => (success!.queueEntry as any))
-					}).promise()
-		
-					promises.push(sqsPromise)
+						promises.push(sqsPromise)
+					}
 				}
 	
 				await Promise.all(promises)
