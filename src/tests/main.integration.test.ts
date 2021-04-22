@@ -9,7 +9,9 @@ import WebSocket from 'ws';
 
 it('tests url and connectionId endpoints', async () => {
 	jest.useRealTimers()
-	expect.assertions(33)
+	expect.assertions(32)
+
+	const client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
 
 	try {
 		const anyTxWebhook = {
@@ -142,7 +144,7 @@ it('tests url and connectionId endpoints', async () => {
 		expect(bitcoinGet2.status).toBe(200)
 		expect(bitcoinGet2.data.labels[0].name).toBe('unset')
 
-		const client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
+		const websocketTestData = []
 
 		await new Promise<void>(resolve => {
 			client.on('open', () => {
@@ -160,6 +162,12 @@ it('tests url and connectionId endpoints', async () => {
 				logger.info('message sent');
 				resolve()
 			});
+		})
+
+		client.on("message", async (_: any, data: any) => {
+			logger.info(data)
+
+			websocketTestData.push(data)
 		})
 
 		await wait(5 * 1000)
@@ -253,14 +261,8 @@ it('tests url and connectionId endpoints', async () => {
 	
 		await wait(3 * 1000)
 	
-		const redisTestData2 = await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'hvals',
-			args: ['testData']
-		})
-	
-		logger.info(redisTestData2.data)
-		expect(redisTestData2.status).toBe(200)
-		expect(redisTestData2.data.length).toBeGreaterThan(redisTestData.data.length)
+		logger.info(websocketTestData)
+		expect(websocketTestData.length).toBeGreaterThan(0)
 	
 		await eventbridge.putEvents({
 			Entries: webhooks2.map(webhook => ({
@@ -313,7 +315,11 @@ it('tests url and connectionId endpoints', async () => {
 	
 		logger.info(redisErrors.data)
 
+		client.close()
+
 		throw error
 	}
+
+	client.close()
 }, 10 * 60 * 1000)
 
