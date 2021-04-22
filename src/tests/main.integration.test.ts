@@ -16,6 +16,8 @@ describe('integration tests', () => {
 	beforeAll((done) => {
 		client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
 
+		if (!client) done()
+
 		client.on('open', () => {
 			logger.info('is open');
 
@@ -322,11 +324,7 @@ describe('integration tests', () => {
 		
 			logger.info(redisErrors.data)
 	
-			client.close()
-	
 			throw error
 		}
-	
-		client.close()
 	}, 10 * 60 * 1000)
 })
