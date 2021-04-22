@@ -147,6 +147,12 @@ it('tests url and connectionId endpoints', async () => {
 		const websocketTestData: any[] = []
 
 		await new Promise<void>(resolve => {
+			client.addEventListener("message", async (data: any) => {
+				logger.info(data)
+	
+				websocketTestData.push(data)
+			})
+
 			client.on('open', () => {
 				logger.info('is open');
 
@@ -162,12 +168,6 @@ it('tests url and connectionId endpoints', async () => {
 				logger.info('message sent');
 				resolve()
 			});
-		})
-
-		client.addEventListener("message", async (data: any) => {
-			logger.info(data)
-
-			websocketTestData.push(data)
 		})
 
 		await wait(5 * 1000)
