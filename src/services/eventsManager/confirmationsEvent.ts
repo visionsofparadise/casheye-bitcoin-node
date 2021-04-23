@@ -3,6 +3,7 @@ import { postEvents } from './postEvents';
 import { logger } from '../../helpers';
 import { decode } from '../webhookManager/webhookEncoder';
 import { redis } from '../../redis';
+import kuuid from 'kuuid';
 
 type ListSinceBlockResponse = Array<{
 	txid: string;
@@ -70,6 +71,10 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 			})
 		} catch (error) {
 			logger.error(error)
+
+			if (process.env.STAGE !== 'prod') {
+				await redis.hset('errors', kuuid.id(), JSON.stringify(error))
+			}
 
 			return
 		}

@@ -2,7 +2,6 @@ import { rpc } from '../bitcoind/bitcoind'
 import { postEvents } from './postEvents';
 import { redis } from '../../redis';
 import { decode } from '../webhookManager/webhookEncoder';
-import { Transaction } from 'bitcore-lib'
 
 export interface GetTransactionResponse {
 	confirmations: number;
@@ -25,7 +24,7 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 
 	if (!tx || tx.confirmations !== 0) return 
 
-	const rawTx = new Transaction(tx.hex)
+	const rawTxPromise = rpc.getRawTransaction(txId, true)
 
 	const addresses = tx.details.filter(detail => detail.label === 'set')
 
@@ -37,13 +36,14 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 		const webhooks = data.map(webhook => decode(webhook))
 
 		return webhooks.map(async webhook => {
-			if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && address.category === 'receive') {
-				events.push({ webhook, payload: rawTx })
-			}
+			const rawTx = await Promise.resolve(rawTxPromise)
 
-			if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && address.category === 'send') {
-				events.push({ webhook, payload: rawTx })
-			}
+			if (!rawTx) return 
+
+			const pushEvent = async () => events.push({ webhook, payload: rawTx })
+
+			if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && address.category === 'receive') await pushEvent()
+			if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && address.category === 'send') await pushEvent()
 		})
 	}))
 

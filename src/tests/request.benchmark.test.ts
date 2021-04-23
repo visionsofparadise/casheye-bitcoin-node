@@ -12,7 +12,10 @@ describe('integration tests', () => {
 	const N = process.env.N ? parseInt(process.env.N) : 1000
 	const testId = kuuid.id()
 	let client: WebSocket | undefined
-	let wsMessages: any[] = []
+
+	let addressTxResponseTimes: any[] = []
+	let confirmationsResponseTimes: any[] = []
+	let newBlockResponseTimes: any[] = []
 	let wsErrors: any[] = []
 
 	beforeAll((done) => {
@@ -40,10 +43,15 @@ describe('integration tests', () => {
 			logger.info(data)
 
 			if (data.requestStartTime) {
-				wsMessages.push({
-					...data,
-					requestEndTime: day().valueOf()
-				})
+				const responseTime = day().valueOf() - day(data.requestStartTime).valueOf()
+
+				if (data.inputs && !data.confirmations) {
+					addressTxResponseTimes.push(responseTime)
+				} else if (data.inputs && data.confirmations) {
+					confirmationsResponseTimes.push(responseTime)
+				} else if (data.height) {
+					newBlockResponseTimes.push(responseTime)
+				}
 			} else {
 				wsErrors.push(data)
 			}
@@ -131,34 +139,20 @@ describe('integration tests', () => {
 		
 			await wait(3 * 1000)
 
-			logger.info({ wsMessages })
 			logger.info({ wsErrors })
-
-			const addressTxEvents = wsMessages.filter(msg => msg.inputs && !msg.confirmations)
-			const confirmationEvents = wsMessages.filter(msg => msg.inputs && msg.confirmations)
-			const newBlockEvents = wsMessages.filter(msg => msg.height ? true : false)
-
-			const responseTimes = (data: Array<{ requestStartTime: string; requestEndTime: number }>) => data
-				.map(response => response.requestEndTime - day(response.requestStartTime).valueOf())
 
 			const average = (data: number[]) => Math.floor(data
 				.reduce((prev, cur) => prev + cur, 0) / data.length)
-
-			const addressTxResponseTimes = responseTimes(addressTxEvents)
 
 			logger.info('addressTx Response Times')
 			logger.info(addressTxResponseTimes)
 			logger.info('addressTx Average')
 			logger.info(average(addressTxResponseTimes))
 
-			const confirmationResponseTimes = responseTimes(confirmationEvents)
-
 			logger.info('confirmation Response Times')
-			logger.info(confirmationResponseTimes)
+			logger.info(confirmationsResponseTimes)
 			logger.info('confirmation Average')
-			logger.info(average(confirmationResponseTimes))
-
-			const newBlockResponseTimes = responseTimes(newBlockEvents)
+			logger.info(average(confirmationsResponseTimes))
 
 			logger.info('newBlock Response Times')
 			logger.info(newBlockResponseTimes)
