@@ -21,7 +21,7 @@ api.get('/', async (_, res) => res.sendStatus(200));
 api.post('/new-tx/:txid/:timestamp', async (req, res) => {	
 	const { txid, timestamp } = req.params
 
-	const requestStartTime = Math.floor(parseInt(timestamp) / 1000)
+	const requestStartTime = Math.floor(parseInt(timestamp) * 1000)
 
 	res.sendStatus(204)
 
@@ -37,7 +37,7 @@ api.post('/new-tx/:txid/:timestamp', async (req, res) => {
 api.post('/new-block/:blockhash/:timestamp', async (req, res) => {	
 	const { blockhash, timestamp } = req.params
 
-	const requestStartTime = Math.floor(parseInt(timestamp) / 1000)
+	const requestStartTime = Math.floor(parseInt(timestamp) * 1000)
 
 	res.sendStatus(204)
 
