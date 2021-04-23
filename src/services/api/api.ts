@@ -9,6 +9,7 @@ import { addressTxEvent } from '../eventsManager/addressTxEvent';
 import { confirmationsEvent } from '../eventsManager/confirmationsEvent';
 import { newBlockEvent } from '../eventsManager/newBlockEvent';
 import kuuid from 'kuuid';
+import day from 'dayjs'
 
 const api = express();
 
@@ -18,10 +19,11 @@ api.use(bodyParser.json());
 
 api.get('/', async (_, res) => res.sendStatus(200));
 
-api.post('/new-tx/:txid/:timestamp', async (req, res) => {	
-	const { txid, timestamp } = req.params
+api.post('/new-tx/:txid', async (req, res) => {	
+	const { txid } = req.params
+	const { timestamp } = req.body
 
-	const requestStartTime = Math.floor(parseInt(timestamp) * 1000)
+	const requestStartTime = day(timestamp).valueOf()
 
 	res.sendStatus(204)
 
@@ -34,10 +36,11 @@ api.post('/new-tx/:txid/:timestamp', async (req, res) => {
 	})
 })
 
-api.post('/new-block/:blockhash/:timestamp', async (req, res) => {	
-	const { blockhash, timestamp } = req.params
+api.post('/new-block/:blockhash', async (req, res) => {	
+	const { blockhash } = req.params
+	const { timestamp } = req.body
 
-	const requestStartTime = Math.floor(parseInt(timestamp) * 1000)
+	const requestStartTime = day(timestamp).valueOf()
 
 	res.sendStatus(204)
 
