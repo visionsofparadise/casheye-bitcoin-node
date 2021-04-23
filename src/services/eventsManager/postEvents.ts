@@ -7,7 +7,7 @@ import { apiGatewaySockets } from '../../apiGatewaySockets'
 import kuuid from "kuuid";
 import { redis } from "../../redis";
 
-export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, requestStartTime: number) => {
+export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, requestStartTime: string) => {
 	const results = await Promise.all(webhooks.map(async ({ webhook, payload }) => {
 		try {
 			if (webhook.url) {

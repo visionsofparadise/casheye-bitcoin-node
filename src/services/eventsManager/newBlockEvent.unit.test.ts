@@ -19,7 +19,7 @@ it('posts event on new block and webhook', async () => {
 
 	await redis.hset('newBlock', 'test', item)
 
-	await newBlockEvent('test', day().valueOf())
+	await newBlockEvent('test', day().toISOString())
 
 	expect(postEvents).toBeCalledTimes(1)
 })
@@ -35,7 +35,7 @@ it('posts multiple events', async () => {
 	await redis.hset('newBlock', 'test', item)
 	await redis.hset('newBlock', 'test', item)
 
-	await newBlockEvent('test', day().valueOf())
+	await newBlockEvent('test', day().toISOString())
 
 	expect(postEvents).toBeCalledTimes(1)
 })

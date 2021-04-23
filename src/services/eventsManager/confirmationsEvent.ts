@@ -13,13 +13,21 @@ type ListSinceBlockResponse = Array<{
 	blockhash: string;
 }>;
 
-export const confirmationsEvent = async (requestStartTime: number) => {
+export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {
 	const MAX_CONFIRMATIONS = process.env.MAX_CONFIRMATIONS ? parseInt(process.env.MAX_CONFIRMATIONS) : 20
 	const blockCount = await rpc.getBlockCount() as number
 
 	if (blockCount === 0) return
 
-	const lastBlockHash = await rpc.getBlockHash(blockCount > MAX_CONFIRMATIONS ? blockCount - MAX_CONFIRMATIONS : 0)
+	const targetBlockNumber = blockCount > MAX_CONFIRMATIONS ? blockCount - MAX_CONFIRMATIONS : 0
+	const result = await redis.pipeline()
+		.hget('blockHashCache', targetBlockNumber.toString())
+		.hset('blockHashCache', blockCount.toString(), blockHash)
+		.exec()
+
+	const cachedBlockHash = result[0][1]
+
+	const lastBlockHash = cachedBlockHash || await rpc.getBlockHash(targetBlockNumber)
 
 	if (!lastBlockHash) return
 
@@ -51,13 +59,13 @@ export const confirmationsEvent = async (requestStartTime: number) => {
 
 			return webhooks.map(async webhook => {
 				if (webhook.confirmations && tx.confirmations <= webhook.confirmations) {		
-					if (webhook.event === 'inboundTx' || webhook.event === 'anyTx' && tx.category === 'receive') {
-						events.push({ webhook, payload: await Promise.resolve(rawTx) })
-					}
-		
-					if (webhook.event === 'outboundTx' || webhook.event === 'anyTx' && tx.category === 'send') {
-						events.push({ webhook, payload: await Promise.resolve(rawTx) })
-					}
+					const pushEvent = async () => events.push({ webhook, payload: {
+						...await Promise.resolve(rawTx),
+						confirmations: tx.confirmations
+					} })
+
+					if (webhook.event === 'inboundTx' || webhook.event === 'anyTx' && tx.category === 'receive') await pushEvent()
+					if (webhook.event === 'outboundTx' || webhook.event === 'anyTx' && tx.category === 'send') await pushEvent()
 				}
 			})
 		} catch (error) {

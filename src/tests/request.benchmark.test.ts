@@ -138,8 +138,8 @@ describe('integration tests', () => {
 			const confirmationEvents = wsMessages.filter(msg => msg.inputs && msg.confirmations)
 			const newBlockEvents = wsMessages.filter(msg => msg.height ? true : false)
 
-			const responseTimes = (data: Array<{ requestStartTime: number; requestEndTime: number }>) => data
-				.map(response => response.requestEndTime - response.requestStartTime)
+			const responseTimes = (data: Array<{ requestStartTime: string; requestEndTime: number }>) => data
+				.map(response => response.requestEndTime - day(response.requestStartTime).valueOf())
 
 			const average = (data: number[]) => Math.floor(data
 				.reduce((prev, cur) => prev + cur, 0) / data.length)

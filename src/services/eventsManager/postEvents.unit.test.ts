@@ -45,7 +45,7 @@ it('posts a payload to a url', async () => {
 		}
 	]
 
-	await postEvents(events, day().valueOf())
+	await postEvents(events, day().toISOString())
 
 	expect(axios.post).toBeCalledTimes(1)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(0)
@@ -64,7 +64,7 @@ it('posts a payload to a connectionId', async () => {
 		}
 	]
 
-	await postEvents(events, day().valueOf())
+	await postEvents(events, day().toISOString())
 
 	expect(axios.post).toBeCalledTimes(0)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(1)
@@ -85,7 +85,7 @@ it('adds error axios post to error queue', async () => {
 		}
 	]
 
-	await postEvents(events, day().valueOf())
+	await postEvents(events, day().toISOString())
 
 	expect(axios.post).toBeCalledTimes(1)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(0)
@@ -106,7 +106,7 @@ it('adds error apiGatewaySocket post to error queue', async () => {
 		}
 	]
 
-	await postEvents(events, day().valueOf())
+	await postEvents(events, day().toISOString())
 
 	expect(axios.post).toBeCalledTimes(0)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(1)

@@ -26,7 +26,7 @@ it('posts event on recieving address and inboundTx webhook', async () => {
 
 	await redis.hset('test', 'test', JSON.stringify({ event: 'inboundTx' }))
 
-	await addressTxEvent('test', day().valueOf())
+	await addressTxEvent('test', day().toISOString())
 
 	expect(postEvents).toBeCalledTimes(1)
 })
@@ -46,7 +46,7 @@ it('posts event on send address and outboundTx webhook', async () => {
 
 	await redis.hset('test', 'test', JSON.stringify({ event: 'outboundTx' }))
 
-	await addressTxEvent('test', day().valueOf())
+	await addressTxEvent('test', day().toISOString())
 
 	expect(postEvents).toBeCalledTimes(1)
 })
@@ -70,7 +70,7 @@ it('posts both events for anyTx', async () => {
 
 	await redis.hset('test', 'test', JSON.stringify({ event: 'anyTx' }))
 
-	await addressTxEvent('test', day().valueOf())
+	await addressTxEvent('test', day().toISOString())
 
 	expect(postEvents).toBeCalledTimes(1)
 })
@@ -108,7 +108,7 @@ it('posts multiple events on valid addresses and webhooks and skips invalid ones
 
 	await redis.hset('test3', 'test', JSON.stringify({ event: 'inboundTx' }))
 
-	await addressTxEvent('test', day().valueOf())
+	await addressTxEvent('test', day().toISOString())
 
 	expect(postEvents).toBeCalledTimes(1)
 })

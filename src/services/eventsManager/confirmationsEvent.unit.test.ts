@@ -4,6 +4,7 @@ import { confirmationsEvent } from "./confirmationsEvent"
 import { redis } from '../../redis'
 import { postEvents } from "./postEvents"
 import day from 'dayjs'
+import kuuid from "kuuid"
 
 jest.mock('../bitcoind/bitcoind')
 jest.mock('./postEvents')
@@ -31,7 +32,7 @@ it('posts event on address transaction confirmation', async () => {
 
 	await redis.hset('test', 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
 
-	await confirmationsEvent(day().valueOf())
+	await confirmationsEvent(kuuid.id(), day().toISOString())
 
 	expect(postEvents).toBeCalledTimes(1)
 })
@@ -84,7 +85,7 @@ it('posts events on  valid address transaction confirmation and skips invalid', 
 	await redis.hset('test4', 'test', JSON.stringify({ event: 'anyTx', confirmations: 6 }))
 	await redis.hset('test5', 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
 
-	await confirmationsEvent(day().valueOf())
+	await confirmationsEvent(kuuid.id(), day().toISOString())
 
 	expect(postEvents).toBeCalledTimes(1)
 })
