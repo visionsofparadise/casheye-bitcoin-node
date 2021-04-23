@@ -54,7 +54,7 @@ describe('integration tests', () => {
 
 	it('tests webhooks with connectionId', async () => {
 		expect.assertions(16)
-		await wait(5 * 1000)
+		await wait(3 * 1000)
 	
 		try {
 			const redisGetConnectionId = await axios.post<string>(process.env.INSTANCE_URL! + 'redis', {
@@ -93,7 +93,7 @@ describe('integration tests', () => {
 				}))
 			}).promise()
 		
-			await wait(10 * 1000)
+			await wait(5 * 1000)
 		
 			const redisGet = await axios.post<IWebhook>(process.env.INSTANCE_URL! + 'redis', {
 				command: 'hget',
@@ -160,7 +160,7 @@ describe('integration tests', () => {
 				}))
 			}).promise()
 		
-			await wait(10 * 1000)
+			await wait(5 * 1000)
 		
 			const redisGet2 = await axios.post<null>(process.env.INSTANCE_URL! + 'redis', {
 				command: 'hget',
@@ -191,7 +191,7 @@ describe('integration tests', () => {
 		} catch (error) {
 			logger.error(error)
 	
-			await wait(10 * 1000)
+			await wait(5 * 1000)
 	
 			const redisErrors = await axios.post(process.env.INSTANCE_URL! + 'redis', {
 				command: 'hvals',

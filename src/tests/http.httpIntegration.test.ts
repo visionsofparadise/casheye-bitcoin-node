@@ -46,7 +46,7 @@ it('tests webhooks with url', async () => {
 			}))
 		}).promise()
 	
-		await wait(10 * 1000)
+		await wait(5 * 1000)
 	
 		const redisGet1 = await axios.post<IWebhook>(process.env.INSTANCE_URL! + 'redis', {
 			command: 'hget',
@@ -119,7 +119,7 @@ it('tests webhooks with url', async () => {
 			}))
 		}).promise()
 	
-		await wait(10 * 1000)
+		await wait(5 * 1000)
 	
 		const redisGet3 = await axios.post<null>(process.env.INSTANCE_URL! + 'redis', {
 			command: 'hget',
@@ -150,7 +150,7 @@ it('tests webhooks with url', async () => {
 	} catch (error) {
 		logger.error(error)
 
-		await wait(10 * 1000)
+		await wait(5 * 1000)
 
 		const redisErrors = await axios.post(process.env.INSTANCE_URL! + 'redis', {
 			command: 'hvals',
