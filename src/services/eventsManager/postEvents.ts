@@ -7,11 +7,14 @@ import { apiGatewaySockets } from '../../apiGatewaySockets'
 import kuuid from "kuuid";
 import { redis } from "../../redis";
 
-export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>) => {
+export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, requestStartTime: number) => {
 	const results = await Promise.all(webhooks.map(async ({ webhook, payload }) => {
 		try {
 			if (webhook.url) {
-				const response = await axios.post(webhook.url, payload)
+				const response = await axios.post(webhook.url, { 
+					...payload,
+					requestStartTime
+				})
 	
 				if (response.status > 299) throw new Error()
 			}
@@ -20,7 +23,10 @@ export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'curr
 				await apiGatewaySockets
 					.postToConnection({
 						ConnectionId: webhook.connectionId,
-						Data: JSON.stringify(payload)
+						Data: JSON.stringify({ 
+							...payload,
+							requestStartTime
+						})
 					})
 					.promise();
 			}

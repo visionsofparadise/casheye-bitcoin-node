@@ -3,6 +3,7 @@ import { apiGatewaySockets } from "../../apiGatewaySockets"
 import { sqs } from "../../sqs"
 import { IWebhook } from "../../types/IWebhook"
 import { postEvents } from "./postEvents"
+import day from 'dayjs'
 
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 jest.mock('axios', () => ({
@@ -44,7 +45,7 @@ it('posts a payload to a url', async () => {
 		}
 	]
 
-	await postEvents(events)
+	await postEvents(events, day().valueOf())
 
 	expect(axios.post).toBeCalledTimes(1)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(0)
@@ -63,7 +64,7 @@ it('posts a payload to a connectionId', async () => {
 		}
 	]
 
-	await postEvents(events)
+	await postEvents(events, day().valueOf())
 
 	expect(axios.post).toBeCalledTimes(0)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(1)
@@ -84,7 +85,7 @@ it('adds error axios post to error queue', async () => {
 		}
 	]
 
-	await postEvents(events)
+	await postEvents(events, day().valueOf())
 
 	expect(axios.post).toBeCalledTimes(1)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(0)
@@ -105,7 +106,7 @@ it('adds error apiGatewaySocket post to error queue', async () => {
 		}
 	]
 
-	await postEvents(events)
+	await postEvents(events, day().valueOf())
 
 	expect(axios.post).toBeCalledTimes(0)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(1)

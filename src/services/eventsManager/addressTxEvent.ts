@@ -14,7 +14,7 @@ export interface GetTransactionResponse {
 	}>;
 }
 
-export const addressTxEvent = async (txId: string) => {
+export const addressTxEvent = async (txId: string, requestStartTime: number) => {
 	let tx
 
 	try {
@@ -47,5 +47,5 @@ export const addressTxEvent = async (txId: string) => {
 		})
 	}))
 
-	await postEvents(events)
+	await postEvents(events, requestStartTime)
 };

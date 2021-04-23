@@ -12,8 +12,8 @@ const rpcpassword = process.env.RPC_PASSWORD || 'test';
 let config: any = {
 	testnet: process.env.NETWORK === 'testnet',
 	regtest: process.env.NETWORK === 'regtest',
-	blocknotify: "curl -X POST http://localhost:4000/new-block/%s",
-	walletnotify: "curl -X POST http://localhost:4000/new-tx/%s",
+	blocknotify: 'curl -X POST "http://localhost:4000/new-block/%s/$(date +%s%3N)"',
+	walletnotify: 'curl -X POST "http://localhost:4000/new-tx/%s/$(date +%s%3N)"',
 };
 
 if (process.env.STAGE !== 'prod') {

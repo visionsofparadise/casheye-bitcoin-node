@@ -2,6 +2,7 @@ import { postEvents } from "./postEvents"
 import { rpc } from "../bitcoind/bitcoind"
 import { newBlockEvent } from "./newBlockEvent"
 import { redis } from '../../redis'
+import day from 'dayjs'
 
 jest.mock('../bitcoind/bitcoind')
 jest.mock('./postEvents')
@@ -18,7 +19,7 @@ it('posts event on new block and webhook', async () => {
 
 	await redis.hset('newBlock', 'test', item)
 
-	await newBlockEvent('test')
+	await newBlockEvent('test', day().valueOf())
 
 	expect(postEvents).toBeCalledTimes(1)
 })
@@ -34,7 +35,7 @@ it('posts multiple events', async () => {
 	await redis.hset('newBlock', 'test', item)
 	await redis.hset('newBlock', 'test', item)
 
-	await newBlockEvent('test')
+	await newBlockEvent('test', day().valueOf())
 
 	expect(postEvents).toBeCalledTimes(1)
 })

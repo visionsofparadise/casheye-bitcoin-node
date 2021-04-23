@@ -18,12 +18,14 @@ api.use(bodyParser.json());
 
 api.get('/', async (_, res) => res.sendStatus(200));
 
-api.post('/new-tx/:txid', async (req, res) => {	
-	const { txid } = req.params
+api.post('/new-tx/:txid/:timestamp', async (req, res) => {	
+	const { txid, timestamp } = req.params
+
+	const requestStartTime = parseInt(timestamp)
 
 	res.sendStatus(204)
 
-	addressTxEvent(txid).catch(async error => {
+	addressTxEvent(txid, requestStartTime).catch(async error => {
 		if (process.env.STAGE !== 'prod') {
 			await redis.hset('errors', kuuid.id(), JSON.stringify(error))
 		}
@@ -32,14 +34,16 @@ api.post('/new-tx/:txid', async (req, res) => {
 	})
 })
 
-api.post('/new-block/:blockhash', async (req, res) => {	
-	const { blockhash } = req.params
+api.post('/new-block/:blockhash/:timestamp', async (req, res) => {	
+	const { blockhash, timestamp } = req.params
+
+	const requestStartTime = parseInt(timestamp)
 
 	res.sendStatus(204)
 
 	try {
-		confirmationsEvent()
-		newBlockEvent(blockhash)
+		confirmationsEvent(requestStartTime)
+		newBlockEvent(blockhash, requestStartTime)
 	} catch (error) {
 		if (process.env.STAGE !== 'prod') {
 			await redis.hset('errors', kuuid.id(), JSON.stringify(error))

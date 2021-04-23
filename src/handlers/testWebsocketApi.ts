@@ -22,8 +22,8 @@ export const testWebsocketHandler = new HttpLambdaHandler(
 				const { data } = JSON.parse(event.body!)
 
 				await axios.post<string>(data.instanceUrl + 'redis', {
-					command: 'set',
-					args: ['testConnectionId', connectionId]
+					command: 'hset',
+					args: ['testConnectionId', data.testId, connectionId]
 				})
 				
 				break;

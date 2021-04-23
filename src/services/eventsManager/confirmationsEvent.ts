@@ -13,12 +13,13 @@ type ListSinceBlockResponse = Array<{
 	blockhash: string;
 }>;
 
-export const confirmationsEvent = async () => {
+export const confirmationsEvent = async (requestStartTime: number) => {
+	const MAX_CONFIRMATIONS = process.env.MAX_CONFIRMATIONS ? parseInt(process.env.MAX_CONFIRMATIONS) : 20
 	const blockCount = await rpc.getBlockCount() as number
 
 	if (blockCount === 0) return
 
-	const lastBlockHash = await rpc.getBlockHash(blockCount > 20 ? blockCount - 20 : 0)
+	const lastBlockHash = await rpc.getBlockHash(blockCount > MAX_CONFIRMATIONS ? blockCount - MAX_CONFIRMATIONS : 0)
 
 	if (!lastBlockHash) return
 
@@ -66,5 +67,5 @@ export const confirmationsEvent = async () => {
 		}
 	}))
 
-	await postEvents(events)
+	await postEvents(events, requestStartTime)
 };
