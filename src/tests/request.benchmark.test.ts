@@ -131,11 +131,9 @@ describe('integration tests', () => {
 		
 			await wait(3 * 1000)
 
-			const parsedMessages = wsMessages.map(msg => JSON.parse(msg) as { confirmations?: number; height?: number; requestStartTime: number; requestEndTime: number })
-
-			const addressTxEvents = parsedMessages.filter(msg => msg.confirmations && (msg.confirmations === 0))
-			const confirmationEvents = parsedMessages.filter(msg => msg.confirmations && (msg.confirmations > 0))
-			const newBlockEvents = parsedMessages.filter(msg => msg.height ? true : false)
+			const addressTxEvents = wsMessages.filter(msg => msg.confirmations && (msg.confirmations === 0))
+			const confirmationEvents = wsMessages.filter(msg => msg.confirmations && (msg.confirmations > 0))
+			const newBlockEvents = wsMessages.filter(msg => msg.height ? true : false)
 
 			const responseTimes = (data: Array<{ requestStartTime: number; requestEndTime: number }>) => data
 				.map(response => response.requestEndTime - response.requestStartTime)
