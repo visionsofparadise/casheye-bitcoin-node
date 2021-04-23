@@ -13,6 +13,7 @@ describe('integration tests', () => {
 	const testId = kuuid.id()
 	let client: WebSocket | undefined
 	let wsMessages: any[] = []
+	let wsErrors: any[] = []
 
 	beforeAll((done) => {
 		client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
@@ -36,10 +37,15 @@ describe('integration tests', () => {
 
 		client!.on("message", async (data: any) => {
 			logger.info(data)
-			wsMessages.push({
-				...data,
-				requestEndTime: day().valueOf()
-			})
+
+			if (data.requestStartTime) {
+				wsMessages.push({
+					...data,
+					requestEndTime: day().valueOf()
+				})
+			} else {
+				wsErrors.push(data)
+			}
 		})
 	})
 
