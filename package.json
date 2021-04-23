@@ -11,7 +11,7 @@
 		"initialize": "jest initialize",
 		"httpIntegration": "jest httpIntegration",
 		"websocketIntegration": "jest websocketIntegration",
-		"performance": "jest performance",
+		"benchmark": "jest benchmark",
 		"start": "node dist/index.js",
 		"startd": "pm2 start dist/index.js",
 		"deploy": "cdk deploy",
