@@ -64,7 +64,7 @@ describe('integration tests', () => {
 
 	it('tests webhooks with connectionId', async () => {
 		expect.assertions(2)
-		await wait(5 * 1000)
+		await wait(3 * 1000)
 	
 		try {
 			const redisGetConnectionId = await axios.post<string>(process.env.INSTANCE_URL! + 'redis', {
@@ -103,7 +103,7 @@ describe('integration tests', () => {
 				}))
 			}).promise()
 		
-			await wait(10 * 1000)
+			await wait(5 * 1000)
 		
 			for (let i = 0; i < N; i++ ) {
 				const bitcoinSend = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
@@ -113,7 +113,7 @@ describe('integration tests', () => {
 			
 				logger.info(bitcoinSend.data)
 			
-				await wait(1000)
+				await wait(500)
 			}
 
 			await wait(3 * 1000)
@@ -126,20 +126,20 @@ describe('integration tests', () => {
 			
 				logger.info(generateResponse.status)
 			
-				await wait(1000)
+				await wait(500)
 			}
 		
 			await wait(3 * 1000)
 
-			const addressTxEvents = wsMessages.filter(msg => msg.confirmations && (msg.confirmations === 0))
-			const confirmationEvents = wsMessages.filter(msg => msg.confirmations && (msg.confirmations > 0))
+			const addressTxEvents = wsMessages.filter(msg => msg.inputs && !msg.confirmations)
+			const confirmationEvents = wsMessages.filter(msg => msg.inputs && msg.confirmations)
 			const newBlockEvents = wsMessages.filter(msg => msg.height ? true : false)
 
 			const responseTimes = (data: Array<{ requestStartTime: number; requestEndTime: number }>) => data
 				.map(response => response.requestEndTime - response.requestStartTime)
 
 			const average = (data: number[]) => Math.floor(data
-				.reduce((prev, cur) => prev + cur) / data.length)
+				.reduce((prev, cur) => prev + cur, 0) / data.length)
 
 			const addressTxResponseTimes = responseTimes(addressTxEvents)
 
@@ -167,7 +167,7 @@ describe('integration tests', () => {
 		} catch (error) {
 			logger.error(error)
 	
-			await wait(10 * 1000)
+			await wait(5 * 1000)
 	
 			const redisErrors = await axios.post(process.env.INSTANCE_URL! + 'redis', {
 				command: 'hvals',
