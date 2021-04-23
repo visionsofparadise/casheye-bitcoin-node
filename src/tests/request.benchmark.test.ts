@@ -63,7 +63,7 @@ describe('integration tests', () => {
 	});
 
 	it('tests webhooks with connectionId', async () => {
-		expect.assertions(3)
+		expect.assertions(2)
 		await wait(5 * 1000)
 	
 		try {
@@ -130,9 +130,6 @@ describe('integration tests', () => {
 			}
 		
 			await wait(3 * 1000)
-		
-			logger.info(wsMessages)
-			expect(wsMessages.length).toBe(3 * N)
 
 			const parsedMessages = wsMessages.map(msg => JSON.parse(msg) as { confirmations?: number; height?: number; requestStartTime: number; requestEndTime: number })
 
