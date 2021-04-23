@@ -54,7 +54,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	await Promise.all(transactions.map(async tx => {
 		try {
-			const rawTxPromise = rpc.getTransaction(tx.txid).then((getTx: GetTransactionResponse) => rpc.decodeRawTransaction(getTx.hex))
+			const rawTxPromise = rpc.getTransaction(tx.txid, true, true) as GetTransactionResponse
 
 			const data = await redis.hvals(tx.address) as string[]
 
@@ -62,7 +62,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 			return webhooks.map(async webhook => {
 				if (webhook.confirmations && tx.confirmations <= webhook.confirmations) {		
-					const pushEvent = async () => events.push({ webhook, payload: await Promise.resolve(rawTxPromise) })
+					const pushEvent = async () => events.push({ webhook, payload: (await Promise.resolve(rawTxPromise)).decoded })
 
 					if (webhook.event === 'inboundTx' || webhook.event === 'anyTx' && tx.category === 'receive') await pushEvent()
 					if (webhook.event === 'outboundTx' || webhook.event === 'anyTx' && tx.category === 'send') await pushEvent()

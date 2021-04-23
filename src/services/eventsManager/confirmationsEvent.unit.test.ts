@@ -12,10 +12,9 @@ jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
 rpc.getBlockCount.mockResolvedValue(100)
 rpc.getBlockHash.mockResolvedValue('test')
-rpc.getTransaction.mockResolvedValue({ hex: 'test' })
-rpc.decodeRawTransaction.mockResolvedValue('success')
+rpc.getTransaction.mockResolvedValue({ hex: 'test', decode: 'test' })
 
-beforeEach(() => redis.flushall())
+beforeEach(async () => redis.flushall())
 
 it('posts event on address transaction confirmation', async () => {
 	jest.clearAllMocks()

@@ -9,9 +9,7 @@ jest.mock('bitcore-lib')
 jest.mock('./postEvents')
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
-rpc.decodeRawTransaction.mockResolvedValue({})
-
-beforeEach(() => redis.flushall())
+beforeEach(async () => redis.flushall())
 
 it('posts event on recieving address and inboundTx webhook', async () => {
 	jest.clearAllMocks()
@@ -19,6 +17,7 @@ it('posts event on recieving address and inboundTx webhook', async () => {
 	rpc.getTransaction.mockResolvedValue({
 		confirmations: 0,
 		hex: 'test',
+		decoded: 'test',
 		details: [{
 			address: 'test',
 			category: 'receive',
@@ -39,6 +38,7 @@ it('posts event on send address and outboundTx webhook', async () => {
 	rpc.getTransaction.mockResolvedValue({
 		confirmations: 0,
 		hex: 'test',
+		decoded: 'test',
 		details: [{
 			address: 'test',
 			category: 'send',
@@ -59,6 +59,7 @@ it('posts both events for anyTx', async () => {
 	rpc.getTransaction.mockResolvedValue({
 		confirmations: 0,
 		hex: 'test',
+		decoded: 'test',
 		details: [{
 			address: 'test',
 			category: 'send',
@@ -83,6 +84,7 @@ it('posts multiple events on valid addresses and webhooks and skips invalid ones
 	rpc.getTransaction.mockResolvedValue({
 		confirmations: 0,
 		hex: 'test',
+		decoded: 'test',
 		details: [{
 			address: 'test1',
 			category: 'receive',

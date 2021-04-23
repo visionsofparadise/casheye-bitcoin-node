@@ -8,7 +8,7 @@ jest.mock('../bitcoind/bitcoind')
 jest.mock('./postEvents')
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
-beforeEach(() => redis.flushall())
+beforeEach(async () => redis.flushall())
 
 const item = JSON.stringify({})
 

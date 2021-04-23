@@ -147,7 +147,7 @@ describe('integration tests', () => {
 			await wait(3 * 1000)
 		
 			logger.info(wsMessages)
-			expect(wsMessages.length).toBeGreaterThan(0)
+			expect(wsMessages.length).toBe(15)
 		
 			await eventbridge.putEvents({
 				Entries: webhooks.map(webhook => ({

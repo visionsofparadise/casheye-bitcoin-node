@@ -46,7 +46,7 @@ it('tests webhooks with url', async () => {
 			}))
 		}).promise()
 	
-		await wait(5 * 1000)
+		await wait(10 * 1000)
 	
 		const redisGet1 = await axios.post<IWebhook>(process.env.INSTANCE_URL! + 'redis', {
 			command: 'hget',
@@ -106,7 +106,7 @@ it('tests webhooks with url', async () => {
 	
 		logger.info(redisTestData.data)
 		expect(redisTestData.status).toBe(200)
-		expect(redisTestData.data.length).toBeGreaterThan(0)
+		expect(redisTestData.data.length).toBe(15)
 	
 		await eventbridge.putEvents({
 			Entries: webhooks.map(webhook => ({
@@ -119,7 +119,7 @@ it('tests webhooks with url', async () => {
 			}))
 		}).promise()
 	
-		await wait(5 * 1000)
+		await wait(10 * 1000)
 	
 		const redisGet3 = await axios.post<null>(process.env.INSTANCE_URL! + 'redis', {
 			command: 'hget',

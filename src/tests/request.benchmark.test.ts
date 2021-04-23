@@ -111,7 +111,7 @@ describe('integration tests', () => {
 				}))
 			}).promise()
 		
-			await wait(5 * 1000)
+			await wait(10 * 1000)
 		
 			for (let i = 0; i < N; i++ ) {
 				const bitcoinSend = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
@@ -159,7 +159,9 @@ describe('integration tests', () => {
 			logger.info('newBlock Average')
 			logger.info(average(newBlockResponseTimes))
 
-			expect(true).toBe(true)
+			expect(addressTxResponseTimes.length).toBe(N)
+			expect(confirmationsResponseTimes.length).toBe(N)
+			expect(newBlockResponseTimes.length).toBe(N)
 
 			const redisErrors = await axios.post(process.env.INSTANCE_URL! + 'redis', {
 				command: 'hvals',
