@@ -24,6 +24,7 @@ describe('integration tests', () => {
 				JSON.stringify({
 					action: 'message',
 					data: {
+						testId,
 						instanceUrl: process.env.INSTANCE_URL!
 					}
 				})
@@ -55,7 +56,7 @@ describe('integration tests', () => {
 	});
 
 	it('tests webhooks with connectionId', async () => {
-		expect.assertions(16)
+		expect.assertions(3)
 		await wait(5 * 1000)
 	
 		try {
