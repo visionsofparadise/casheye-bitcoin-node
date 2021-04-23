@@ -113,7 +113,7 @@ describe('integration tests', () => {
 			
 				logger.info(bitcoinSend.data)
 			
-				await wait(500)
+				await wait(1000)
 			}
 
 			await wait(3 * 1000)
@@ -126,10 +126,13 @@ describe('integration tests', () => {
 			
 				logger.info(generateResponse.status)
 			
-				await wait(500)
+				await wait(1000)
 			}
 		
 			await wait(3 * 1000)
+
+			logger.info({ wsMessages })
+			logger.info({ wsErrors })
 
 			const addressTxEvents = wsMessages.filter(msg => msg.inputs && !msg.confirmations)
 			const confirmationEvents = wsMessages.filter(msg => msg.inputs && msg.confirmations)
@@ -164,10 +167,19 @@ describe('integration tests', () => {
 
 			expect(true).toBe(true)
 
+			const redisErrors = await axios.post(process.env.INSTANCE_URL! + 'redis', {
+				command: 'hvals',
+				args: ['errors']
+			})
+		
+			logger.info(redisErrors.data)
+
 		} catch (error) {
 			logger.error(error)
 	
 			await wait(5 * 1000)
+
+			logger.info({ wsErrors })
 	
 			const redisErrors = await axios.post(process.env.INSTANCE_URL! + 'redis', {
 				command: 'hvals',
