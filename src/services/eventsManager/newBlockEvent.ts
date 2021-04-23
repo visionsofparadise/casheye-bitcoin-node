@@ -5,7 +5,7 @@ import { rpc } from "../bitcoind/bitcoind"
 import { decode } from "../webhookManager/webhookEncoder"
 
 export const newBlockEvent = async (blockHash: string, requestStartTime: number) => {
-	const blockPromise = rpc.getBlock(blockHash, 2).catch(() => undefined) as Promise<any>
+	const blockPromise = rpc.getBlock(blockHash, 1).catch(() => undefined) as Promise<any>
 
 	const data = await redis.hvals('newBlock') as string[]
 
