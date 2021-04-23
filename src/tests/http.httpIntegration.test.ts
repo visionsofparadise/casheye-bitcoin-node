@@ -8,8 +8,8 @@ import { eventbridge } from '../eventbridge'
 
 afterAll(async() => {
 	await axios.post(process.env.INSTANCE_URL! + 'redis', {
-		command: 'del',
-		args: ['errors']
+		command: 'flushall',
+		args: []
 	})
 })
 

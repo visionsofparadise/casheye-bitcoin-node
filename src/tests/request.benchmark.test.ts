@@ -49,13 +49,8 @@ describe('integration tests', () => {
 		}
 
 		await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'del',
-			args: ['errors']
-		})
-
-		await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'hdel',
-			args: ['testConnectionId', testId]
+			command: 'flushall',
+			args: []
 		})
 	});
 
