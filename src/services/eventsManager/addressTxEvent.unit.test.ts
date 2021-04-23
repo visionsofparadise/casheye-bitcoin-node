@@ -9,6 +9,8 @@ jest.mock('bitcore-lib')
 jest.mock('./postEvents')
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
+rpc.decodeRawTransaction.mockResolvedValue({})
+
 beforeEach(() => redis.flushall())
 
 it('posts event on recieving address and inboundTx webhook', async () => {

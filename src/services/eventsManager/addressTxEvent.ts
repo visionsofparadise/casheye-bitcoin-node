@@ -24,7 +24,7 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 
 	if (!tx || tx.confirmations !== 0) return 
 
-	const rawTxPromise = rpc.getRawTransaction(txId, true)
+	const rawTxPromise = rpc.decodeRawTransaction(tx.hex)
 
 	const addresses = tx.details.filter(detail => detail.label === 'set')
 

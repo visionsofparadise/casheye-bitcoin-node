@@ -4,9 +4,11 @@ import { logger } from '../../helpers';
 import { decode } from '../webhookManager/webhookEncoder';
 import { redis } from '../../redis';
 import kuuid from 'kuuid';
+import { GetTransactionResponse } from './addressTxEvent';
 
 type ListSinceBlockResponse = Array<{
 	txid: string;
+	hex: string;
 	address: string;
 	category: string;
 	confirmations: number
@@ -52,7 +54,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	await Promise.all(transactions.map(async tx => {
 		try {
-			const rawTx = rpc.getRawTransaction(tx.txid, true, tx.blockhash)
+			const rawTxPromise = rpc.getTransaction(tx.txid).then((getTx: GetTransactionResponse) => rpc.decodeRawTransaction(getTx.hex))
 
 			const data = await redis.hvals(tx.address) as string[]
 
@@ -60,10 +62,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 			return webhooks.map(async webhook => {
 				if (webhook.confirmations && tx.confirmations <= webhook.confirmations) {		
-					const pushEvent = async () => events.push({ webhook, payload: {
-						...await Promise.resolve(rawTx),
-						confirmations: tx.confirmations
-					} })
+					const pushEvent = async () => events.push({ webhook, payload: await Promise.resolve(rawTxPromise) })
 
 					if (webhook.event === 'inboundTx' || webhook.event === 'anyTx' && tx.category === 'receive') await pushEvent()
 					if (webhook.event === 'outboundTx' || webhook.event === 'anyTx' && tx.category === 'send') await pushEvent()
