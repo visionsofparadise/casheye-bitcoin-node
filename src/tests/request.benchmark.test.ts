@@ -35,7 +35,8 @@ describe('integration tests', () => {
 			done()
 		});
 
-		client!.on("message", async (data: any) => {
+		client!.on("message", async (json: string) => {
+			const data  = JSON.parse(json)
 			logger.info(data)
 
 			if (data.requestStartTime) {
