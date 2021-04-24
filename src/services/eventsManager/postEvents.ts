@@ -8,7 +8,11 @@ import kuuid from "kuuid";
 import { redis } from "../../redis";
 
 export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, requestStartTime: string) => {
-	const results = await Promise.all(webhooks.map(async ({ webhook, payload }) => {
+	const errors: any[] = []
+
+	for (const item of webhooks) {
+		const { webhook, payload } = item
+
 		try {
 			if (webhook.url) {
 				const response = await axios.post(webhook.url, { 
@@ -30,8 +34,6 @@ export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'curr
 					})
 					.promise();
 			}
-
-			return { status: 'success' }
 		} catch (error) {
 			logger.error({ error })
 
@@ -50,15 +52,13 @@ export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'curr
 		
 			const hash = md5(JSON.stringify(retry))
 
-			return {
+			errors.push({
 				status: 'error',
 				retry,
 				hash
-			}
+			})
 		}
-	}))
-
-	const errors = results.filter(result => result.status === 'error')
+	}
 
 	if (errors.length > 0) {
 		await sqs
