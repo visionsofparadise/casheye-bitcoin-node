@@ -18,7 +18,12 @@ describe('integration tests', () => {
 	let newBlockResponseTimes: any[] = []
 	let wsErrors: any[] = []
 
-	beforeAll((done) => {
+	beforeAll(async (done) => {
+		await axios.post(process.env.INSTANCE_URL! + 'redis', {
+			command: 'flushall',
+			args: []
+		})
+
 		client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
 
 		client!.on('open', () => {
@@ -63,11 +68,6 @@ describe('integration tests', () => {
 				console.log('disconnecting...');
 				client!.close();
 		}
-
-		await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'flushall',
-			args: []
-		})
 	});
 
 	it('tests webhooks with connectionId', async () => {

@@ -6,7 +6,7 @@ import { testAddressGenerator } from '../testAddressGenerator'
 import { IWebhook } from '../types/IWebhook'
 import { eventbridge } from '../eventbridge'
 
-afterAll(async() => {
+beforeAll(async() => {
 	await axios.post(process.env.INSTANCE_URL! + 'redis', {
 		command: 'flushall',
 		args: []

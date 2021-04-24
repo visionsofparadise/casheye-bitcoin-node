@@ -3,10 +3,11 @@ import cluster from 'cluster'
 import { logger, wait } from './helpers'
 import { rpc, startBitcoind } from './services/bitcoind/bitcoind'
 import { webhookManager } from './services/webhookManager/webhookManager';
-import { api } from './services/api/api'
+import { api as internalApi } from './services/api/internalApi'
+import { api as externalApi } from './services/api/externalApi'
 import { redis } from './redis';
 
-const jobs = ['bitcoind', 'webhookManager', 'api']
+const jobs = ['bitcoind', 'webhookManager', 'internalApi', 'externalApi']
 
 if (cluster.isMaster) {
 	logger.info(`Master ${process.pid} is running`);
@@ -63,6 +64,14 @@ if (cluster.isWorker) {
 			generator()
 		}
 	}
+
 	if (job === 'webhookManager') redis.set('webhookManagerState', '1').then(() => webhookManager())
-	if (job === 'api') api.listen(process.env.PORT || 4000, () => logger.info(`Server listening on port ${process.env.PORT || 4000}`))
+
+	if (job === 'internalApi') {
+		internalApi.listen(process.env.INTERNAL_PORT || 3000, () => logger.info(`Server listening on port ${process.env.INTERNAL_PORT || 3000}`))
+	}
+	
+	if (job === 'externalApi') {
+		externalApi.listen(process.env.EXTERNAL_PORT || 4000, () => logger.info(`Server listening on port ${process.env.EXTERNAL_PORT || 4000}`))
+	}
 }
