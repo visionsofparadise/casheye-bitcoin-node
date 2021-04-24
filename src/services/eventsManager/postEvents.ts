@@ -47,7 +47,10 @@ export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'curr
 				url: webhook.url,
 				connectionId: webhook.connectionId,
 				retries: 0,
-				payload
+				payload: {
+					...payload,
+					requestStartTime
+				}
 			}
 		
 			const hash = md5(JSON.stringify(retry))
