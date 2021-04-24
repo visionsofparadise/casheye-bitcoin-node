@@ -45,10 +45,8 @@ api.post('/new-block/:blockhash', async (req, res) => {
 	res.sendStatus(204)
 
 	try {
-		const confirmationsPromise = confirmationsEvent(blockhash, timestamp)
-		const newBlockPromise = newBlockEvent(blockhash, timestamp)
-
-		await Promise.all([confirmationsPromise, newBlockPromise])
+		await newBlockEvent(blockhash, timestamp)
+		await confirmationsEvent(blockhash, timestamp)
 	} catch (error) {
 		if (process.env.STAGE !== 'prod') {
 			await redis.hset('errors', kuuid.id(), JSON.stringify(error))

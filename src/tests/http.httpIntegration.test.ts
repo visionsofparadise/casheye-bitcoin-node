@@ -157,7 +157,7 @@ it('tests webhooks with url', async () => {
 			args: ['errors']
 		})
 	
-		logger.info(redisErrors.data)
+		logger.info({ errors: redisErrors.data })
 
 		throw error
 	}
