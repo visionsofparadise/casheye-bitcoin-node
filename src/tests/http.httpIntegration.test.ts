@@ -100,7 +100,7 @@ it('tests webhooks with url', async () => {
 		await wait(3 * 1000)
 	
 		const redisTestData = await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'hkeys',
+			command: 'hvals',
 			args: ['testData']
 		})
 	

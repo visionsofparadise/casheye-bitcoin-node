@@ -64,8 +64,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 				if (webhook.confirmations && tx.confirmations <= webhook.confirmations) {		
 					const pushEvent = async () => events.push({ webhook, payload: (await Promise.resolve(rawTxPromise)).decoded })
 
-					if (webhook.event === 'inboundTx' || webhook.event === 'anyTx' && tx.category === 'receive') await pushEvent()
-					if (webhook.event === 'outboundTx' || webhook.event === 'anyTx' && tx.category === 'send') await pushEvent()
+					if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && tx.category === 'receive') await pushEvent()
+					if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && tx.category === 'send') await pushEvent()
 				}
 			})
 		} catch (error) {
