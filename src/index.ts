@@ -21,7 +21,7 @@ if (cluster.isMaster) {
 			UV_THREADPOOL_SIZE: 4
 		}
 
-		if (job === 'api') env.UV_THREADPOOL_SIZE = 128
+		if (job === 'internalApi') env.UV_THREADPOOL_SIZE = 128
 
 		const worker = cluster.fork(env);
 

@@ -273,6 +273,7 @@ pm2 save`
 			setQueue.grantSendMessages(instance.grantPrincipal)
 			unsetQueue.grantConsumeMessages(instance.grantPrincipal)
 			errorQueue.grantSendMessages(instance.grantPrincipal)
+			logGroup.grantWrite(instance.grantPrincipal)
 
 			instances.push(instance)
 		}

@@ -7,11 +7,33 @@ import { IWebhook } from '../types/IWebhook'
 import { eventbridge } from '../eventbridge'
 import { documentClient } from '../dynamodb'
 
-beforeAll(async() => {
+beforeAll(async (done) => {
 	await axios.post(process.env.INSTANCE_URL! + 'redis', {
 		command: 'flushall',
 		args: []
 	})
+
+	const redisOldTestData = await documentClient.query({
+		TableName: process.env.DYNAMODB_TABLE!,
+		KeyConditionExpression: 'pk = :pk',
+		ExpressionAttributeValues: {
+			':pk': 'BitcoinNodeTestData'
+		}
+	}).promise()
+
+	if (redisOldTestData.Items) {
+		for (const item of redisOldTestData.Items) {
+			await documentClient.delete({
+				TableName: process.env.DYNAMODB_TABLE!,
+				Key: {
+					pk: item.pk,
+					sk: item.sk
+				}
+			}).promise()
+		}
+	}
+
+	done()
 })
 
 it('tests webhooks with url', async () => {
@@ -97,7 +119,7 @@ it('tests webhooks with url', async () => {
 		await wait(1000)
 	}
 
-	await wait(3 * 1000)
+	await wait(5 * 1000)
 
 	const redisTestData = await documentClient.query({
 		TableName: process.env.DYNAMODB_TABLE!,
