@@ -100,7 +100,7 @@ it('tests webhooks with url', async () => {
 	await wait(3 * 1000)
 
 	const redisTestData = await documentClient.query({
-		TableName: process.env.DYNAMODB_TABLE,
+		TableName: process.env.DYNAMODB_TABLE!,
 		KeyConditionExpression: 'pk = :pk',
 		ExpressionAttributeValues: {
 			':pk': 'BitcoinNodeTestData'
