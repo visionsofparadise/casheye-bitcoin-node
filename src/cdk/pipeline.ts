@@ -1,4 +1,4 @@
-import { Stack, Construct, StackProps, SecretValue } from '@aws-cdk/core';
+import { Stack, Construct, StackProps, SecretValue, Fn } from '@aws-cdk/core';
 import { Artifact } from '@aws-cdk/aws-codepipeline';
 import { CdkPipeline, SimpleSynthAction, ShellScriptAction } from '@aws-cdk/pipelines';
 import { GitHubSourceAction } from '@aws-cdk/aws-codepipeline-actions';
@@ -6,6 +6,7 @@ import { CasheyeBitcoinNodeStage } from './stack';
 import { App } from '@aws-cdk/core';
 import { EventBus } from '@aws-cdk/aws-events';
 import { PolicyStatement } from '@aws-cdk/aws-iam';
+import { Table } from '@aws-cdk/aws-dynamodb';
 
 export const serviceName = 'casheye-bitcoin-node';
 
@@ -50,12 +51,15 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 			NETWORK: 'regtest'
 		});
 
-		const testAppStage = pipeline.addApplicationStage(testApp);
+		const testAppStage = pipeline.addApplicationStage(testApp);		
+
+		const db = Table.fromTableArn(this, 'DynamoDB', Fn.importValue(`casheye-dynamodb-test-arn`));
 
 		const testEnv = [
 			'STAGE=test',
 			`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
 			`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY_BTC')}`,
+			`DYNAMODB_TABLE=${db.tableName}`,
 			'N=100'
 		]
 
@@ -90,6 +94,7 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 		testAppStage.addActions(integrationTestAction)
 
 		EventBus.grantAllPutEvents(integrationTestAction)
+		db.grantReadData(integrationTestAction)
 
 		// const testnetApp = new CasheyeBitcoinNodeStage(this, serviceName + '-testnet-prod', {
 		// 	STAGE: 'prod',

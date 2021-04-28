@@ -1,10 +1,10 @@
 import { rpc } from '../bitcoind/bitcoind';
 import { postEvents } from './postEvents';
-import { logger } from '../../helpers';
 import { decode } from '../webhookManager/webhookEncoder';
 import { redis } from '../../redis';
-import kuuid from 'kuuid';
-import { GetTransactionResponse } from './addressTxEvent';
+import { Transaction } from 'bitcore-lib';
+import { cloudLog } from '../cloudLogger/cloudLog';
+import { cloudMetric } from '../cloudLogger/cloudMetric';
 
 type ListSinceBlockResponse = Array<{
 	txid: string;
@@ -34,17 +34,11 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	if (!lastBlockHash) return
 
-	const unfilteredTransactions: ListSinceBlockResponse = []
-	
-	try {
-		const txs = await rpc.listSinceBlock(lastBlockHash, undefined, true, false) as ListSinceBlockResponse
+	const txsSinceBlock = await rpc.listSinceBlock(lastBlockHash, undefined, true, false) as ListSinceBlockResponse
 
-		unfilteredTransactions.concat(txs)
-	} catch (err) {
-		return
-	}
+	const cloudMetricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.length])
 
-	const transactions = unfilteredTransactions.filter(tx => 
+	const transactions = txsSinceBlock.filter(tx => 
 		tx.label === 'set' && 
 		tx.confirmations > 0 && 
 		(tx.category === 'receive' || tx.category === 'send')
@@ -54,30 +48,30 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	await Promise.all(transactions.map(async tx => {
 		try {
-			const rawTxPromise = rpc.getTransaction(tx.txid, true, true) as GetTransactionResponse
+			const rawTx = new Transaction(tx.hex)
+			const payload = {
+				confirmations: tx.confirmations,
+				...rawTx
+			}
 
 			const data = await redis.hvals(tx.address) as string[]
-
 			const webhooks = data.map(webhook => decode(webhook))
 
 			return webhooks.map(async webhook => {
 				if (webhook.confirmations && tx.confirmations <= webhook.confirmations) {		
-					const pushEvent = async () => events.push({ webhook, payload: (await Promise.resolve(rawTxPromise)).decoded })
+					const pushEvent = async () => events.push({ webhook, payload })
 
 					if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && tx.category === 'receive') await pushEvent()
 					if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && tx.category === 'send') await pushEvent()
 				}
 			})
 		} catch (error) {
-			logger.error(error)
+			cloudLog(error)
 
-			if (process.env.STAGE !== 'prod') {
-				await redis.hset('errors', kuuid.id(), JSON.stringify(error))
-			}
-
-			return
+			throw error
 		}
 	}))
 
-	await postEvents(events, requestStartTime)
+	await postEvents(events, requestStartTime, 'confirmations')
+	await Promise.resolve(cloudMetricPromise)
 };

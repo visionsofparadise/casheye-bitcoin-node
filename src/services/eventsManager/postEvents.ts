@@ -1,17 +1,18 @@
 import axios from "axios";
 import md5 from "md5";
-import { logger } from "../../helpers";
 import { sqs } from "../../sqs";
 import { IWebhook } from "../../types/IWebhook";
 import { apiGatewaySockets } from '../../apiGatewaySockets'
-import kuuid from "kuuid";
-import { redis } from "../../redis";
+import { cloudLog } from "../cloudLogger/cloudLog";
+import { cloudMetric } from "../cloudLogger/cloudMetric";
+import day from "dayjs";
 
-export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, requestStartTime: string) => {
+export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, requestStartTime: string, callerName: string) => {
+	await cloudLog({ events })
 	const errors: any[] = []
 
-	for (const item of webhooks) {
-		const { webhook, payload } = item
+	for (const event of events) {
+		const { webhook, payload } = event
 
 		try {
 			if (webhook.url) {
@@ -34,12 +35,13 @@ export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'curr
 					})
 					.promise();
 			}
-		} catch (error) {
-			logger.error({ error })
 
-			if (process.env.STAGE !== 'prod') {
-				await redis.hset('errors', kuuid.id(), JSON.stringify(error))
-			}
+			await cloudMetric('processingTime', [day().valueOf() - day(requestStartTime).valueOf()], [{
+				name: 'processor',
+				value: callerName
+			}])
+		} catch (error) {
+			await cloudLog(error)
 	
 			const retry = {
 				id: webhook.id,
@@ -63,7 +65,11 @@ export const postEvents = async (webhooks: Array<{ webhook: Omit<IWebhook, 'curr
 		}
 	}
 
+	await cloudMetric('events', [events.length - errors.length])
+
 	if (errors.length > 0) {
+		await cloudMetric('errors', [errors.length])
+
 		await sqs
 		.sendMessageBatch({
 			QueueUrl: process.env.ERROR_QUEUE_URL || 'test',

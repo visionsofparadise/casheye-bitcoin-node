@@ -1,10 +1,12 @@
-import express from 'express';
+import express, { Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { isProd } from '../../helpers';
 import { rpc } from '../bitcoind/bitcoind'
 import { resetWebhooks } from '../webhookManager/resetWebhooks';
 import { redis } from '../../redis';
+import { cloudLog } from '../cloudLogger/cloudLog';
+import { cloudMetric } from '../cloudLogger/cloudMetric';
 
 const api = express();
 
@@ -15,37 +17,38 @@ api.use(bodyParser.json());
 api.get('/', async (_, res) => res.sendStatus(200));
 
 !isProd && api.post('/rpc', async (req, res) => {	
-	try {
-		const { command, args } = req.body as { command: string; args?: Array<any> };
+	const { command, args } = req.body as { command: string; args?: Array<any> };
 
-		const argsArray = args || [] 
+	const argsArray = args || [] 
+
+	const result = await rpc[command](...argsArray)
 	
-		const result = await rpc[command](...argsArray)
-		
-		result ? res.status(200).send(result) : res.sendStatus(204)
-	} catch (err) {
-		res.status(500).send(err)
-	}
+	result ? res.status(200).send(result) : res.sendStatus(204)
 })
 
 !isProd && api.post('/redis', async (req, res) => {	
-	try {
-		const { command, args } = req.body as { command: string; args?: Array<any> };
+	const { command, args } = req.body as { command: string; args?: Array<any> };
 
-		const argsArray = args || [] 
+	const argsArray = args || [] 
+
+	const redisCast = redis as any
+
+	const result = await redisCast[command](...argsArray)
 	
-		const redisCast = redis as any
-	
-		const result = await redisCast[command](...argsArray)
-		
-		result ? res.status(200).send(result) : res.sendStatus(204)
-	} catch (err) {
-		res.status(500).send(err)
-	}
+	result ? res.status(200).send(result) : res.sendStatus(204)
 })
 
 !isProd && api.post('/reset', async (_, res) => {	
-	await resetWebhooks().then(() => res.sendStatus(204)).catch(res.status(500).send)
+	await resetWebhooks()
+
+	res.sendStatus(204)
+})
+
+api.use(async (error: any, _: any, res: Response, __: any) => {
+	await cloudLog(error)
+	await cloudMetric('errors', [1])
+	
+  res.status(500).send('Server error')
 })
 
 export { api }

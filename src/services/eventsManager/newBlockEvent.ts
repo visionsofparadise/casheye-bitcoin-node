@@ -15,5 +15,5 @@ export const newBlockEvent = async (blockHash: string, requestStartTime: string)
 
 	if (!block) return
 
-	return postEvents(webhooks.map(webhook => ({ webhook, payload: block })), requestStartTime)
+	return postEvents(webhooks.map(webhook => ({ webhook, payload: block })), requestStartTime, 'newBlock')
 }

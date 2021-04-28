@@ -1,14 +1,15 @@
 import md5 from "md5"
-import { logger, wait } from "../../helpers"
+import { wait } from "../../helpers"
 import { redis } from "../../redis"
 import { rpc } from "../bitcoind/bitcoind"
 import fs from 'fs'
 import { resolve } from 'path'
 import flatten from "lodash/flatten"
 import { sqs } from "../../sqs"
+import { cloudLog } from "../cloudLogger/cloudLog"
 
 export const resetWebhooks = async () => {
-	logger.info('turning off queue')
+	cloudLog('turning off queue')
 
 	await redis.set('webhookManagerState', '0')
 
@@ -18,13 +19,13 @@ export const resetWebhooks = async () => {
 
 	const pipeline = redis.pipeline().hvals('newBlock').del('newBlock')
 
-	for(const address of Object.keys(addressHash)) {
+	for (const address of Object.keys(addressHash)) {
 		pipeline.hvals(address).del(address)
 	}
 
 	const results = await pipeline.exec()
 
-	logger.info('webhooks deleted')
+	cloudLog('webhooks deleted')
 
 	const queueEntries = results.filter((_, index) => index % 2 === 0).map(result => {
 		const encodedWebhooks = result[1] as string[]
@@ -46,7 +47,7 @@ export const resetWebhooks = async () => {
 		})
 		.promise();
 
-	logger.info('webhooks queued')
+	cloudLog('webhooks queued')
 
 	await wait(3 * 1000)
 	
@@ -54,7 +55,7 @@ export const resetWebhooks = async () => {
 
 	fs.unlinkSync(resolve(__dirname, '../bitcoind/wallet.dat'));
 
-	logger.info('bitcoind reset')
+	cloudLog('bitcoind reset')
 
-	logger.info('system restart is ready')
+	cloudLog('system restart is ready')
 }

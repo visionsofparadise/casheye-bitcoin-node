@@ -2,8 +2,8 @@ import { rpc } from '../bitcoind/bitcoind'
 import { postEvents } from './postEvents';
 import { redis } from '../../redis';
 import { decode } from '../webhookManager/webhookEncoder';
-import kuuid from 'kuuid';
-import { logger } from '../../helpers';
+import { cloudLog } from '../cloudLogger/cloudLog';
+import { Transaction } from 'bitcore-lib';
 
 export interface GetTransactionResponse {
 	confirmations: number;
@@ -17,17 +17,12 @@ export interface GetTransactionResponse {
 }
 
 export const addressTxEvent = async (txId: string, requestStartTime: string) => {
-	let tx: GetTransactionResponse | undefined
-
-	try {
-		tx = (await rpc.getTransaction(txId, true, true)) as GetTransactionResponse;
-	} catch (err) {
-		return
-	}	
+	const tx = (await rpc.getTransaction(txId, true)) as GetTransactionResponse;
 
 	if (!tx || tx.confirmations !== 0) return 
 
 	const addresses = tx.details.filter(detail => detail.label === 'set')
+	const rawTx = new Transaction(tx.hex)
 
 	const events: Parameters<typeof postEvents>[0] = []
 
@@ -38,21 +33,17 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 			const webhooks = data.map(webhook => decode(webhook))
 	
 			return webhooks.map(async webhook => {
-				const pushEvent = async () => events.push({ webhook, payload: tx!.decoded })
+				const pushEvent = async () => events.push({ webhook, payload: rawTx })
 	
 				if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && address.category === 'receive') await pushEvent()
 				if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && address.category === 'send') await pushEvent()
 			})
 		} catch (error) {
-			logger.error({ error })
-
-			if (process.env.STAGE !== 'prod') {
-				await redis.hset('errors', kuuid.id(), JSON.stringify(error))
-			}
+			await cloudLog(error)
 
 			throw error
 		}
 	}))
 
-	await postEvents(events, requestStartTime)
+	await postEvents(events, requestStartTime, 'addressTx')
 };

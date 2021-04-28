@@ -5,9 +5,10 @@ import { rpc, startBitcoind } from './services/bitcoind/bitcoind'
 import { webhookManager } from './services/webhookManager/webhookManager';
 import { api as internalApi } from './services/api/internalApi'
 import { api as externalApi } from './services/api/externalApi'
+import { cloudPut } from './services/cloudLogger/cloudPut'
 import { redis } from './redis';
 
-const jobs = ['bitcoind', 'webhookManager', 'internalApi', 'externalApi']
+const jobs = ['bitcoind', 'cloudLogger', 'webhookManager', 'internalApi', 'externalApi']
 
 if (cluster.isMaster) {
 	logger.info(`Master ${process.pid} is running`);
@@ -65,13 +66,17 @@ if (cluster.isWorker) {
 		}
 	}
 
+	if (job === 'cloudLogger') cloudPut()
+
 	if (job === 'webhookManager') redis.set('webhookManagerState', '1').then(() => webhookManager())
 
 	if (job === 'internalApi') {
-		internalApi.listen(process.env.INTERNAL_PORT || 3000, () => logger.info(`Server listening on port ${process.env.INTERNAL_PORT || 3000}`))
+		const internalPort = 3000
+		internalApi.listen(internalPort, () => logger.info(`Server listening on port ${internalPort}`))
 	}
 	
 	if (job === 'externalApi') {
-		externalApi.listen(process.env.EXTERNAL_PORT || 4000, () => logger.info(`Server listening on port ${process.env.EXTERNAL_PORT || 4000}`))
+		const externalPort = 4000
+		externalApi.listen(externalPort, () => logger.info(`Server listening on port ${externalPort}`))
 	}
 }

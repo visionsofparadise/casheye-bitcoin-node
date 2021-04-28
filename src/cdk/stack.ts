@@ -17,6 +17,8 @@ import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
 import { WebSocketApi, WebSocketStage } from '@aws-cdk/aws-apigatewayv2';
 import { LambdaWebSocketIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
+import { LogGroup, LogStream, RetentionDays } from '@aws-cdk/aws-logs';
+import { Table } from '@aws-cdk/aws-dynamodb';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -146,8 +148,16 @@ export class CasheyeBitcoinNodeStack extends Stack {
 
 			unsetQueues.push(unsetQueue)
 
+			const logGroup = new LogGroup(this, `LogGroup${i}`, {
+				retention: RetentionDays.ONE_WEEK,
+			});
+
+			const logStream = new LogStream(this, `LogStream${i}`, {
+				logGroup: logGroup
+			});
+
 			const nodeName = deploymentName + `-node-${i}`
-			const instanceEnv = `NODE_ENV=production STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} MAX_CONFIRMATIONS=${props.STAGE === 'prod' ? 20 : 10000 } RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} LOG_GROUP_NAME=${logGroup.logGroupName} LOG_STREAM_NAME=${logStream.logStreamName} MAX_CONFIRMATIONS=${props.STAGE === 'prod' ? 20 : 10000 } RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 			const shebang = `#!/bin/bash
 sudo add-apt-repository ppa:chris-lea/redis-server
@@ -319,11 +329,15 @@ pm2 save`
 			
 			const webhookTestResource = api.root.addResource('test');
 
+			const db = Table.fromTableArn(this, 'DynamoDB', Fn.importValue(`casheye-dynamodb-test-arn`));
+
 			const testEndpoint = createLambda(this, 'testEndpoint', {
 				environment: {
-					INSTANCE_URL: instanceUrl
+					INSTANCE_URL: instanceUrl,
+					DYNAMODB_TABLE: db.tableName
 				}
 			});
+			db.grantWriteData(testEndpoint.grantPrincipal)
 
 			webhookTestResource.addMethod('POST', new LambdaIntegration(testEndpoint))
 
