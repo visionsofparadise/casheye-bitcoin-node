@@ -3,19 +3,29 @@ import { cloudwatch, cloudwatchLogs } from '../../cloudwatch'
 import { logger, wait } from '../../helpers'
 import { redis } from '../../redis'
 import { metrics } from './cloudMetric'
+import day from 'dayjs'
 
 export const cloudPut = async (): Promise<any> => {
 	logger.info('cloud logger started')
+
+	const namespace = `casheye/node/${process.env.STAGE!}/${process.env.NETWORK!}/${process.env.NODE_INDEX!}`
 	
 	while (true) {
+		const now = day().valueOf()
 		const logData = await redis.zrange('logs', 0, -1, 'WITHSCORES')
 		
 		if (logData.length > 0) {
 			const logEntries = chunk(logData, 2)
+			const logStreamName = namespace + `/${now}`
+
+			await cloudwatchLogs.createLogStream({
+				logGroupName: process.env.LOG_GROUP_NAME!,
+				logStreamName
+			}).promise()
 			
 			await cloudwatchLogs.putLogEvents({
 				logGroupName: process.env.LOG_GROUP_NAME!,
-				logStreamName: process.env.LOG_STREAM_NAME!,
+				logStreamName,
 				logEvents: logEntries.map(([message, timestamp]) => ({
 					message,
 					timestamp: parseInt(timestamp)
@@ -24,12 +34,13 @@ export const cloudPut = async (): Promise<any> => {
 		}
 
 		for (const metric of metrics) {
-			const metricData = await redis.zrange(`metric-${metric}`, 0, -1, 'WITHSCORES')
-			const metricEntries = chunk(metricData, 2)
+			const metricData = await redis.zrange(`metric-${metric}`, 0, -1, 'WITHSCORES')	
 
-			if (metricEntries.length > 0) {
+			if (metricData.length > 0) {
+				const metricEntries = chunk(metricData, 2)
+
 				await cloudwatch.putMetricData({
-					Namespace: `casheye/node/${process.env.STAGE!}/${process.env.NETWORK!}/${process.env.NODE_INDEX!}`,
+					Namespace: namespace,
 					MetricData: metricEntries.map(([metricData, timestamp]) => {
 						const { values, dimensions } = JSON.parse(metricData)
 

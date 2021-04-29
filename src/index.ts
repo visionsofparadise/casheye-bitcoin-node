@@ -1,6 +1,6 @@
 
 import cluster from 'cluster'
-import { logger, wait } from './helpers'
+import { wait } from './helpers'
 import { rpc, startBitcoind } from './services/bitcoind/bitcoind'
 import { webhookManager } from './services/webhookManager/webhookManager';
 import { api as internalApi } from './services/api/internalApi'
@@ -8,11 +8,12 @@ import { api as externalApi } from './services/api/externalApi'
 import { cloudPut } from './services/cloudLogger/cloudPut'
 import { redis } from './redis';
 import reverse from 'lodash/reverse';
+import { cloudLog } from './services/cloudLogger/cloudLog';
 
 const jobs = ['bitcoind', 'cloudLogger', 'webhookManager', 'internalApi', 'externalApi']
 
 if (cluster.isMaster) {
-	logger.info(`Master ${process.pid} is running`);
+	cloudLog(`Master ${process.pid} is running`);
 
 	const workerConfigs: Array<{ job: string; worker: cluster.Worker }> = []
 	
@@ -36,7 +37,7 @@ if (cluster.isMaster) {
 
 		worker.on('exit', (code) => {
 			if (code !== 0) {
-				logger.info(`worker ${job} died`);
+				cloudLog(`worker ${job} died`);
 			
 				cluster.fork({
 					JOB: job
@@ -47,7 +48,7 @@ if (cluster.isMaster) {
 }
 
 if (cluster.isWorker) {
-	logger.info(`Worker ${process.pid} started`);
+	cloudLog(`Worker ${process.pid} started`);
 
 	const job = process.env.JOB
 	
@@ -62,7 +63,7 @@ if (cluster.isWorker) {
 
 				await redis.lpush('blockHashCache', ...reverse(response))
 
-				logger.info(response)
+				cloudLog(response)
 			}
 
 			generator()
@@ -74,18 +75,14 @@ if (cluster.isWorker) {
 	if (job === 'webhookManager') redis.set('webhookManagerState', '1').then(() => webhookManager())
 
 	if (job === 'internalApi') {
-		const asyncFn = async () => {
-			await wait(10 * 1000)
-
+		setTimeout(() => {
 			const internalPort = 3000
-			internalApi.listen(internalPort, () => logger.info(`Server listening on port ${internalPort}`))
-		}
-
-		asyncFn
+			internalApi.listen(internalPort, () => cloudLog(`Server listening on port ${internalPort}`))
+		}, 15 * 1000)
 	}
 	
 	if (job === 'externalApi') {
 		const externalPort = 4000
-		externalApi.listen(externalPort, () => logger.info(`Server listening on port ${externalPort}`))
+		externalApi.listen(externalPort, () => cloudLog(`Server listening on port ${externalPort}`))
 	}
 }

@@ -17,7 +17,7 @@ import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 import { RestApi, Cors, LambdaIntegration } from '@aws-cdk/aws-apigateway';
 import { WebSocketApi, WebSocketStage } from '@aws-cdk/aws-apigatewayv2';
 import { LambdaWebSocketIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
-import { LogGroup, LogStream, RetentionDays } from '@aws-cdk/aws-logs';
+import { LogGroup, RetentionDays } from '@aws-cdk/aws-logs';
 import { Table } from '@aws-cdk/aws-dynamodb';
 
 const prodEC2Config = {
@@ -152,12 +152,8 @@ export class CasheyeBitcoinNodeStack extends Stack {
 				retention: RetentionDays.ONE_WEEK
 			});
 
-			const logStream = new LogStream(this, `LogStream${i}`, {
-				logGroup: logGroup
-			});
-
 			const nodeName = deploymentName + `-node-${i}`
-			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} LOG_GROUP_NAME=${logGroup.logGroupName} LOG_STREAM_NAME=${logStream.logStreamName} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} LOG_GROUP_NAME=${logGroup.logGroupName} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 			const shebang = `#!/bin/bash
 sudo add-apt-repository ppa:chris-lea/redis-server
