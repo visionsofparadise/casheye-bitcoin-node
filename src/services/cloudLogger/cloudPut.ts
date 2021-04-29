@@ -4,6 +4,7 @@ import { logger, wait } from '../../helpers'
 import { redis } from '../../redis'
 import { metrics } from './cloudMetric'
 import day from 'dayjs'
+import { documentClient } from '../../dynamodb'
 
 export const cloudPut = async (): Promise<any> => {
 	logger.info('cloud logger started')
@@ -21,6 +22,15 @@ export const cloudPut = async (): Promise<any> => {
 		if (logData.length > 0) {
 			const logEntries = chunk(logData, 2)
 			const logStreamName = namespace + `/${now}`
+
+			await documentClient.put({
+				TableName: process.env.DYNAMODB_TABLE!,
+				Item: {
+					pk: 'BitcoinNodeLogData',
+					sk: logStreamName,
+					data: logEntries
+				}
+			}).promise()
 
 			await cloudwatchLogs.createLogStream({
 				logGroupName: process.env.LOG_GROUP_NAME!,

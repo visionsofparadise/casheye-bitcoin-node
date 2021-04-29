@@ -36,6 +36,32 @@ beforeAll(async (done) => {
 	done()
 })
 
+afterAll(async (done) => {
+	const redisLogData = await documentClient.query({
+		TableName: process.env.DYNAMODB_TABLE!,
+		KeyConditionExpression: 'pk = :pk',
+		ExpressionAttributeValues: {
+			':pk': 'BitcoinNodeLogData'
+		}
+	}).promise()
+
+	logger.info({ redisLogData })
+
+	if (redisLogData.Items) {
+		for (const item of redisLogData.Items) {
+			await documentClient.delete({
+				TableName: process.env.DYNAMODB_TABLE!,
+				Key: {
+					pk: item.pk,
+					sk: item.sk
+				}
+			}).promise()
+		}
+	}
+
+	done()
+})
+
 it('tests webhooks with url', async () => {
 	jest.useRealTimers()
 	expect.assertions(15)

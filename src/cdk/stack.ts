@@ -135,6 +135,8 @@ export class CasheyeBitcoinNodeStack extends Stack {
 
 		const unsetQueues: Queue[] = []
 
+		const db = Table.fromTableArn(this, 'DynamoDB', Fn.importValue(`casheye-dynamodb-test-arn`));
+
 		const instanceCount = 1
 		const config = isProd ? prodEC2Config : testEC2Config
 		const instances: Instance[] = []	
@@ -153,7 +155,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			});
 
 			const nodeName = deploymentName + `-node-${i}`
-			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} LOG_GROUP_NAME=${logGroup.logGroupName} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} LOG_GROUP_NAME=${logGroup.logGroupName} DYNAMODB_TABLE=${db.tableName} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 			const shebang = `#!/bin/bash
 sudo add-apt-repository ppa:chris-lea/redis-server
@@ -209,6 +211,7 @@ pm2 save`
 			unsetQueue.grantConsumeMessages(instance.grantPrincipal)
 			errorQueue.grantSendMessages(instance.grantPrincipal)
 			logGroup.grantWrite(instance.grantPrincipal)
+			db.grantReadWriteData(instance.grantPrincipal)
 
 			instances.push(instance)
 		}
@@ -264,8 +267,6 @@ pm2 save`
 			});
 			
 			const webhookTestResource = api.root.addResource('test');
-
-			const db = Table.fromTableArn(this, 'DynamoDB', Fn.importValue(`casheye-dynamodb-test-arn`));
 
 			const testEndpoint = createLambda(this, 'testEndpoint', {
 				environment: {
