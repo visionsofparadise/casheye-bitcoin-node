@@ -29,14 +29,14 @@ api.post('/new-tx/:txid/:timestamp', async (req, res) => {
 	}
 })
 
-api.post('/new-block/:blockhash/:timestamp', async (req, res) => {	
+api.post('/new-block/:blockhash/:timestamp', async (req, res, next) => {	
 	const { blockhash, timestamp } = req.params
 
 	res.sendStatus(204)
 
 	await cloudLog(`new block: ${blockhash}`)
-	const newBlockPromise = newBlockEvent(blockhash, timestamp)
-	const confirmationsPromise = confirmationsEvent(blockhash, timestamp)
+	const newBlockPromise = newBlockEvent(blockhash, timestamp).catch(next)
+	const confirmationsPromise = confirmationsEvent(blockhash, timestamp).catch(next)
 
 	await Promise.resolve(newBlockPromise)
 	await Promise.resolve(confirmationsPromise)
