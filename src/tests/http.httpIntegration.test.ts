@@ -37,6 +37,8 @@ beforeAll(async (done) => {
 })
 
 afterAll(async (done) => {
+	await wait(2 * 60 * 1000)
+	
 	const redisLogData = await documentClient.query({
 		TableName: process.env.DYNAMODB_TABLE!,
 		KeyConditionExpression: 'pk = :pk',
