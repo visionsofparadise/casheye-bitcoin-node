@@ -10,15 +10,13 @@ jest.mock('../bitcoind/bitcoind')
 jest.mock('./postEvents')
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
-rpc.getBlockCount.mockResolvedValue(100)
-rpc.getBlockHash.mockResolvedValue('test')
-rpc.getTransaction.mockResolvedValue({ hex: 'test', decode: 'test' })
-
 beforeEach(async () => redis.flushall())
 
 it('posts event on address transaction confirmation', async () => {
 	jest.clearAllMocks()
 	jest.useRealTimers()
+	
+	await redis.lpush('blockHashCache', [].fill('test', 0, 20))
 	
 	rpc.listSinceBlock.mockResolvedValue([{
 		txid: 'test',
@@ -28,8 +26,6 @@ it('posts event on address transaction confirmation', async () => {
 		blockhash: 'test',
 		confirmations: 1
 	}])
-
-	
 
 	await redis.hset('test', 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
 
@@ -41,6 +37,8 @@ it('posts event on address transaction confirmation', async () => {
 it('posts events on  valid address transaction confirmation and skips invalid', async () => {
 	jest.clearAllMocks()
 	jest.useRealTimers()
+
+	await redis.lpush('blockHashCache', [].fill('test', 0, 20))
 	
 	rpc.listSinceBlock.mockResolvedValue([{
 		txid: 'test',

@@ -9,7 +9,7 @@ import day from 'dayjs';
 describe('benchmark tests', () => {
 	jest.useRealTimers()
 
-	const N = process.env.N ? parseInt(process.env.N) : 1000
+	const N = process.env.N ? parseInt(process.env.N) : 100
 	const testId = kuuid.id()
 	let client: WebSocket | undefined
 
@@ -70,7 +70,7 @@ describe('benchmark tests', () => {
 		}
 	});
 
-	it('tests webhooks with connectionId', async () => {
+	it('benchmarks event response times', async () => {
 		expect.assertions(2)
 		await wait(3 * 1000)
 	
@@ -81,61 +81,55 @@ describe('benchmark tests', () => {
 	
 		logger.info(redisGetConnectionId.data)
 		expect(redisGetConnectionId.status).toBe(200)
-
-		const anyTxWebhook = {
-			id: kuuid.id(),
-			userId: kuuid.id(),
-			address: testAddressGenerator(),
-			currency: 'BTC',
-			confirmations: 1000,
-			event: 'anyTx',
-			connectionId: redisGetConnectionId.data
-		}
-	
-		const newBlockWebhook = {
-			id: kuuid.id(),
-			userId: kuuid.id(),
-			currency: 'BTC',
-			event: 'newBlock',
-			connectionId: redisGetConnectionId.data
-		}
-	
-		const webhooks = [anyTxWebhook, newBlockWebhook]
-	
-		await eventbridge.putEvents({
-			Entries: webhooks.map(webhook => ({
-				Source: 'casheye-' + process.env.STAGE!,
-				DetailType: 'setWebhook',
-				Detail: JSON.stringify(webhook)
-			}))
-		}).promise()
-	
-		await wait(10 * 1000)
 	
 		for (let i = 0; i < N; i++ ) {
+			const anyTxWebhook = {
+				id: kuuid.id(),
+				userId: kuuid.id(),
+				address: testAddressGenerator(),
+				currency: 'BTC',
+				confirmations: 1,
+				event: 'anyTx',
+				connectionId: redisGetConnectionId.data
+			}
+		
+			const newBlockWebhook = {
+				id: kuuid.id(),
+				userId: kuuid.id(),
+				currency: 'BTC',
+				event: 'newBlock',
+				connectionId: redisGetConnectionId.data
+			}
+		
+			const webhooks = [anyTxWebhook, newBlockWebhook]
+		
+			await eventbridge.putEvents({
+				Entries: webhooks.map(webhook => ({
+					Source: 'casheye-' + process.env.STAGE!,
+					DetailType: 'setWebhook',
+					Detail: JSON.stringify(webhook)
+				}))
+			}).promise()
+		
+			await wait(5 * 1000)
+
 			const bitcoinSend = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 				command: 'sendToAddress',
 				args: [anyTxWebhook.address, "0.0001"]
 			})
 		
 			logger.info(bitcoinSend.data)
-		
-			await wait(1000)
-		}
 
-		await wait(3 * 1000)
-	
-		for (let i = 0; i < N; i++ ) {
+			await wait(1000)
+
 			const generateResponse = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 				command: 'generate',
 				args: [1]
 			})
 		
 			logger.info(generateResponse.status)
-		
-			await wait(1000)
 		}
-	
+
 		await wait(3 * 1000)
 
 		logger.info({ wsErrors })

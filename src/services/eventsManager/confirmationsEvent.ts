@@ -16,21 +16,13 @@ type ListSinceBlockResponse = Array<{
 	blockhash: string;
 }>;
 
-export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {
-	const MAX_CONFIRMATIONS = process.env.MAX_CONFIRMATIONS ? parseInt(process.env.MAX_CONFIRMATIONS) : 20
-	const blockCount = await rpc.getBlockCount() as number
-
-	if (blockCount === 0) return
-
-	const targetBlockNumber = blockCount > MAX_CONFIRMATIONS ? blockCount - MAX_CONFIRMATIONS : 0
+export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {	
 	const result = await redis.pipeline()
-		.hget('blockHashCache', targetBlockNumber.toString())
-		.hset('blockHashCache', blockCount.toString(), blockHash)
+		.lpush('blockHashCache', blockHash)
+		.lindex('blockHashCache', 20)
 		.exec()
 
-	const cachedBlockHash = result[0][1]
-
-	const lastBlockHash = cachedBlockHash || await rpc.getBlockHash(targetBlockNumber)
+	const lastBlockHash = result[1][1]
 
 	if (!lastBlockHash) return
 

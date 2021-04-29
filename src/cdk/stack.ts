@@ -149,7 +149,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			unsetQueues.push(unsetQueue)
 
 			const logGroup = new LogGroup(this, `LogGroup${i}`, {
-				retention: RetentionDays.ONE_WEEK,
+				retention: RetentionDays.ONE_WEEK
 			});
 
 			const logStream = new LogStream(this, `LogStream${i}`, {
@@ -157,7 +157,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			});
 
 			const nodeName = deploymentName + `-node-${i}`
-			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} LOG_GROUP_NAME=${logGroup.logGroupName} LOG_STREAM_NAME=${logStream.logStreamName} MAX_CONFIRMATIONS=${props.STAGE === 'prod' ? 20 : 10000 } RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} LOG_GROUP_NAME=${logGroup.logGroupName} LOG_STREAM_NAME=${logStream.logStreamName} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 			const shebang = `#!/bin/bash
 sudo add-apt-repository ppa:chris-lea/redis-server
@@ -198,67 +198,6 @@ pm2 save`
 				}),
 				userDataCausesReplacement: true
 			})
-
-			instance.addToRolePolicy(new PolicyStatement({
-				effect: Effect.ALLOW,
-				resources: ['*'],
-				actions: [
-					"ssm:DescribeAssociation",
-					"ssm:GetDeployablePatchSnapshotForInstance",
-					"ssm:GetDocument",
-					"ssm:DescribeDocument",
-					"ssm:GetManifest",
-					"ssm:GetParameter",
-					"ssm:GetParameters",
-					"ssm:ListAssociations",
-					"ssm:ListInstanceAssociations",
-					"ssm:PutInventory",
-					"ssm:PutComplianceItems",
-					"ssm:PutConfigurePackageResult",
-					"ssm:UpdateAssociationStatus",
-					"ssm:UpdateInstanceAssociationStatus",
-					"ssm:UpdateInstanceInformation"
-				]
-			}))
-
-			instance.addToRolePolicy(new PolicyStatement({
-				effect: Effect.ALLOW,
-				resources: ['*'],
-				actions: [
-					"ssmmessages:CreateControlChannel",
-          "ssmmessages:CreateDataChannel",
-          "ssmmessages:OpenControlChannel",
-          "ssmmessages:OpenDataChannel"
-				]
-			}))
-
-			instance.addToRolePolicy(new PolicyStatement({
-				effect: Effect.ALLOW,
-				resources: ['*'],
-				actions: [
-					"ec2messages:AcknowledgeMessage",
-					"ec2messages:DeleteMessage",
-					"ec2messages:FailMessage",
-					"ec2messages:GetEndpoint",
-					"ec2messages:GetMessages",
-					"ec2messages:SendReply"
-				]
-			}))
-
-			instance.addToRolePolicy(new PolicyStatement({
-				effect: Effect.ALLOW,
-				resources: ['*'],
-				actions: [
-					"cloudwatch:PutMetricData",
-					"ec2:DescribeVolumes",
-					"ec2:DescribeTags",
-					"logs:PutLogEvents",
-					"logs:DescribeLogStreams",
-					"logs:DescribeLogGroups",
-					"logs:CreateLogStream",
-					"logs:CreateLogGroup"
-				]
-			}))
 
 			instance.addToRolePolicy(new PolicyStatement({
 				actions: ['execute-api:*'],

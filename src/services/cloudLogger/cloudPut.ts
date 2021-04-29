@@ -9,9 +9,10 @@ export const cloudPut = async (): Promise<any> => {
 	
 	while (true) {
 		const logData = await redis.zrange('logs', 0, -1, 'WITHSCORES')
-		const logEntries = chunk(logData, 2)
-
-		if (logEntries.length > 0) {
+		
+		if (logData.length > 0) {
+			const logEntries = chunk(logData, 2)
+			
 			await cloudwatchLogs.putLogEvents({
 				logGroupName: process.env.LOG_GROUP_NAME!,
 				logStreamName: process.env.LOG_STREAM_NAME!,
