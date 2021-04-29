@@ -28,7 +28,7 @@ it('calls addressTx event', async () => {
 	jest.clearAllMocks()
 	const txId = kuuid.id()
 
-	const response = await axios.post(url + `new-tx/${txId}`, { timestamp: day().toISOString() })
+	const response = await axios.post(url + `new-tx/${txId}/${day().toISOString()}`)
 
 	expect(response.status).toBe(204)
 
@@ -41,11 +41,11 @@ it('deduplicates addressTx event', async () => {
 	jest.clearAllMocks()
 	const txId = kuuid.id()
 
-	await axios.post(url + `new-tx/${txId}`, { timestamp: day().toISOString() })
-	await axios.post(url + `new-tx/${txId}`, { timestamp: day().toISOString() })
-	await axios.post(url + `new-tx/${txId}`, { timestamp: day().toISOString() })
-	await axios.post(url + `new-tx/${txId}`, { timestamp: day().toISOString() })
-	await axios.post(url + `new-tx/${txId}`, { timestamp: day().toISOString() })
+	await axios.post(url + `new-tx/${txId}/${day().toISOString()}`)
+	await axios.post(url + `new-tx/${txId}/${day().toISOString()}`)
+	await axios.post(url + `new-tx/${txId}/${day().toISOString()}`)
+	await axios.post(url + `new-tx/${txId}/${day().toISOString()}`)
+	await axios.post(url + `new-tx/${txId}/${day().toISOString()}`)
 
 	await wait(500)
 
@@ -56,7 +56,7 @@ it('calls confirmations and newBlock event', async () => {
 	jest.clearAllMocks()
 	const blockHash = kuuid.id()
 
-	const response = await axios.post(url + `new-block/${blockHash}`, { timestamp: day().toISOString() })
+	const response = await axios.post(url + `new-block/${blockHash}/${day().toISOString()}`)
 
 	expect(response.status).toBe(204)
 

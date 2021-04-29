@@ -11,8 +11,8 @@ const api = express();
 
 api.use(bodyParser.json());
 
-api.post('/new-tx/:txid', async (req, res) => {	
-	const { txid } = req.params
+api.post('/new-tx/:txid/:timestamp', async (req, res) => {	
+	const { txid, timestamp } = req.params
 
 	const dedupKey = `dedup-${txid}`
 	const dedupTx = await redis.multi()
@@ -25,13 +25,12 @@ api.post('/new-tx/:txid', async (req, res) => {
 
 	if (!result) {	
 		await cloudLog(`new transaction: ${txid}`)
-		await addressTxEvent(txid, req.body.timestamp)
+		await addressTxEvent(txid, timestamp)
 	}
 })
 
-api.post('/new-block/:blockhash', async (req, res) => {	
-	const { blockhash } = req.params
-	const { timestamp } = req.body
+api.post('/new-block/:blockhash/:timestamp', async (req, res) => {	
+	const { blockhash, timestamp } = req.params
 
 	res.sendStatus(204)
 

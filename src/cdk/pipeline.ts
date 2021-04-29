@@ -94,7 +94,7 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 		testAppStage.addActions(integrationTestAction)
 
 		EventBus.grantAllPutEvents(integrationTestAction)
-		db.grantReadData(integrationTestAction)
+		db.grantReadWriteData(integrationTestAction)
 
 		// const testnetApp = new CasheyeBitcoinNodeStage(this, serviceName + '-testnet-prod', {
 		// 	STAGE: 'prod',
