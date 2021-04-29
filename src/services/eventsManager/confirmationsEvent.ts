@@ -19,16 +19,18 @@ type ListSinceBlockResponse = Array<{
 export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {	
 	const result = await redis.pipeline()
 		.lpush('blockHashCache', blockHash)
-		.lindex('blockHashCache', 20)
+		.ltrim('blockHashCache', 0, 19)
+		.lindex('blockHashCache', 19)
 		.exec()
 
-	const lastBlockHash = result[1][1]
+	const lastBlockHash = result[2][1]
 
 	if (!lastBlockHash) return
 
 	const txsSinceBlock = await rpc.listSinceBlock(lastBlockHash, undefined, true, false) as ListSinceBlockResponse
 
 	const cloudMetricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.length])
+	await cloudLog(txsSinceBlock)
 
 	const transactions = txsSinceBlock.filter(tx => 
 		tx.label === 'set' && 
@@ -58,7 +60,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 				}
 			})
 		} catch (error) {
-			cloudLog(error)
+			await cloudLog(error)
 
 			throw error
 		}

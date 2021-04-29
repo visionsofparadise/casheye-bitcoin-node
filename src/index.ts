@@ -13,38 +13,38 @@ import { cloudLog } from './services/cloudLogger/cloudLog';
 const jobs = ['bitcoind', 'cloudLogger', 'webhookManager', 'internalApi', 'externalApi']
 
 if (cluster.isMaster) {
-	cloudLog(`Master ${process.pid} is running`);
-
-	const workerConfigs: Array<{ job: string; worker: cluster.Worker }> = []
+	cloudLog(`Master ${process.pid} is running`).then(() => {
+		const workerConfigs: Array<{ job: string; worker: cluster.Worker }> = []
 	
-	for (const job of jobs) {
-		const env: any = {
-			JOB: job,
-			UV_THREADPOOL_SIZE: 4
-		}
-
-		if (job === 'internalApi') env.UV_THREADPOOL_SIZE = 128
-
-		const worker = cluster.fork(env);
-
-		workerConfigs.push({
-			job, worker
-		})
-	}
-
-	for (const workerConfig of workerConfigs) {
-		const { job, worker } = workerConfig
-
-		worker.on('exit', (code) => {
-			if (code !== 0) {
-				cloudLog(`worker ${job} died`);
-			
-				cluster.fork({
-					JOB: job
-				});
+		for (const job of jobs) {
+			const env: any = {
+				JOB: job,
+				UV_THREADPOOL_SIZE: 4
 			}
-		});
-	}
+	
+			if (job === 'internalApi') env.UV_THREADPOOL_SIZE = 128
+	
+			const worker = cluster.fork(env);
+	
+			workerConfigs.push({
+				job, worker
+			})
+		}
+	
+		for (const workerConfig of workerConfigs) {
+			const { job, worker } = workerConfig
+	
+			worker.on('exit', (code) => {
+				if (code !== 0) {
+					cloudLog(`worker ${job} died`).then(() => {
+						cluster.fork({
+							JOB: job
+						});
+					});
+				}
+			});
+		}
+	});
 }
 
 if (cluster.isWorker) {
@@ -63,7 +63,7 @@ if (cluster.isWorker) {
 
 				await redis.lpush('blockHashCache', ...reverse(response))
 
-				cloudLog(response)
+				await cloudLog(response)
 			}
 
 			generator()
@@ -77,12 +77,12 @@ if (cluster.isWorker) {
 	if (job === 'internalApi') {
 		setTimeout(() => {
 			const internalPort = 3000
-			internalApi.listen(internalPort, () => cloudLog(`Server listening on port ${internalPort}`))
+			internalApi.listen(internalPort, async () => cloudLog(`Server listening on port ${internalPort}`))
 		}, 15 * 1000)
 	}
 	
 	if (job === 'externalApi') {
 		const externalPort = 4000
-		externalApi.listen(externalPort, () => cloudLog(`Server listening on port ${externalPort}`))
+		externalApi.listen(externalPort, async () => cloudLog(`Server listening on port ${externalPort}`))
 	}
 }

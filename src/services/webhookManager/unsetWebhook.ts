@@ -8,7 +8,7 @@ export const unsetWebhook = async (msg: SQS.Message): Promise<any> => {
 	const webhook = JSON.parse(msg.Body!) as OnUnsetWebhookDetail
 	const promises = []
 
-	cloudLog('unsetting webhook ' + webhook.id)		
+	await cloudLog('unsetting webhook ' + webhook.id)		
 
 	if (webhook.event === 'newBlock') {
 		const dbPromise = redis.hdel('newBlock', webhook.id)
@@ -23,7 +23,7 @@ export const unsetWebhook = async (msg: SQS.Message): Promise<any> => {
 
 	await Promise.all(promises)
 
-	cloudLog('webhook unset ' + webhook.id)
+	await cloudLog('webhook unset ' + webhook.id)
 
 	return {
 		queueEntry: {

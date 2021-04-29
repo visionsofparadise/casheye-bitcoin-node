@@ -12,7 +12,11 @@ export const cloudPut = async (): Promise<any> => {
 	
 	while (true) {
 		const now = day().valueOf()
-		const logData = await redis.zrange('logs', 0, -1, 'WITHSCORES')
+		const logDataResult = await redis.multi()
+			.zrange('logs', 0, -1, 'WITHSCORES')
+			.del('logs')
+			.exec()
+		const logData = logDataResult[0][1] as string[]
 		
 		if (logData.length > 0) {
 			const logEntries = chunk(logData, 2)
@@ -34,7 +38,12 @@ export const cloudPut = async (): Promise<any> => {
 		}
 
 		for (const metric of metrics) {
-			const metricData = await redis.zrange(`metric-${metric}`, 0, -1, 'WITHSCORES')	
+			const meticKey = `metric-${metric}`
+			const metricDataResult = await redis.multi()
+				.zrange(meticKey, 0, -1, 'WITHSCORES')	
+				.del(meticKey)
+				.exec()
+			const metricData = metricDataResult[0][1] as string[]
 
 			if (metricData.length > 0) {
 				const metricEntries = chunk(metricData, 2)
