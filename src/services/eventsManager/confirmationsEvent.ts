@@ -11,6 +11,7 @@ type ListSinceBlockResponse = {
 		txid: string;
 		hex: string;
 		address: string;
+		amount: number
 		category: string;
 		confirmations: number
 		label: string;
@@ -37,7 +38,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 	const transactions = txsSinceBlock.transactions.filter(tx => 
 		tx.label === 'set' && 
 		tx.confirmations > 0 && 
-		(tx.category === 'receive' || tx.category === 'send')
+		(tx.category === 'receive' || tx.category === 'send') &&
+		tx.amount > 0
 	)
 
 	const events: Parameters<typeof postEvents>[0] = []

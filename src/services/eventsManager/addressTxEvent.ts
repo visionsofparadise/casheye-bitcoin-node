@@ -12,6 +12,7 @@ export interface GetTransactionResponse {
 		address: string;
 		category: string;
 		label: string;
+		amount: number;
 	}>;
 	decoded: object
 }
@@ -21,7 +22,12 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 
 	if (!tx || tx.confirmations !== 0) return 
 
-	const addresses = tx.details.filter(detail => detail.label === 'set')
+	const addresses = tx.details.filter(detail => 
+		detail.label === 'set' && 
+		detail.amount > 0 && 
+		(detail.category === 'send' || detail.category === 'receive')
+	)
+
 	const rawTx = new Transaction(tx.hex)
 
 	const events: Parameters<typeof postEvents>[0] = []
