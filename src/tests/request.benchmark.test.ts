@@ -47,7 +47,7 @@ describe('benchmark tests', () => {
 				logger.info({ timeSplit })
 				const nanoSecondsSplit = timeSplit[1].split('+')
 				logger.info({ nanoSecondsSplit })
-				const milliseconds = Math.floor(nanoSecondsSplit[0] / 1000 * 1000)
+				const milliseconds = Math.floor(parseInt(nanoSecondsSplit[0]) / 1000 * 1000)
 				logger.info({ milliseconds })
 				const iso8601Time = `${timeSplit[0]}.${milliseconds}+${nanoSecondsSplit[1]}`
 				logger.info({ iso8601Time })
