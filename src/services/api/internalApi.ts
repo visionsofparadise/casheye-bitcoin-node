@@ -25,7 +25,7 @@ api.post('/new-tx/:txid/:timestamp', async (req, res) => {
 
 	if (!result) {	
 		await cloudLog(`new transaction: ${txid}`)
-		await addressTxEvent(txid, timestamp)
+		await addressTxEvent(txid, timestamp).catch(cloudLog)
 	}
 })
 
@@ -36,8 +36,8 @@ api.post('/new-block/:blockhash/:timestamp', async (req, res) => {
 
 	await cloudLog(`new block: ${blockhash}`)
 
-	await confirmationsEvent(blockhash, timestamp)
-	await newBlockEvent(blockhash, timestamp)
+	await confirmationsEvent(blockhash, timestamp).catch(cloudLog)
+	await newBlockEvent(blockhash, timestamp).catch(cloudLog)
 })	
 
 api.use(async (error: any, _: any, res: Response, __: any) => {

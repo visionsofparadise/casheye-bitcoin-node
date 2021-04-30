@@ -25,8 +25,8 @@ it('executes redis command', async () => {
 	expect(response.status).toBe(200)
 })
 
-it('responds log group name', async () => {
-	const response = await axios.get(process.env.INSTANCE_URL! + 'log-group-name')
+it('responds with env data', async () => {
+	const response = await axios.get(process.env.INSTANCE_URL! + 'env')
 
 	logger.info({ logGroupName: response.data })
 
