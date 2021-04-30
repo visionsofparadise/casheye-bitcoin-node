@@ -1,5 +1,6 @@
 import { APIGatewayEvent } from 'aws-lambda/trigger/api-gateway-proxy';
 import kuuid from 'kuuid';
+import { Response, SUCCESS_NO_CONTENT_204 } from 'xkore-lambda-helpers/dist/Response';
 import { documentClient } from '../dynamodb'
 
 export const handler = async (event: APIGatewayEvent) => {
@@ -12,5 +13,5 @@ export const handler = async (event: APIGatewayEvent) => {
 		}
 	}).promise()
 
-	return
+	return new Response(SUCCESS_NO_CONTENT_204)
 }
