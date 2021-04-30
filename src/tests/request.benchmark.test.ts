@@ -43,7 +43,11 @@ describe('benchmark tests', () => {
 			logger.info(data)
 
 			if (data.requestStartTime) {
-				const responseTime = day().valueOf() - day(data.requestStartTime).valueOf()
+				const timeSplit = data.requestStartTime.split(',')
+				const nanoSecondsSplit = timeSplit[1].split('+')
+				const milliseconds = Math.floor(nanoSecondsSplit[0] / 1000)
+
+				const responseTime = day().valueOf() - day(timeSplit[0]).add(milliseconds, 'ms').valueOf()
 
 				if (data.inputs && !data.confirmations) {
 					addressTxResponseTimes.push(responseTime)
@@ -76,6 +80,22 @@ describe('benchmark tests', () => {
 	
 		logger.info(redisGetConnectionId.data)
 		expect(redisGetConnectionId.status).toBe(200)
+
+		const newBlockWebhook = {
+			id: kuuid.id(),
+			userId: kuuid.id(),
+			currency: 'BTC',
+			event: 'newBlock',
+			connectionId: redisGetConnectionId.data
+		}
+
+		await eventbridge.putEvents({
+			Entries: [{
+				Source: 'casheye-' + process.env.STAGE!,
+				DetailType: 'setWebhook',
+				Detail: JSON.stringify(newBlockWebhook)
+			}]
+		}).promise()
 	
 		for (let i = 0; i < N; i++ ) {
 			const anyTxWebhook = {
@@ -88,22 +108,12 @@ describe('benchmark tests', () => {
 				connectionId: redisGetConnectionId.data
 			}
 		
-			const newBlockWebhook = {
-				id: kuuid.id(),
-				userId: kuuid.id(),
-				currency: 'BTC',
-				event: 'newBlock',
-				connectionId: redisGetConnectionId.data
-			}
-		
-			const webhooks = [anyTxWebhook, newBlockWebhook]
-		
 			await eventbridge.putEvents({
-				Entries: webhooks.map(webhook => ({
+				Entries: [{
 					Source: 'casheye-' + process.env.STAGE!,
 					DetailType: 'setWebhook',
-					Detail: JSON.stringify(webhook)
-				}))
+					Detail: JSON.stringify(anyTxWebhook)
+				}]
 			}).promise()
 		
 			await wait(5 * 1000)
