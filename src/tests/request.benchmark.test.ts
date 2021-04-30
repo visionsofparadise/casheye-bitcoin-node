@@ -45,7 +45,7 @@ describe('benchmark tests', () => {
 			if (data.requestStartTime) {
 				const timeSplit = data.requestStartTime.split(',')
 				const nanoSecondsSplit = timeSplit[1].split('+')
-				const milliseconds = Math.floor(nanoSecondsSplit[0] / 1000)
+				const milliseconds = Math.floor(nanoSecondsSplit[0] / 1000 * 1000)
 
 				const responseTime = day().valueOf() - day(timeSplit[0]).add(milliseconds, 'ms').valueOf()
 
