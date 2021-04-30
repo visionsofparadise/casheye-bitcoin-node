@@ -15,11 +15,6 @@ describe('integration tests', () => {
 	let wsMessages: any[] = []
 
 	beforeAll(async (done) => {
-		await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'flushall',
-			args: []
-		})
-
 		client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
 
 		client!.on('open', () => {
