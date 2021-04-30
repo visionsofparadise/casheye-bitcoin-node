@@ -11,7 +11,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 	await cloudLog({ events })
 	const errors: any[] = []
 
-	for (const event of events) {
+	await Promise.all(events.map(async event => {
 		const { webhook, payload } = event
 
 		try {
@@ -63,7 +63,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 				hash
 			})
 		}
-	}
+	}))
 
 	await cloudMetric('events', [events.length - errors.length])
 
