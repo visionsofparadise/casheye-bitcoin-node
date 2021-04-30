@@ -28,7 +28,7 @@ it('executes redis command', async () => {
 it('responds with env data', async () => {
 	const response = await axios.get(process.env.INSTANCE_URL! + 'env')
 
-	logger.info({ logGroupName: response.data })
+	logger.info({ env: response.data })
 
 	expect(response.status).toBe(200)
 })

@@ -44,7 +44,7 @@ api.get('/', async (_, res) => res.sendStatus(200));
 	res.sendStatus(204)
 })
 
-!isProd && api.get('/env', async (_, res) => res.status(204).send(JSON.stringify(process.env)))
+!isProd && api.get('/env', async (_, res) => res.status(200).send(JSON.stringify(process.env)))
 
 api.use(async (error: any, _: any, res: Response, __: any) => {
 	await cloudLog(error)
