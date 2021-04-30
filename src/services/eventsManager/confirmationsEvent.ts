@@ -2,7 +2,6 @@ import { rpc } from '../bitcoind/bitcoind';
 import { postEvents } from './postEvents';
 import { decode } from '../webhookManager/webhookEncoder';
 import { redis } from '../../redis';
-import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
 
@@ -46,19 +45,13 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	await Promise.all(transactions.map(async tx => {
 		try {
-			const getTx = await rpc.getTransaction(tx.txid, true) as { hex: string }
-			const rawTx = new Transaction(getTx.hex)
-			const payload = {
-				confirmations: tx.confirmations,
-				...rawTx
-			}
-
+			const getTx = await rpc.getTransaction(tx.txid, true, true) as { decoded: object }
 			const data = await redis.hvals(tx.address) as string[]
 			const webhooks = data.map(webhook => decode(webhook))
 
 			return webhooks.map(async webhook => {
 				if (webhook.confirmations && tx.confirmations <= webhook.confirmations) {		
-					const pushEvent = async () => events.push({ webhook, payload })
+					const pushEvent = async () => events.push({ webhook, payload: getTx.decoded })
 
 					if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && tx.category === 'receive') await pushEvent()
 					if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && tx.category === 'send') await pushEvent()

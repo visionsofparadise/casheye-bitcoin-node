@@ -44,10 +44,15 @@ describe('benchmark tests', () => {
 
 			if (data.requestStartTime) {
 				const timeSplit = data.requestStartTime.split(',')
+				logger.info({ timeSplit })
 				const nanoSecondsSplit = timeSplit[1].split('+')
+				logger.info({ nanoSecondsSplit })
 				const milliseconds = Math.floor(nanoSecondsSplit[0] / 1000 * 1000)
+				logger.info({ milliseconds })
+				const iso8601Time = `${timeSplit[0]}.${milliseconds}+${nanoSecondsSplit[1]}`
+				logger.info({ iso8601Time })
 
-				const responseTime = day().valueOf() - day(timeSplit[0]).add(milliseconds, 'ms').valueOf()
+				const responseTime = day().valueOf() - day(iso8601Time).valueOf()
 
 				if (data.inputs && !data.confirmations) {
 					addressTxResponseTimes.push(responseTime)
@@ -70,7 +75,7 @@ describe('benchmark tests', () => {
 	});
 
 	it('benchmarks event response times', async () => {
-		expect.assertions(2)
+		expect.assertions(4)
 		await wait(3 * 1000)
 	
 		const redisGetConnectionId = await axios.post<string>(process.env.INSTANCE_URL! + 'redis', {
@@ -116,7 +121,7 @@ describe('benchmark tests', () => {
 				}]
 			}).promise()
 		
-			await wait(5 * 1000)
+			await wait(3 * 1000)
 
 			const bitcoinSend = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 				command: 'sendToAddress',
@@ -125,7 +130,7 @@ describe('benchmark tests', () => {
 		
 			logger.info(bitcoinSend.data)
 
-			await wait(1000)
+			await wait(500)
 
 			const generateResponse = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 				command: 'generate',
