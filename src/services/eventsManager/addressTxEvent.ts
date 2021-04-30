@@ -41,7 +41,7 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 		} catch (error) {
 			await cloudLog(error)
 
-			throw error
+			return
 		}
 	}))
 

@@ -6,15 +6,17 @@ import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
 
-type ListSinceBlockResponse = Array<{
-	txid: string;
-	hex: string;
-	address: string;
-	category: string;
-	confirmations: number
-	label: string;
-	blockhash: string;
-}>;
+type ListSinceBlockResponse = {
+	transactions: Array<{
+		txid: string;
+		hex: string;
+		address: string;
+		category: string;
+		confirmations: number
+		label: string;
+		blockhash: string;
+	}>;
+}
 
 export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {	
 	const result = await redis.pipeline()
@@ -29,10 +31,10 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	const txsSinceBlock = await rpc.listSinceBlock(lastBlockHash, undefined, true, false) as ListSinceBlockResponse
 
-	const cloudMetricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.length])
+	const cloudMetricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
 	await cloudLog(txsSinceBlock)
 
-	const transactions = txsSinceBlock.filter(tx => 
+	const transactions = txsSinceBlock.transactions.filter(tx => 
 		tx.label === 'set' && 
 		tx.confirmations > 0 && 
 		(tx.category === 'receive' || tx.category === 'send')
@@ -62,7 +64,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		} catch (error) {
 			await cloudLog(error)
 
-			throw error
+			return
 		}
 	}))
 
