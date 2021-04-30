@@ -9,6 +9,7 @@ import { cloudPut } from './services/cloudLogger/cloudPut'
 import { redis } from './redis';
 import reverse from 'lodash/reverse';
 import { cloudLog } from './services/cloudLogger/cloudLog';
+import pick from 'lodash/pick';
 
 const jobs = ['bitcoind', 'cloudLogger', 'webhookManager', 'internalApi', 'externalApi']
 
@@ -18,7 +19,20 @@ if (cluster.isMaster) {
 	
 		for (const job of jobs) {
 			const env: any = {
-				...process.env,
+				...pick(process.env, [
+					"NODE_ENV", 
+					"NODE_INDEX", 
+					"STAGE", 
+					"NETWORK", 
+					"WEBSOCKET_URL", 
+					"SET_QUEUE_URL", 
+					"UNSET_QUEUE_URL", 
+					"ERROR_QUEUE_URL", 
+					"LOG_GROUP_NAME", 
+					"DYNAMODB_TABLE", 
+					"RPC_USER", 
+					"RPC_PASSWORD"
+				]),
 				JOB: job
 			}
 	

@@ -8,11 +8,6 @@ import { eventbridge } from '../eventbridge'
 import { documentClient } from '../dynamodb'
 
 beforeAll(async (done) => {
-	await axios.post(process.env.INSTANCE_URL! + 'redis', {
-		command: 'flushall',
-		args: []
-	})
-
 	const redisOldTestData = await documentClient.query({
 		TableName: process.env.DYNAMODB_TABLE!,
 		KeyConditionExpression: 'pk = :pk',
@@ -35,34 +30,6 @@ beforeAll(async (done) => {
 
 	done()
 })
-
-afterAll(async (done) => {
-	await wait(2 * 60 * 1000)
-
-	const redisLogData = await documentClient.query({
-		TableName: process.env.DYNAMODB_TABLE!,
-		KeyConditionExpression: 'pk = :pk',
-		ExpressionAttributeValues: {
-			':pk': 'BitcoinNodeLogData'
-		}
-	}).promise()
-
-	logger.info({ redisLogData })
-
-	if (redisLogData.Items) {
-		for (const item of redisLogData.Items) {
-			await documentClient.delete({
-				TableName: process.env.DYNAMODB_TABLE!,
-				Key: {
-					pk: item.pk,
-					sk: item.sk
-				}
-			}).promise()
-		}
-	}
-
-	done()
-}, 5 * 60 * 1000)
 
 it('tests webhooks with url', async () => {
 	jest.useRealTimers()

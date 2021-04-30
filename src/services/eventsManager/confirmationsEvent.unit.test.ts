@@ -18,14 +18,14 @@ it('posts event on address transaction confirmation', async () => {
 	
 	await redis.lpush('blockHashCache', [].fill('test', 0, 20))
 	
-	rpc.listSinceBlock.mockResolvedValue([{
+	rpc.listSinceBlock.mockResolvedValue({ transactions: [{
 		txid: 'test',
 		address: 'test',
 		category: 'send',
 		label: 'set',
 		blockhash: 'test',
 		confirmations: 1
-	}])
+	}]})
 
 	await redis.hset('test', 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
 
@@ -40,7 +40,7 @@ it('posts events on  valid address transaction confirmation and skips invalid', 
 
 	await redis.lpush('blockHashCache', [].fill('test', 0, 20))
 	
-	rpc.listSinceBlock.mockResolvedValue([{
+	rpc.listSinceBlock.mockResolvedValue({ transactions: [{
 		txid: 'test',
 		address: 'test1',
 		category: 'send',
@@ -74,7 +74,7 @@ it('posts events on  valid address transaction confirmation and skips invalid', 
 		category: 'send',
 		label: 'set',
 		confirmations: 15
-	}])
+	}]})
 
 	rpc.getRawTransaction.mockResolvedValue('test')
 
