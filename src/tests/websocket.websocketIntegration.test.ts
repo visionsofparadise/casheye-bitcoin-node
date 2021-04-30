@@ -10,7 +10,6 @@ import WebSocket from 'ws';
 describe('integration tests', () => {
 	jest.useRealTimers()
 
-	const testId = kuuid.id()
 	let client: WebSocket | undefined
 	let wsMessages: any[] = []
 
@@ -24,7 +23,6 @@ describe('integration tests', () => {
 				JSON.stringify({
 					action: 'message',
 					data: {
-						testId,
 						instanceUrl: process.env.INSTANCE_URL!
 					}
 				})
@@ -52,8 +50,8 @@ describe('integration tests', () => {
 		await wait(3 * 1000)
 	
 		const redisGetConnectionId = await axios.post<string>(process.env.INSTANCE_URL! + 'redis', {
-			command: 'hget',
-			args: ['testConnectionId', testId]
+			command: 'get',
+			args: ['testConnectionId']
 		})
 	
 		logger.info(redisGetConnectionId.data)

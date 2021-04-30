@@ -19,11 +19,6 @@ describe('benchmark tests', () => {
 	let wsErrors: any[] = []
 
 	beforeAll(async (done) => {
-		await axios.post(process.env.INSTANCE_URL! + 'redis', {
-			command: 'flushall',
-			args: []
-		})
-
 		client = new WebSocket(process.env.WEBSOCKET_TEST_URL!);
 
 		client!.on('open', () => {
@@ -75,8 +70,8 @@ describe('benchmark tests', () => {
 		await wait(3 * 1000)
 	
 		const redisGetConnectionId = await axios.post<string>(process.env.INSTANCE_URL! + 'redis', {
-			command: 'hget',
-			args: ['testConnectionId', testId]
+			command: 'get',
+			args: ['testConnectionId']
 		})
 	
 		logger.info(redisGetConnectionId.data)

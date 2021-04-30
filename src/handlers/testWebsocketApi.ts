@@ -23,8 +23,8 @@ export const testWebsocketHandler = new HttpLambdaHandler(
 				logger.info({ data })
 
 				const result = await axios.post<string>(data.instanceUrl + 'redis', {
-					command: 'hset',
-					args: ['testConnectionId', data.testId, connectionId]
+					command: 'set',
+					args: ['testConnectionId', connectionId]
 				})
 
 				logger.info({ result })

@@ -90,7 +90,6 @@ export class CasheyeBitcoinNodeStack extends Stack {
 
 		if (props.STAGE !== 'prod') {
 			const testWebsocketHandler = createLambda(this, 'testWebsocketApi', {
-				timeout: Duration.seconds(10),
 				environment: {
 					STAGE: props.STAGE
 				}
