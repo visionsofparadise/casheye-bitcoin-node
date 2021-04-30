@@ -1,6 +1,5 @@
 import { HttpLambdaHandler } from 'xkore-lambda-helpers/dist/HttpLambdaHandler';
 import { logger } from '../helpers';
-import { Response, SUCCESS_NO_CONTENT_204 } from 'xkore-lambda-helpers/dist/Response';
 import axios from 'axios';
 
 export const testWebsocketHandler = new HttpLambdaHandler(
@@ -23,10 +22,12 @@ export const testWebsocketHandler = new HttpLambdaHandler(
 
 				logger.info({ data })
 
-				await axios.post<string>(data.instanceUrl + 'redis', {
+				const result = await axios.post<string>(data.instanceUrl + 'redis', {
 					command: 'hset',
 					args: ['testConnectionId', data.testId, connectionId]
 				})
+
+				logger.info({ result })
 				
 				break;
 			case '$default':
@@ -35,7 +36,7 @@ export const testWebsocketHandler = new HttpLambdaHandler(
 				break;
 		}
 
-		return new Response(SUCCESS_NO_CONTENT_204);
+		return
 	}
 );
 
