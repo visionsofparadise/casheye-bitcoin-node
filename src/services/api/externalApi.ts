@@ -44,7 +44,7 @@ api.get('/', async (_, res) => res.sendStatus(200));
 	res.sendStatus(204)
 })
 
-!isProd && api.post('/log-group-name', async (_, res) => res.status(204).send(process.env.LOG_GROUP_NAME))
+!isProd && api.get('/log-group-name', async (_, res) => res.status(204).send(process.env.LOG_GROUP_NAME))
 
 api.use(async (error: any, _: any, res: Response, __: any) => {
 	await cloudLog(error)
