@@ -46,11 +46,9 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	await Promise.all(transactions.map(async tx => {
 		try {
-			const rawTx = new Transaction(tx.hex)
-			const payload = {
-				confirmations: tx.confirmations,
-				...rawTx
-			}
+			const getTx = await rpc.getTransaction(tx.txid, true) as { hex: string }
+			const rawTx = new Transaction(getTx.hex)
+			const payload = rawTx
 
 			const data = await redis.hvals(tx.address) as string[]
 			const webhooks = data.map(webhook => decode(webhook))

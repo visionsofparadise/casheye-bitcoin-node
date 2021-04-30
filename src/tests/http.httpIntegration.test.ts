@@ -103,7 +103,7 @@ it('tests webhooks with url', async () => {
 
 	await wait(3 * 1000)
 
-	for (let i = 0; i < 7; i++ ) {
+	for (let i = 0; i < 6; i++ ) {
 		const generateResponse = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 			command: 'generate',
 			args: [1]
@@ -125,7 +125,7 @@ it('tests webhooks with url', async () => {
 	}).promise()
 
 	logger.info(redisTestData)
-	expect(redisTestData.Items!.length).toBe(15)
+	expect(redisTestData.Items!.length).toBe(13)
 
 	await eventbridge.putEvents({
 		Entries: webhooks.map(webhook => ({
