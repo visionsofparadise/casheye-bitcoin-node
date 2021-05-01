@@ -62,13 +62,13 @@ describe('benchmark tests', () => {
 					confirmationsResponseTimes.push(responseTime)
 
 					const splits: number[] = [day(iso8601Time).valueOf(), ...data.splits, requestEndTime]
-					splits.map((split, index) => {
+					const diff = splits.map((split, index) => {
 						if (index + 1 >= splits.length) return 0
 
 						return split - splits[index +  1]
 					})
 
-					confirmationsSplitTimes.push(splits)
+					confirmationsSplitTimes.push(diff)
 				} else if (data.height) {
 					newBlockResponseTimes.push(responseTime)
 				}

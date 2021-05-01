@@ -31,6 +31,7 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 
 	const rawTx = {
 		...new Transaction(tx.hex),
+		requestStartTime,
 		fee: tx.fee,
 		txId
 	}
@@ -43,12 +44,14 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 
 			const webhooks = data.map(webhook => decode(webhook))
 	
-			return webhooks.map(async webhook => {
+			webhooks.map(async webhook => {
 				const pushEvent = async () => events.push({ webhook, payload: rawTx })
 	
 				if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && address.category === 'receive') await pushEvent()
 				if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && address.category === 'send') await pushEvent()
 			})
+
+			return
 		} catch (error) {
 			await cloudLog(error)
 
@@ -56,6 +59,6 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 		}
 	}))
 
-	await postEvents(events, requestStartTime, 'addressTx')
+	await postEvents(events, 'addressTx')
 	await redis.hset('rawTxCache', txId, JSON.stringify(rawTx))
 };

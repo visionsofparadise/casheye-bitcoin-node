@@ -5,13 +5,13 @@ import { rpc, startBitcoind } from './services/bitcoind/bitcoind'
 import { webhookManager } from './services/webhookManager/webhookManager';
 import { api as internalApi } from './services/api/internalApi'
 import { api as externalApi } from './services/api/externalApi'
-import { cloudPut } from './services/cloudLogger/cloudPut'
+// import { cloudPut } from './services/cloudLogger/cloudPut'
 import { redis } from './redis';
 import reverse from 'lodash/reverse';
 import { cloudLog } from './services/cloudLogger/cloudLog';
 import pick from 'lodash/pick';
 
-const jobs = ['bitcoind', 'cloudLogger', 'webhookManager', 'internalApi', 'externalApi']
+const jobs = ['bitcoind',/* 'cloudLogger', */ 'webhookManager', 'internalApi', 'externalApi']
 
 if (cluster.isMaster) {
 	cloudLog(`Master ${process.pid} is running`).then(() => {
@@ -84,7 +84,7 @@ if (cluster.isWorker) {
 		}
 	}
 
-	if (job === 'cloudLogger') cloudPut()
+	// if (job === 'cloudLogger') cloudPut()
 
 	if (job === 'webhookManager') redis.set('webhookManagerState', '1').then(() => webhookManager())
 

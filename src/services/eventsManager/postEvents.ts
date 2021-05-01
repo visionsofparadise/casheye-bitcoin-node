@@ -4,11 +4,11 @@ import { sqs } from "../../sqs";
 import { IWebhook } from "../../types/IWebhook";
 import { apiGatewaySockets } from '../../apiGatewaySockets'
 import { cloudLog } from "../cloudLogger/cloudLog";
-import { cloudMetric } from "../cloudLogger/cloudMetric";
-import day from "dayjs";
+// import { cloudMetric } from "../cloudLogger/cloudMetric";
+// import day from "dayjs";
 
-export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, requestStartTime: string, callerName: string) => {
-	await cloudLog({ events })
+export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, _: string) => {
+	// await cloudLog({ events })
 	const lowPriorityPromises: any[] = []
 	const errors: any[] = []
 
@@ -17,10 +17,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 
 		try {
 			if (webhook.url) {
-				const response = await axios.post(webhook.url, { 
-					...payload,
-					requestStartTime
-				})
+				const response = await axios.post(webhook.url, payload)
 	
 				if (response.status > 299) throw new Error()
 			}
@@ -29,20 +26,17 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 				await apiGatewaySockets
 					.postToConnection({
 						ConnectionId: webhook.connectionId,
-						Data: JSON.stringify({ 
-							...payload,
-							requestStartTime
-						})
+						Data: JSON.stringify(payload)
 					})
 					.promise();
 			}
 
-			const metricPromise = cloudMetric('processingTime', [day().valueOf() - day(requestStartTime).valueOf()], [{
-				name: 'processor',
-				value: callerName
-			}])
+			// const metricPromise = cloudMetric('processingTime', [day().valueOf() - day(payload.requestStartTime).valueOf()], [{
+			// 	name: 'processor',
+			// 	value: callerName
+			// }])
 
-			lowPriorityPromises.push(metricPromise)
+			// lowPriorityPromises.push(metricPromise)
 		} catch (error) {
 			lowPriorityPromises.push(cloudLog(error))
 	
@@ -52,10 +46,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 				url: webhook.url,
 				connectionId: webhook.connectionId,
 				retries: 0,
-				payload: {
-					...payload,
-					requestStartTime
-				}
+				payload
 			}
 		
 			const hash = md5(JSON.stringify(retry))
@@ -68,11 +59,11 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 		}
 	}
 
-	await Promise.all(lowPriorityPromises)
-	await cloudMetric('events', [events.length - errors.length])
+	// await Promise.all(lowPriorityPromises)
+	// await cloudMetric('events', [events.length - errors.length])
 
 	if (errors.length > 0) {
-		await cloudMetric('errors', [errors.length])
+		// await cloudMetric('errors', [errors.length])
 
 		await sqs
 		.sendMessageBatch({
