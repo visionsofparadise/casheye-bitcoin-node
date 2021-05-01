@@ -34,8 +34,8 @@ api.post('/new-block/:blockhash/:timestamp', async (req, res, next) => {
 
 	res.sendStatus(204)
 
-	await newBlockEvent(blockhash, timestamp).catch(next)
 	await confirmationsEvent(blockhash, timestamp).catch(next)
+	await newBlockEvent(blockhash, timestamp).catch(next)
 	await cloudLog(`new block: ${blockhash}`)
 })	
 
