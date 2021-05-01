@@ -66,7 +66,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 			let rawTx = rawTxCache.filter(rawTx => rawTx.txId === tx.txid)[0]
 
 			if (!rawTx) {
-				const getTx = await rpc.getTransaction(tx.txid, true) as { hex: string }
+				const getTx = await rpc.getTransaction(tx.txid, true) as { hex: string; txid: string }
 				rawTx = {
 					...new Transaction(getTx.hex),
 					fee: tx.fee,
@@ -74,6 +74,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 				}
 
 				toCache.concat([rawTx.txId, JSON.stringify(rawTx)])
+				lowPriorityPromises.push(cloudLog('recaching rawTx: ' + getTx.txid ))
 			}
 
 			const payload = {
@@ -96,7 +97,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 			return
 		} catch (error) {
-			errors.push(error)
+			errors.push({ error })
 
 			return
 		}

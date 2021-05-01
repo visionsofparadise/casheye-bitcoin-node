@@ -6,9 +6,12 @@ import { apiGatewaySockets } from '../../apiGatewaySockets'
 import { cloudLog } from "../cloudLogger/cloudLog";
 import { cloudMetric } from "../cloudLogger/cloudMetric";
 import day from "dayjs";
+import { translateLinuxTime } from "../../translateLinuxTime";
 
 export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, callerName: string) => {
 	const errors: any[] = []
+
+	const prePostTime = day().valueOf()
 
 	await Promise.all(events.map(async event => {
 		const { webhook, payload } = event
@@ -29,12 +32,19 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 					.promise();
 			}
 
-			await cloudMetric('processingTime', [day().valueOf() - day(payload.requestStartTime).valueOf()], [{
+			const postPostTime = day().valueOf()
+			const requestStartTime = translateLinuxTime(payload.requestStartTime)
+
+			const processingTime = postPostTime - requestStartTime
+			const preProcessingTime = prePostTime - requestStartTime
+
+			await cloudMetric('processingTime', [processingTime], [{
 				name: 'processor',
 				value: callerName
 			}])
+			await cloudLog({ processingTime, preProcessingTime })
 		} catch (error) {
-			await cloudLog(error)
+			await cloudLog({ error })
 	
 			const retry = {
 				id: webhook.id,
@@ -59,6 +69,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 	await cloudMetric('events', [events.length - errors.length])
 
 	if (errors.length > 0) {
+		await cloudLog({ errors })
 		await cloudMetric('errors', [errors.length])
 
 		await sqs

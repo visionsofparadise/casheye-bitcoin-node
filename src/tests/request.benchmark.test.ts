@@ -5,6 +5,7 @@ import { testAddressGenerator } from '../testAddressGenerator'
 import { eventbridge } from '../eventbridge'
 import WebSocket from 'ws';
 import day from 'dayjs';
+import { translateLinuxTime } from '../translateLinuxTime'
 
 describe('benchmark tests', () => {
 	jest.useRealTimers()
@@ -44,13 +45,10 @@ describe('benchmark tests', () => {
 			logger.info(data)
 
 			if (data.requestStartTime) {
-				const timeSplit = data.requestStartTime.split(',')
-				const nanoSecondsSplit = timeSplit[1].split('+')
-				const milliseconds = Math.floor(parseInt(nanoSecondsSplit[0]) / (1000 * 1000))
-				const iso8601Time = `${timeSplit[0]}.${milliseconds.toString().padStart(3, '0')}+${nanoSecondsSplit[1]}`
+				const iso8601Time = translateLinuxTime(data.requestStartTime)
 				logger.info({ iso8601Time })
 
-				const responseTime = requestEndTime - day(iso8601Time).valueOf()
+				const responseTime = requestEndTime - iso8601Time
 
 				if (data.inputs && !data.confirmations) {
 					addressTxResponseTimes.push(responseTime)
