@@ -15,7 +15,6 @@ describe('benchmark tests', () => {
 
 	let addressTxResponseTimes: any[] = []
 	let confirmationsResponseTimes: any[] = []
-	let confirmationsSplitTimes: any[] = []
 	let newBlockResponseTimes: any[] = []
 	let wsErrors: any[] = []
 
@@ -46,11 +45,8 @@ describe('benchmark tests', () => {
 
 			if (data.requestStartTime) {
 				const timeSplit = data.requestStartTime.split(',')
-				logger.info({ timeSplit })
 				const nanoSecondsSplit = timeSplit[1].split('+')
-				logger.info({ nanoSecondsSplit })
 				const milliseconds = Math.floor(parseInt(nanoSecondsSplit[0]) / (1000 * 1000))
-				logger.info({ milliseconds })
 				const iso8601Time = `${timeSplit[0]}.${milliseconds.toString().padStart(3, '0')}+${nanoSecondsSplit[1]}`
 				logger.info({ iso8601Time })
 
@@ -60,15 +56,6 @@ describe('benchmark tests', () => {
 					addressTxResponseTimes.push(responseTime)
 				} else if (data.inputs && data.confirmations) {
 					confirmationsResponseTimes.push(responseTime)
-
-					const splits: number[] = [day(iso8601Time).valueOf(), ...data.splits, requestEndTime]
-					const diff = splits.map((split, index) => {
-						if (index + 1 >= splits.length) return 0
-
-						return splits[index +  1] - split
-					})
-
-					confirmationsSplitTimes.push(diff)
 				} else if (data.height) {
 					newBlockResponseTimes.push(responseTime)
 				}
@@ -165,8 +152,6 @@ describe('benchmark tests', () => {
 
 		logger.info('confirmation Response Times')
 		logger.info(confirmationsResponseTimes)
-		logger.info('confirmation Split Times')
-		logger.info(confirmationsSplitTimes)
 		logger.info('confirmation Average')
 		logger.info(average(confirmationsResponseTimes))
 
