@@ -21,22 +21,26 @@ api.post('/new-tx/:txid/:timestamp', async (req, res, next) => {
 		.exec()
 	const result = dedupTx[0][1]
 
-	res.sendStatus(204)
-
 	if (!result) {	
-		await addressTxEvent(txid, timestamp).catch(next)
-		await cloudLog(`new transaction: ${txid}`)
+		const addressTxPromise = addressTxEvent(txid, timestamp).catch(next)
+		const logPromise = cloudLog(`new transaction: ${txid}`)
+
+		await Promise.all([addressTxPromise, logPromise]).catch(next)
 	}
+
+	res.sendStatus(204)
 })
 
 api.post('/new-block/:blockhash/:timestamp', async (req, res, next) => {	
 	const { blockhash, timestamp } = req.params
 
-	res.sendStatus(204)
+	const newBlockPromise = newBlockEvent(blockhash, timestamp).catch(next)
+	const confirmationsPromise = confirmationsEvent(blockhash, timestamp).catch(next)
+	const logPromise = cloudLog(`new block: ${blockhash}`)
 
-	await confirmationsEvent(blockhash, timestamp).catch(next)
-	await newBlockEvent(blockhash, timestamp).catch(next)
-	await cloudLog(`new block: ${blockhash}`)
+	await Promise.all([newBlockPromise, confirmationsPromise, logPromise]).catch(next)
+
+	res.sendStatus(204)
 })	
 
 api.use(async (error: any, _: any, res: Response, __: any) => {
