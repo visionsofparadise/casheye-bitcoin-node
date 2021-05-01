@@ -15,6 +15,7 @@ describe('benchmark tests', () => {
 
 	let addressTxResponseTimes: any[] = []
 	let confirmationsResponseTimes: any[] = []
+	let confirmationsSplitTimes: any[] = []
 	let newBlockResponseTimes: any[] = []
 	let wsErrors: any[] = []
 
@@ -59,6 +60,15 @@ describe('benchmark tests', () => {
 					addressTxResponseTimes.push(responseTime)
 				} else if (data.inputs && data.confirmations) {
 					confirmationsResponseTimes.push(responseTime)
+
+					const splits: number[] = [day(iso8601Time).valueOf(), ...data.splits, requestEndTime]
+					splits.map((split, index) => {
+						if (index + 1 >= splits.length) return 0
+
+						return split - splits[index +  1]
+					})
+
+					confirmationsSplitTimes.push(splits)
 				} else if (data.height) {
 					newBlockResponseTimes.push(responseTime)
 				}
@@ -155,6 +165,8 @@ describe('benchmark tests', () => {
 
 		logger.info('confirmation Response Times')
 		logger.info(confirmationsResponseTimes)
+		logger.info('confirmation Split Times')
+		logger.info(confirmationsSplitTimes)
 		logger.info('confirmation Average')
 		logger.info(average(confirmationsResponseTimes))
 

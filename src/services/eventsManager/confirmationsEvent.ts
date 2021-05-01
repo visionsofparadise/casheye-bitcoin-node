@@ -5,6 +5,7 @@ import { redis } from '../../redis';
 import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
+import day from 'dayjs'
 
 type ListSinceBlockResponse = {
 	transactions: Array<{
@@ -21,6 +22,8 @@ type ListSinceBlockResponse = {
 }
 
 export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {	
+	const splitA = day().valueOf()
+
 	const result = await redis.pipeline()
 		.lpush('blockHashCache', blockHash)
 		.lindex('blockHashCache', 19)
@@ -33,6 +36,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 	if (!lastBlockHash) return
 
 	const txsSinceBlockPromise = rpc.listSinceBlock(lastBlockHash, undefined, true, false) as Promise<ListSinceBlockResponse>
+
+	const splitB = day().valueOf()
 
 	const rawTxCache: any[] = result[3][1].map((data: string) => JSON.parse(data))
 
@@ -57,6 +62,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	const webhookData = await webhookDataPipeline.exec()
 
+	const splitC = day().valueOf()
+
 	const events: Parameters<typeof postEvents>[0] = []
 	const errors: any[] = []
 	const toCache: string[] = []
@@ -76,8 +83,11 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 				toCache.concat([rawTx.txId, JSON.stringify(rawTx)])
 			}
 
+			const splitD = day().valueOf()
+
 			const payload = {
 				confirmations: tx.confirmations,
+				splits: [splitA, splitB, splitC, splitD],
 				...rawTx
 			}
 
