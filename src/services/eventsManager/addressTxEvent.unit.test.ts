@@ -21,7 +21,8 @@ it('posts event on recieving address and inboundTx webhook', async () => {
 		details: [{
 			address: 'test',
 			category: 'receive',
-			label: 'set'
+			label: 'set',
+			amount: 1
 		}]
 	})
 
@@ -42,7 +43,8 @@ it('posts event on send address and outboundTx webhook', async () => {
 		details: [{
 			address: 'test',
 			category: 'send',
-			label: 'set'
+			label: 'set',
+			amount: 1
 		}]
 	})
 
@@ -63,11 +65,13 @@ it('posts both events for anyTx', async () => {
 		details: [{
 			address: 'test',
 			category: 'send',
-			label: 'set'
+			label: 'set',
+			amount: 1
 		}, {
 			address: 'test',
 			category: 'receive',
-			label: 'set'
+			label: 'set',
+			amount: 1
 		}]
 	})
 
@@ -88,15 +92,18 @@ it('posts multiple events on valid addresses and webhooks and skips invalid ones
 		details: [{
 			address: 'test1',
 			category: 'receive',
-			label: 'set'
+			label: 'set',
+			amount: 1
 		}, {
 			address: 'test2',
 			category: 'send',
-			label: 'set'
+			label: 'set',
+			amount: 1
 		}, {
 			address: 'test3',
 			category: 'invalid',
-			label: 'unset'
+			label: 'unset',
+			amount: 1
 		}]
 	})
 

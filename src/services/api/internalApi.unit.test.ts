@@ -15,8 +15,12 @@ jest.mock('ioredis', () => require('ioredis-mock/jest'));
 jest.mock('../eventsManager/addressTxEvent', () => ({
 	addressTxEvent: jest.fn().mockResolvedValue('success')
 }))
-jest.mock('../eventsManager/confirmationsEvent')
-jest.mock('../eventsManager/newBlockEvent')
+jest.mock('../eventsManager/confirmationsEvent', () => ({
+	confirmationsEvent: jest.fn().mockResolvedValue('success')
+}))
+jest.mock('../eventsManager/newBlockEvent', () => ({
+	newBlockEvent: jest.fn().mockResolvedValue('success')
+}))
 
 beforeAll(() => {
 	redis.flushall()

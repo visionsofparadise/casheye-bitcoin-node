@@ -11,6 +11,9 @@ jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
 jest.mock('../../cloudwatch', () => ({
 	cloudwatchLogs: {
+		createLogStream: jest.fn().mockReturnValue({
+			promise: jest.fn().mockResolvedValue('success')
+		}),
 		putLogEvents: jest.fn().mockReturnValue({
 			promise: jest.fn().mockResolvedValue('success')
 		})

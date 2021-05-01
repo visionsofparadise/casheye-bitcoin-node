@@ -15,19 +15,27 @@ beforeEach(async () => redis.flushall())
 it('posts event on address transaction confirmation', async () => {
 	jest.clearAllMocks()
 	jest.useRealTimers()
+
+	const array: string[] = Array(20)
 	
-	await redis.lpush('blockHashCache', [].fill('test', 0, 20))
-	
-	rpc.listSinceBlock.mockResolvedValue({ transactions: [{
+	await redis.lpush('blockHashCache', array.fill('test', 0, 20))
+
+	const transactions = [{
 		txid: 'test',
 		address: 'test',
 		category: 'send',
 		label: 'set',
 		blockhash: 'test',
-		confirmations: 1
-	}]})
+		confirmations: 1,
+		amount: 1
+	}]
+	
+	rpc.listSinceBlock.mockResolvedValue({ transactions })
 
-	await redis.hset('test', 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
+	for (const transaction of transactions) {
+		await redis.hset('rawTxCache', transaction.txid, JSON.stringify(transaction))
+		await redis.hset(transaction.address, 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
+	}
 
 	await confirmationsEvent(kuuid.id(), day().toISOString())
 
@@ -38,51 +46,62 @@ it('posts events on  valid address transaction confirmation and skips invalid', 
 	jest.clearAllMocks()
 	jest.useRealTimers()
 
-	await redis.lpush('blockHashCache', [].fill('test', 0, 20))
+	const array: string[] = Array(20)
 	
-	rpc.listSinceBlock.mockResolvedValue({ transactions: [{
+	await redis.lpush('blockHashCache', array.fill('test', 0, 20))
+
+	const transactions = [{
 		txid: 'test',
 		address: 'test1',
 		category: 'send',
 		label: 'set',
-		confirmations: 1
+		confirmations: 1,
+		amount: 1
 	},
 	{
 		txid: 'test',
 		address: 'test2',
 		category: 'send',
 		label: 'set',
-		confirmations: 0
+		confirmations: 0,
+		amount: 1
 	},
 	{
 		txid: 'test',
 		address: 'test3',
 		category: 'receive',
 		label: 'set',
-		confirmations: 5
+		confirmations: 5,
+		amount: 1
 	},
 	{
 		txid: 'test',
 		address: 'test4',
 		category: 'invalid',
 		label: 'set',
-		confirmations: 15
+		confirmations: 15,
+		amount: 1
 	},
 	{
 		txid: 'test',
 		address: 'test5',
 		category: 'send',
 		label: 'set',
-		confirmations: 15
-	}]})
+		confirmations: 15,
+		amount: 1
+	}]
+	
+	rpc.listSinceBlock.mockResolvedValue({ transactions })
 
-	rpc.getRawTransaction.mockResolvedValue('test')
+	for (const tx of transactions) {
+		await redis.hset('rawTxCache', tx.txid, JSON.stringify(tx))
+	}
 
-	await redis.hset('test1', 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
-	await redis.hset('test2', 'test', JSON.stringify({ event: 'inboundTx', confirmations: 6 }))
-	await redis.hset('test3', 'test', JSON.stringify({ event: 'inboundTx', confirmations: 6 }))
-	await redis.hset('test4', 'test', JSON.stringify({ event: 'anyTx', confirmations: 6 }))
-	await redis.hset('test5', 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
+	await redis.hset(transactions[0].address, 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
+	await redis.hset(transactions[1].address, 'test', JSON.stringify({ event: 'inboundTx', confirmations: 6 }))
+	await redis.hset(transactions[2].address, 'test', JSON.stringify({ event: 'inboundTx', confirmations: 6 }))
+	await redis.hset(transactions[3].address, 'test', JSON.stringify({ event: 'anyTx', confirmations: 6 }))
+	await redis.hset(transactions[4].address, 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
 
 	await confirmationsEvent(kuuid.id(), day().toISOString())
 

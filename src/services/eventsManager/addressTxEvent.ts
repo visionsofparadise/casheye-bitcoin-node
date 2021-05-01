@@ -8,6 +8,7 @@ import { Transaction } from 'bitcore-lib';
 export interface GetTransactionResponse {
 	confirmations: number;
 	hex: string;
+	fee: number;
 	details: Array<{
 		address: string;
 		category: string;
@@ -28,13 +29,19 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 		(detail.category === 'send' || detail.category === 'receive')
 	)
 
-	const rawTx = new Transaction(tx.hex)
+	const rawTx = {
+		...new Transaction(tx.hex),
+		fee: tx.fee,
+		txId
+	}
 
 	const events: Parameters<typeof postEvents>[0] = []
 
 	await Promise.all(addresses.map(async address => {
 		try {
-			const data = await redis.hvals(address.address) as string[]
+			const results = await redis.pipeline().hvals(address.address).hset('rawTxCache', txId, JSON.stringify(rawTx)).exec()
+
+			const data = results[0][1] as string[]
 
 			const webhooks = data.map(webhook => decode(webhook))
 	

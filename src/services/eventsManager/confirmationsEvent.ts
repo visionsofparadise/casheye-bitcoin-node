@@ -16,24 +16,28 @@ type ListSinceBlockResponse = {
 		confirmations: number
 		label: string;
 		blockhash: string;
+		fee: number;
 	}>;
 }
 
 export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {	
 	const result = await redis.pipeline()
 		.lpush('blockHashCache', blockHash)
-		.ltrim('blockHashCache', 0, 19)
 		.lindex('blockHashCache', 19)
+		.ltrim('blockHashCache', 0, 19)
+		.hvals('rawTxCache')
 		.exec()
 
-	const lastBlockHash = result[2][1]
+	const lastBlockHash: string = result[1][1]
+	const rawTxCache: any[] = result[3][1].map((data: string) => JSON.parse(data))
 
 	if (!lastBlockHash) return
 
 	const txsSinceBlock = await rpc.listSinceBlock(lastBlockHash, undefined, true, false) as ListSinceBlockResponse
 
 	const cloudMetricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
-	await cloudLog(txsSinceBlock)
+	const cloudLogPromise = cloudLog(txsSinceBlock)
+	const lowPriorityPromises = [cloudMetricPromise, cloudLogPromise]
 
 	const transactions = txsSinceBlock.transactions.filter(tx => 
 		tx.label === 'set' && 
@@ -42,35 +46,71 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		tx.amount > 0
 	)
 
-	const events: Parameters<typeof postEvents>[0] = []
+	const webhookDataPipeline = redis.pipeline()
 
-	await Promise.all(transactions.map(async tx => {
+	for (const tx of transactions) {
+		webhookDataPipeline.hvals(tx.address)
+	}
+
+	const webhookData = await webhookDataPipeline.exec()
+
+	const events: Parameters<typeof postEvents>[0] = []
+	const errors: any[] = []
+	const toCache: string[] = []
+
+	await Promise.all(transactions.map(async (tx, index) => {
 		try {
-			const getTx = await rpc.getTransaction(tx.txid, true) as { hex: string }
-			const rawTx = new Transaction(getTx.hex)
+			let rawTx = rawTxCache.filter(rawTx => rawTx.txId === tx.txid)[0]
+
+			if (!rawTx) {
+				const getTx = await rpc.getTransaction(tx.txid, true) as { hex: string }
+				rawTx = {
+					...new Transaction(getTx.hex),
+					fee: tx.fee,
+					txId: tx.txid
+				}
+
+				toCache.concat([rawTx.txId, JSON.stringify(rawTx)])
+			}
+
 			const payload = {
 				confirmations: tx.confirmations,
 				...rawTx
 			}
 
-			const data = await redis.hvals(tx.address) as string[]
-			const webhooks = data.map(webhook => decode(webhook))
+			const data: string[] = webhookData[index][1]
+			const webhooks = data.map((webhook) => decode(webhook))
 
-			return webhooks.map(async webhook => {
-				if (webhook.confirmations && tx.confirmations <= webhook.confirmations) {		
-					const pushEvent = async () => events.push({ webhook, payload })
+			webhooks.map(webhook => {
+				if (webhook.confirmations && tx.confirmations <= webhook.confirmations) {	
+					console.log('got to here f')	
+					const pushEvent = () => events.push({ webhook, payload })
 
-					if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && tx.category === 'receive') await pushEvent()
-					if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && tx.category === 'send') await pushEvent()
+					if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && tx.category === 'receive') pushEvent()
+					if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && tx.category === 'send') pushEvent()
 				}
 			})
+
+			return
 		} catch (error) {
-			await cloudLog(error)
+			errors.push(error)
 
 			return
 		}
 	}))
 
 	await postEvents(events, requestStartTime, 'confirmations')
-	await Promise.resolve(cloudMetricPromise)
+
+	const logErrorsPromise = cloudLog({ errors })
+
+	const txIds = transactions.map(tx => tx.txid)
+	const expiredRawTxs = rawTxCache.filter(tx => !txIds.includes(tx.txId))
+	const expiredRawTxIds = expiredRawTxs.map(tx => tx.txid)
+
+	const cachePipelinePromise = redis.pipeline()
+		.hdel('rawTxCache', ...expiredRawTxIds)
+		.hset('rawTxCache', ...toCache)
+		.exec()
+
+	await Promise.all<any>([...lowPriorityPromises, logErrorsPromise, cachePipelinePromise])
 };
