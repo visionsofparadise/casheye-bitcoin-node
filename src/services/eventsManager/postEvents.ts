@@ -8,7 +8,6 @@ import { cloudMetric } from "../cloudLogger/cloudMetric";
 import day from "dayjs";
 
 export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, callerName: string) => {
-	const lowPriorityPromises: any[] = []
 	const errors: any[] = []
 
 	for (const event of events) {
@@ -30,14 +29,12 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 					.promise();
 			}
 
-			const metricPromise = cloudMetric('processingTime', [day().valueOf() - day(payload.requestStartTime).valueOf()], [{
+			await cloudMetric('processingTime', [day().valueOf() - day(payload.requestStartTime).valueOf()], [{
 				name: 'processor',
 				value: callerName
 			}])
-
-			lowPriorityPromises.push(metricPromise)
 		} catch (error) {
-			lowPriorityPromises.push(cloudLog(error))
+			await cloudLog(error)
 	
 			const retry = {
 				id: webhook.id,
@@ -58,7 +55,6 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 		}
 	}
 
-	await Promise.all(lowPriorityPromises)
 	await cloudLog({ events })
 	await cloudMetric('events', [events.length - errors.length])
 

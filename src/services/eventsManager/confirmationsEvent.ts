@@ -32,15 +32,12 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	if (!lastBlockHash) return
 
-	const txsSinceBlockPromise = rpc.listSinceBlock(lastBlockHash, undefined, true, false) as Promise<ListSinceBlockResponse>
+	const txsSinceBlock = await rpc.listSinceBlock(lastBlockHash, undefined, true, false) as ListSinceBlockResponse
 
 	const rawTxCache: any[] = result[3][1].map((data: string) => JSON.parse(data))
 
-	const txsSinceBlock = await txsSinceBlockPromise
-
-	const cloudMetricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
-	const cloudLogPromise = cloudLog(txsSinceBlock)
-	const lowPriorityPromises = [cloudMetricPromise, cloudLogPromise]
+	await cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
+	await cloudLog(txsSinceBlock)
 
 	const transactions = txsSinceBlock.transactions.filter(tx => 
 		tx.label === 'set' && 
@@ -64,6 +61,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 	await Promise.all(transactions.map(async (tx, index) => {
 		try {
 			let rawTx = rawTxCache.filter(rawTx => rawTx.txId === tx.txid)[0]
+
+			if (rawTx) await cloudLog('cached rawTx used')
 
 			if (!rawTx) {
 				const getTx = await rpc.getTransaction(tx.txid, true) as { hex: string }
@@ -103,17 +102,14 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 	}))
 
 	await postEvents(events, 'confirmations')
-
-	const logErrorsPromise = cloudLog({ errors })
+	await cloudLog({ errors })
 
 	const txIds = transactions.map(tx => tx.txid)
 	const expiredRawTxs = rawTxCache.filter(tx => !txIds.includes(tx.txId))
 	const expiredRawTxIds = expiredRawTxs.map(tx => tx.txid)
 
-	const cachePipelinePromise = redis.pipeline()
+	await redis.pipeline()
 		.hdel('rawTxCache', ...expiredRawTxIds)
 		.hset('rawTxCache', ...toCache)
 		.exec()
-
-	await Promise.all<any>([...lowPriorityPromises, logErrorsPromise, cachePipelinePromise])
 };
