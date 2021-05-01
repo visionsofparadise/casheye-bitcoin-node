@@ -1,4 +1,5 @@
-import { chunk } from 'lodash'
+import chunk from 'lodash/chunk'
+import reverse from 'lodash/reverse'
 import { cloudwatch, cloudwatchLogs } from '../../cloudwatch'
 import { logger, wait } from '../../helpers'
 import { redis } from '../../redis'
@@ -30,7 +31,7 @@ export const cloudPut = async (): Promise<any> => {
 			await cloudwatchLogs.putLogEvents({
 				logGroupName: process.env.LOG_GROUP_NAME!,
 				logStreamName,
-				logEvents: logEntries.map(([message, timestamp]) => ({
+				logEvents: reverse(logEntries).map(([message, timestamp]) => ({
 					message,
 					timestamp: parseInt(timestamp)
 				}))
@@ -50,7 +51,7 @@ export const cloudPut = async (): Promise<any> => {
 
 				await cloudwatch.putMetricData({
 					Namespace: namespace,
-					MetricData: metricEntries.map(([metricData, timestamp]) => {
+					MetricData: reverse(metricEntries).map(([metricData, timestamp]) => {
 						const { values, dimensions } = JSON.parse(metricData)
 
 						return {
