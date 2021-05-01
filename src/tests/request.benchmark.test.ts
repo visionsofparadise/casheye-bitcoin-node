@@ -65,7 +65,7 @@ describe('benchmark tests', () => {
 					const diff = splits.map((split, index) => {
 						if (index + 1 >= splits.length) return 0
 
-						return split - splits[index +  1]
+						return splits[index +  1] - split
 					})
 
 					confirmationsSplitTimes.push(diff)
