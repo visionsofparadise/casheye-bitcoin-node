@@ -12,7 +12,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 	const lowPriorityPromises: any[] = []
 	const errors: any[] = []
 
-	await Promise.all(events.map(async event => {
+	for (const event of events) {
 		const { webhook, payload } = event
 
 		try {
@@ -66,7 +66,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 				hash
 			})
 		}
-	}))
+	}
 
 	await Promise.all(lowPriorityPromises)
 	await cloudMetric('events', [events.length - errors.length])
