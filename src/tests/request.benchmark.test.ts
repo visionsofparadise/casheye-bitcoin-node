@@ -39,6 +39,7 @@ describe('benchmark tests', () => {
 		});
 
 		client!.on("message", async (json: string) => {
+			const requestEndTime = day().valueOf()
 			const data  = JSON.parse(json)
 			logger.info(data)
 
@@ -52,7 +53,7 @@ describe('benchmark tests', () => {
 				const iso8601Time = `${timeSplit[0]}.${milliseconds.toString().padStart(3, '0')}+${nanoSecondsSplit[1]}`
 				logger.info({ iso8601Time })
 
-				const responseTime = day().valueOf() - day(iso8601Time).valueOf()
+				const responseTime = requestEndTime - day(iso8601Time).valueOf()
 
 				if (data.inputs && !data.confirmations) {
 					addressTxResponseTimes.push(responseTime)

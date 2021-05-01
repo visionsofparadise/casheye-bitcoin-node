@@ -24,10 +24,8 @@ api.post('/new-tx/:txid/:timestamp', async (req, res, next) => {
 	res.sendStatus(204)
 
 	if (!result) {	
-		const addressTxPromise = addressTxEvent(txid, timestamp).catch(next)
-		const logPromise = cloudLog(`new transaction: ${txid}`)
-
-		await Promise.all([addressTxPromise, logPromise]).catch(next)
+		await addressTxEvent(txid, timestamp).catch(next)
+		await cloudLog(`new transaction: ${txid}`)
 	}
 })
 
@@ -38,9 +36,10 @@ api.post('/new-block/:blockhash/:timestamp', async (req, res, next) => {
 
 	const newBlockPromise = newBlockEvent(blockhash, timestamp).catch(next)
 	const confirmationsPromise = confirmationsEvent(blockhash, timestamp).catch(next)
-	const logPromise = cloudLog(`new block: ${blockhash}`)
 
-	await Promise.all([newBlockPromise, confirmationsPromise, logPromise]).catch(next)
+	await Promise.all([newBlockPromise, confirmationsPromise]).catch(next)
+
+	await cloudLog(`new block: ${blockhash}`)
 })	
 
 api.use(async (error: any, _: any, res: Response, __: any) => {

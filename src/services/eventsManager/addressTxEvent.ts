@@ -39,9 +39,7 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 
 	await Promise.all(addresses.map(async address => {
 		try {
-			const results = await redis.pipeline().hvals(address.address).hset('rawTxCache', txId, JSON.stringify(rawTx)).exec()
-
-			const data = results[0][1] as string[]
+			const data: string[] = await redis.hvals(address.address)
 
 			const webhooks = data.map(webhook => decode(webhook))
 	
@@ -59,4 +57,5 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 	}))
 
 	await postEvents(events, requestStartTime, 'addressTx')
+	await redis.hset('rawTxCache', txId, JSON.stringify(rawTx))
 };

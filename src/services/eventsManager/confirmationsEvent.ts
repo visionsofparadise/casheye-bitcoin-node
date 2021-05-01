@@ -29,11 +29,14 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		.exec()
 
 	const lastBlockHash: string = result[1][1]
-	const rawTxCache: any[] = result[3][1].map((data: string) => JSON.parse(data))
 
 	if (!lastBlockHash) return
 
-	const txsSinceBlock = await rpc.listSinceBlock(lastBlockHash, undefined, true, false) as ListSinceBlockResponse
+	const txsSinceBlockPromise = rpc.listSinceBlock(lastBlockHash, undefined, true, false) as Promise<ListSinceBlockResponse>
+
+	const rawTxCache: any[] = result[3][1].map((data: string) => JSON.parse(data))
+
+	const txsSinceBlock = await txsSinceBlockPromise
 
 	const cloudMetricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
 	const cloudLogPromise = cloudLog(txsSinceBlock)
