@@ -45,8 +45,6 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 	const txsSinceBlock = await txsSinceBlockPromise
 
 	const metricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
-	const logPromise = cloudLog(txsSinceBlock)
-	const lowPriorityPromises = [metricPromise, logPromise]
 
 	const transactions = txsSinceBlock.transactions.filter(tx => 
 		tx.label === 'set' && 
@@ -54,6 +52,9 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		(tx.category === 'receive' || tx.category === 'send') &&
 		tx.amount > 0
 	)
+
+	const logPromise = cloudLog({ transactions })
+	const lowPriorityPromises = [metricPromise, logPromise]
 
 	const splitC = day().valueOf() - startTime
 
@@ -112,12 +113,14 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 			return
 		}
 	}))
+
+	const splitE = day().valueOf() - startTime
 	
 	const callerName = 'confirmations'
 
 	await postEvents(events, callerName)
 
-	const splitsLogPromise = cloudLog({ callerName, splitA, splitB, splitC, splitD })
+	const splitsLogPromise = cloudLog({ callerName, splitA, splitB, splitC, splitD, splitE })
 	const errorLogPromise = cloudLog({ errors })
 
 	const txIds = transactions.map(tx => tx.txid)
