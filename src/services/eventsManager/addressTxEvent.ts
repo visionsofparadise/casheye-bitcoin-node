@@ -31,7 +31,7 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 
 	const rawTx = {
 		...new Transaction(tx.hex),
-		fee: -tx.fee * (10 ** 8),
+		fee: Math.round(-tx.fee * (10 ** 8)),
 		txId
 	}
 

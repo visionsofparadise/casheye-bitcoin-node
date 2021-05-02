@@ -24,7 +24,8 @@ type ListSinceBlockResponse = {
 
 export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {	
 	const startTime = translateLinuxTime(requestStartTime)
-	const splitA = day().valueOf() - startTime
+	const splitATime = day().valueOf()
+	const splitA = splitATime - startTime
 
 	const result = await redis.pipeline()
 		.lpush('blockHashCache', blockHash)
@@ -37,15 +38,18 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	if (!lastBlockHash) return
 
-	const splitB = day().valueOf() - splitA
+	const splitBTime = day().valueOf()
+	const splitB = splitBTime - splitATime
 
 	const txsSinceBlockPromise = rpc.listSinceBlock(lastBlockHash, undefined, true, false) as Promise<ListSinceBlockResponse>
 
 	const rawTxCache: any[] = result[3][1].map((data: string) => JSON.parse(data))
-	const splitC = day().valueOf() - splitB
+	const splitCTime = day().valueOf()
+	const splitC = splitCTime - splitBTime
 
 	const txsSinceBlock = await txsSinceBlockPromise
-	const splitD = day().valueOf() - splitC
+	const splitDTime = day().valueOf()
+	const splitD = splitDTime - splitCTime
 
 	const metricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
 
@@ -55,12 +59,14 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		(tx.category === 'receive' || tx.category === 'send') &&
 		tx.amount > 0
 	)
-	const splitE = day().valueOf() - splitD
+	const splitETime = day().valueOf()
+	const splitE = splitETime - splitDTime
 
 	const logPromise = cloudLog({ transactions })
 	const lowPriorityPromises = [metricPromise, logPromise]
 
-	const splitF = day().valueOf() - splitE
+	const splitFTime = day().valueOf()
+	const splitF = splitFTime - splitETime
 
 	const webhookDataPipeline = redis.pipeline()
 
@@ -70,7 +76,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	const webhookData = await webhookDataPipeline.exec()
 
-	const splitG = day().valueOf() - splitF
+	const splitGTime = day().valueOf() 
+	const splitG = splitGTime - splitFTime
 
 	const events: Parameters<typeof postEvents>[0] = []
 	const errors: any[] = []
@@ -118,7 +125,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		}
 	}))
 
-	const splitH = day().valueOf() - splitG
+	const splitHTime = day().valueOf() 
+	const splitH = splitHTime - splitGTime
 	
 	const callerName = 'confirmations'
 
