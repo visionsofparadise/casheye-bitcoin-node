@@ -22,7 +22,7 @@ api.post('/new-tx/:txid/:timestamp', async (req, res, next) => {
 	const dedupKey = `dedup-${txid}`
 	const data = await redis.multi()
 		.get(dedupKey)
-		.set(dedupKey, '1', 'EX', 10)
+		.set(dedupKey, '1', 'EX', 30 * 60)
 		.exec()
 
 	const result = data[0][1]

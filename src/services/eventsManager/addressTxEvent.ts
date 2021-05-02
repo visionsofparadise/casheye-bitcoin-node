@@ -21,7 +21,7 @@ export interface GetTransactionResponse {
 export const addressTxEvent = async (txId: string, requestStartTime: string) => {
 	const tx = (await rpc.getTransaction(txId, true)) as GetTransactionResponse;
 
-	if (!tx || tx.confirmations !== 0) return 
+	if (!tx || tx.confirmations > 1) return 
 
 	const addresses = tx.details.filter(detail => 
 		detail.label === 'set' && 
