@@ -126,8 +126,6 @@ describe('benchmark tests', () => {
 		
 			logger.info(bitcoinSend.data)
 
-			await wait(500)
-
 			const generateResponse = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 				command: 'generate',
 				args: [1]
