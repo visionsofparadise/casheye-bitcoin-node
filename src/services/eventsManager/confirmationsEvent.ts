@@ -5,6 +5,8 @@ import { redis } from '../../redis';
 import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
+import { translateLinuxTime } from '../../translateLinuxTime';
+import day from 'dayjs'
 
 type ListSinceBlockResponse = {
 	transactions: Array<{
@@ -32,7 +34,11 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	if (!lastBlockHash) return
 
+	const startTime = translateLinuxTime(requestStartTime)
+	const splitA = day().valueOf() - startTime
+
 	const txsSinceBlockPromise = rpc.listSinceBlock(lastBlockHash, undefined, true, false) as Promise<ListSinceBlockResponse>
+	const splitB = day().valueOf() - startTime
 
 	const rawTxCache: any[] = result[3][1].map((data: string) => JSON.parse(data))
 
@@ -49,6 +55,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		tx.amount > 0
 	)
 
+	const splitC = day().valueOf() - startTime
+
 	const webhookDataPipeline = redis.pipeline()
 
 	for (const tx of transactions) {
@@ -56,6 +64,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 	}
 
 	const webhookData = await webhookDataPipeline.exec()
+
+	const splitD = day().valueOf() - startTime
 
 	const events: Parameters<typeof postEvents>[0] = []
 	const errors: any[] = []
@@ -102,9 +112,12 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 			return
 		}
 	}))
+	
+	const callerName = 'confirmations'
 
-	await postEvents(events, 'confirmations')
+	await postEvents(events, callerName)
 
+	const splitsLogPromise = cloudLog({ callerName, splitA, splitB, splitC, splitD })
 	const errorLogPromise = cloudLog({ errors })
 
 	const txIds = transactions.map(tx => tx.txid)
@@ -116,5 +129,5 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		.hset('rawTxCache', ...toCache)
 		.exec()
 
-	await Promise.all<any>([...lowPriorityPromises, errorLogPromise, cachePromise])
+	await Promise.all<any>([...lowPriorityPromises, splitsLogPromise, errorLogPromise, cachePromise])
 };

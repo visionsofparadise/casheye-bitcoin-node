@@ -34,8 +34,7 @@ api.post('/new-tx/:txid/:timestamp', async (req, res, next) => {
 		await cloudLog(`new transaction: ${txid}`)
 
 		const calibrationTime2 = day().valueOf() - requestStartTime
-		await cloudLog({ route: 'tx', calibrationTime1 })
-		await cloudLog({ route: 'tx', calibrationTime2 })
+		await cloudLog({ route: 'tx', calibrationTime1, calibrationTime2 })
 	}
 })
 
@@ -54,8 +53,7 @@ api.post('/new-block/:blockhash/:timestamp', async (req, res, next) => {
 	await cloudLog(`new block: ${blockhash}`)
 
 	const calibrationTime2 = day().valueOf() - requestStartTime
-	await cloudLog({ route: 'block', calibrationTime1 })
-	await cloudLog({ route: 'block', calibrationTime2 })
+	await cloudLog({ route: 'block', calibrationTime1, calibrationTime2 })
 })	
 
 api.use(async (error: any, _: any, res: Response, __: any) => {
