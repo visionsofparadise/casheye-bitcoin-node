@@ -2,9 +2,6 @@ import bitcoind from 'bitcoind'
 import { ChildProcess } from 'child_process';
 import { logger } from '../../helpers';
 import Client from 'bitcoin-core';
-import Redis from 'ioredis'
-
-new Redis('127.0.0.1')
  
 const rpcuser = process.env.RPC_USER || 'test';
 const rpcpassword = process.env.RPC_PASSWORD || 'test';
@@ -12,8 +9,8 @@ const rpcpassword = process.env.RPC_PASSWORD || 'test';
 let config: any = {
 	testnet: process.env.NETWORK === 'testnet',
 	regtest: process.env.NETWORK === 'regtest',
-	blocknotify: 'curl -X POST "http://localhost:3000/new-block/%s/$(date -Ins)"',
-	walletnotify: 'curl -X POST "http://localhost:3000/new-tx/%s/$(date -Ins)"',
+	blocknotify: 'redis-cli PUBLISH new-block "%s#$(date -Ins)"',
+	walletnotify: 'redis-cli PUBLISH new-tx "%s#$(date -Ins)"',
 };
 
 if (process.env.STAGE !== 'prod') {

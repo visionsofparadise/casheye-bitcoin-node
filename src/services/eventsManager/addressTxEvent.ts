@@ -1,6 +1,6 @@
 import { rpc } from '../bitcoind/bitcoind'
 import { postEvents } from './postEvents';
-import { redis } from '../../redis';
+import { redis, redisSub } from '../../redis';
 import { decode } from '../webhookManager/webhookEncoder';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { Transaction } from 'bitcore-lib';
@@ -61,3 +61,28 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 	await postEvents(events, 'addressTx')
 	await redis.hset('rawTxCache', txId, JSON.stringify(rawTx))
 };
+
+export const addressTxSubscription = async () => {
+	const subscription = 'new-tx'
+
+	redisSub.subscribe(subscription);
+
+	redisSub.on("message", async (channel, message) => {
+		if (channel === subscription) {
+			const [txId, timestamp] = message.split('#')
+
+			const dedupKey = `dedup-${txId}`
+			const data = await redis.multi()
+				.get(dedupKey)
+				.set(dedupKey, '1', 'EX', 30 * 60)
+				.exec()
+		
+			const result = data[0][1]
+
+			if (!result) {
+				await addressTxEvent(txId, timestamp).catch(cloudLog)
+				await cloudLog(`new transaction: ${txId}`)
+			}
+		}
+	})
+}

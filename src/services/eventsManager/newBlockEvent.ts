@@ -1,8 +1,9 @@
 
-import { redis } from "../../redis"
+import { redis, redisSub } from "../../redis"
 import { postEvents } from "./postEvents"
 import { rpc } from "../bitcoind/bitcoind"
 import { decode } from "../webhookManager/webhookEncoder"
+import { cloudLog } from "../cloudLogger/cloudLog"
 
 export const newBlockEvent = async (blockHash: string, requestStartTime: string) => {
 	const blockPromise = rpc.getBlock(blockHash, 1).catch(() => undefined) as Promise<any>
@@ -21,4 +22,19 @@ export const newBlockEvent = async (blockHash: string, requestStartTime: string)
 	} })), 'newBlock')
 
 	return
+}
+
+export const newBlockSubscription = async () => {
+	const subscription = 'new-block'
+
+	redisSub.subscribe(subscription);
+
+	redisSub.on("message", async (channel, message) => {
+		if (channel === subscription) {
+			const [blockHash, timestamp] = message.split('#')
+
+			await newBlockEvent(blockHash, timestamp).catch(cloudLog)
+			await cloudLog(`new block: ${blockHash}`)
+		}
+	})
 }

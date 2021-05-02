@@ -1,9 +1,9 @@
 import axios from "axios"
+import day from "dayjs"
 import { apiGatewaySockets } from "../../apiGatewaySockets"
 import { sqs } from "../../sqs"
 import { IWebhook } from "../../types/IWebhook"
 import { postEvents } from "./postEvents"
-import day from 'dayjs'
 
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 jest.mock('axios', () => ({
@@ -32,6 +32,10 @@ jest.mock('../../sqs', () => ({
 		})
 	}
 }))
+jest.mock('../cloudLogger/cloudLog')
+jest.mock('../cloudLogger/cloudMetric')
+
+const linuxTime = () => day().toISOString().split('.')[0] + ',100000000+00:00'
 
 it('posts a payload to a url', async () => {
 	jest.clearAllMocks()
@@ -41,11 +45,13 @@ it('posts a payload to a url', async () => {
 			webhook: {
 				url: 'test'
 			} as IWebhook,
-			payload: 'test'
+			payload: {
+				requestStartTime: linuxTime()
+			}
 		}
 	]
 
-	await postEvents(events, day().toISOString(), 'test')
+	await postEvents(events, 'test')
 
 	expect(axios.post).toBeCalledTimes(1)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(0)
@@ -60,11 +66,13 @@ it('posts a payload to a connectionId', async () => {
 			webhook: {
 				connectionId: 'test'
 			} as IWebhook,
-			payload: 'test'
+			payload: {
+				requestStartTime: linuxTime()
+			}
 		}
 	]
 
-	await postEvents(events, day().toISOString(), 'test')
+	await postEvents(events, 'test')
 
 	expect(axios.post).toBeCalledTimes(0)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(1)
@@ -81,11 +89,13 @@ it('adds error axios post to error queue', async () => {
 				userId: 'test',
 				url: 'test'
 			} as IWebhook,
-			payload: 'test'
+			payload: {
+				requestStartTime: linuxTime()
+			}
 		}
 	]
 
-	await postEvents(events, day().toISOString(), 'test')
+	await postEvents(events, 'test')
 
 	expect(axios.post).toBeCalledTimes(1)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(0)
@@ -102,11 +112,13 @@ it('adds error apiGatewaySocket post to error queue', async () => {
 				userId: 'test',
 				connectionId: 'test'
 			} as IWebhook,
-			payload: 'test'
+			payload: {
+				requestStartTime: linuxTime()
+			}
 		}
 	]
 
-	await postEvents(events, day().toISOString(), 'test')
+	await postEvents(events, 'test')
 
 	expect(axios.post).toBeCalledTimes(0)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(1)

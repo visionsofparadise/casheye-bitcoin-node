@@ -1,7 +1,7 @@
 import { rpc } from '../bitcoind/bitcoind';
 import { postEvents } from './postEvents';
 import { decode } from '../webhookManager/webhookEncoder';
-import { redis } from '../../redis';
+import { redis, redisSub } from '../../redis';
 import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
@@ -119,3 +119,18 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	await Promise.all<any>([...lowPriorityPromises, logPromise, metricPromise, errorLogPromise, cachePromise])
 };
+
+export const confirmationsSubscription = async () => {
+	const subscription = 'new-block'
+
+	redisSub.subscribe(subscription);
+
+	redisSub.on("message", async (channel, message) => {
+		if (channel === subscription) {
+			const [blockHash, timestamp] = message.split('#')
+
+			await confirmationsEvent(blockHash, timestamp).catch(cloudLog)
+			await cloudLog(`new block: ${blockHash}`)
+		}
+	})
+}

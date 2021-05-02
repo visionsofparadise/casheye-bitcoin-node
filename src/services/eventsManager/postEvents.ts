@@ -70,15 +70,15 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 		lowPriorityPromises.concat([cloudLog({ errors }), cloudMetric('errors', [errors.length])])
 
 		await sqs
-		.sendMessageBatch({
-			QueueUrl: process.env.ERROR_QUEUE_URL || 'test',
-			Entries: errors.map(({ hash, retry }) => ({
-				Id: hash!,
-				MessageBody: JSON.stringify(retry!)
-			}))
-		})
-		.promise();
+			.sendMessageBatch({
+				QueueUrl: process.env.ERROR_QUEUE_URL || 'test',
+				Entries: errors.map(({ hash, retry }) => ({
+					Id: hash!,
+					MessageBody: JSON.stringify(retry!)
+				}))
+			})
+			.promise();
 	}
 
-	await Promise.all(lowPriorityPromises)
+	await Promise.all<any>(lowPriorityPromises)
 }
