@@ -70,7 +70,7 @@ describe('benchmark tests', () => {
 		}
 	});
 
-	it('benchmarks event response times', async () => {
+	it('benchmarks event response times', async (done) => {
 		expect.assertions(4)
 		await wait(3 * 1000)
 	
@@ -166,6 +166,7 @@ describe('benchmark tests', () => {
 			expect(addressTxResponseTimes.length).toBe(N)
 			expect(confirmationsResponseTimes.length).toBe(N)
 			expect(newBlockResponseTimes.length).toBe(N)
+			done()
 		}, ((7 * N) + 10) * 1000)
 	}, 30 * 60 * 1000)
 })
