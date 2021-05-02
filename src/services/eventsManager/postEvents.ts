@@ -42,7 +42,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 				name: 'processor',
 				value: callerName
 			}])
-			await cloudLog({ processingTime, preProcessingTime })
+			await cloudLog({ callerName, processingTime, preProcessingTime })
 		} catch (error) {
 			await cloudLog({ error })
 	

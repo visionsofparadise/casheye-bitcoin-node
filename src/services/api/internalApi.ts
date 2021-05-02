@@ -20,7 +20,12 @@ api.post('/new-tx/:txid/:timestamp', async (req, res, next) => {
 	const calibrationTime1 = day().valueOf() - requestStartTime
 	
 	const dedupKey = `dedup-${txid}`
-	const result = await redis.set(dedupKey, '1', 'EX', 10, 'GET')
+	const data = await redis.multi()
+		.get(dedupKey)
+		.set(dedupKey, '1', 'EX', 10)
+		.exec()
+
+	const result = data[0][1]
 
 	res.sendStatus(204)
 
