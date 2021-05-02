@@ -1,5 +1,4 @@
 import express, { Response } from 'express';
-import bodyParser from 'body-parser';
 import { redis } from '../../redis';
 import { addressTxEvent } from '../eventsManager/addressTxEvent';
 import { confirmationsEvent } from '../eventsManager/confirmationsEvent';
@@ -10,8 +9,6 @@ import { translateLinuxTime } from '../../translateLinuxTime'
 import day from 'dayjs'
 
 const api = express();
-
-api.use(bodyParser.json());
 
 api.post('/new-tx/:txid/:timestamp', async (req, res, next) => {	
 	const { txid, timestamp } = req.params

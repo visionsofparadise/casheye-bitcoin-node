@@ -23,6 +23,9 @@ type ListSinceBlockResponse = {
 }
 
 export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {	
+	const startTime = translateLinuxTime(requestStartTime)
+	const splitA = day().valueOf() - startTime
+
 	const result = await redis.pipeline()
 		.lpush('blockHashCache', blockHash)
 		.lindex('blockHashCache', 19)
@@ -34,15 +37,15 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	if (!lastBlockHash) return
 
-	const startTime = translateLinuxTime(requestStartTime)
-	const splitA = day().valueOf() - startTime
+	const splitB = day().valueOf() - splitA
 
 	const txsSinceBlockPromise = rpc.listSinceBlock(lastBlockHash, undefined, true, false) as Promise<ListSinceBlockResponse>
-	const splitB = day().valueOf() - startTime
 
 	const rawTxCache: any[] = result[3][1].map((data: string) => JSON.parse(data))
+	const splitC = day().valueOf() - splitB
 
 	const txsSinceBlock = await txsSinceBlockPromise
+	const splitD = day().valueOf() - splitC
 
 	const metricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
 
@@ -52,11 +55,12 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		(tx.category === 'receive' || tx.category === 'send') &&
 		tx.amount > 0
 	)
+	const splitE = day().valueOf() - splitD
 
 	const logPromise = cloudLog({ transactions })
 	const lowPriorityPromises = [metricPromise, logPromise]
 
-	const splitC = day().valueOf() - startTime
+	const splitF = day().valueOf() - splitE
 
 	const webhookDataPipeline = redis.pipeline()
 
@@ -66,7 +70,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	const webhookData = await webhookDataPipeline.exec()
 
-	const splitD = day().valueOf() - startTime
+	const splitG = day().valueOf() - splitF
 
 	const events: Parameters<typeof postEvents>[0] = []
 	const errors: any[] = []
@@ -114,13 +118,13 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		}
 	}))
 
-	const splitE = day().valueOf() - startTime
+	const splitH = day().valueOf() - splitG
 	
 	const callerName = 'confirmations'
 
 	await postEvents(events, callerName)
 
-	const splitsLogPromise = cloudLog({ callerName, splitA, splitB, splitC, splitD, splitE })
+	const splitsLogPromise = cloudLog({ callerName, splitA, splitB, splitC, splitD, splitE, splitF, splitG, splitH })
 	const errorLogPromise = cloudLog({ errors })
 
 	const txIds = transactions.map(tx => tx.txid)
