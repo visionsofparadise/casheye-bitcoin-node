@@ -9,9 +9,8 @@ import day from "dayjs";
 import { translateLinuxTime } from "../../translateLinuxTime";
 
 export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, callerName: string) => {
+	const lowPriorityPromises: Promise<any>[] = []
 	const errors: any[] = []
-
-	const prePostTime = day().valueOf()
 
 	await Promise.all(events.map(async event => {
 		const { webhook, payload } = event
@@ -32,19 +31,19 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 					.promise();
 			}
 
-			const postPostTime = day().valueOf()
+			const now = day().valueOf()
 			const requestStartTime = translateLinuxTime(payload.requestStartTime)
+			const processingTime = now - requestStartTime
 
-			const processingTime = postPostTime - requestStartTime
-			const preProcessingTime = prePostTime - requestStartTime
-
-			await cloudMetric('processingTime', [processingTime], [{
+			const metricPromise = cloudMetric('processingTime', [processingTime], [{
 				name: 'processor',
 				value: callerName
 			}])
-			await cloudLog({ callerName, processingTime, preProcessingTime })
+			const logPromise = cloudLog({ callerName, processingTime })
+
+			lowPriorityPromises.concat([metricPromise, logPromise])
 		} catch (error) {
-			await cloudLog({ error })
+			lowPriorityPromises.push(cloudLog({ error }))
 	
 			const retry = {
 				id: webhook.id,
@@ -65,12 +64,10 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 		}
 	}))
 
-	await cloudLog({ events })
-	await cloudMetric('events', [events.length - errors.length])
+	lowPriorityPromises.concat([cloudLog({ events }), cloudMetric('events', [events.length - errors.length])])
 
 	if (errors.length > 0) {
-		await cloudLog({ errors })
-		await cloudMetric('errors', [errors.length])
+		lowPriorityPromises.concat([cloudLog({ errors }), cloudMetric('errors', [errors.length])])
 
 		await sqs
 		.sendMessageBatch({
@@ -82,4 +79,6 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 		})
 		.promise();
 	}
+
+	await Promise.all(lowPriorityPromises)
 }

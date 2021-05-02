@@ -5,8 +5,6 @@ import { redis } from '../../redis';
 import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
-import { translateLinuxTime } from '../../translateLinuxTime';
-import day from 'dayjs'
 
 type ListSinceBlockResponse = {
 	transactions: Array<{
@@ -22,11 +20,7 @@ type ListSinceBlockResponse = {
 	}>;
 }
 
-export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {	
-	const startTime = translateLinuxTime(requestStartTime)
-	const splitATime = day().valueOf()
-	const splitA = splitATime - startTime
-
+export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {
 	const result = await redis.pipeline()
 		.lpush('blockHashCache', blockHash)
 		.lindex('blockHashCache', 19)
@@ -38,20 +32,11 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	if (!lastBlockHash) return
 
-	const splitBTime = day().valueOf()
-	const splitB = splitBTime - splitATime
-
 	const txsSinceBlockPromise = rpc.listSinceBlock(lastBlockHash, undefined, true, false) as Promise<ListSinceBlockResponse>
 
 	const rawTxCache: any[] = result[3][1].map((data: string) => JSON.parse(data))
-	const splitCTime = day().valueOf()
-	const splitC = splitCTime - splitBTime
 
 	const txsSinceBlock = await txsSinceBlockPromise
-	const splitDTime = day().valueOf()
-	const splitD = splitDTime - splitCTime
-
-	const metricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
 
 	const transactions = txsSinceBlock.transactions.filter(tx => 
 		tx.label === 'set' && 
@@ -59,14 +44,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 		(tx.category === 'receive' || tx.category === 'send') &&
 		tx.amount > 0
 	)
-	const splitETime = day().valueOf()
-	const splitE = splitETime - splitDTime
 
-	const logPromise = cloudLog({ transactions })
-	const lowPriorityPromises = [metricPromise, logPromise]
-
-	const splitFTime = day().valueOf()
-	const splitF = splitFTime - splitETime
+	const lowPriorityPromises: Promise<any>[] = []
 
 	const webhookDataPipeline = redis.pipeline()
 
@@ -75,9 +54,6 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 	}
 
 	const webhookData = await webhookDataPipeline.exec()
-
-	const splitGTime = day().valueOf() 
-	const splitG = splitGTime - splitFTime
 
 	const events: Parameters<typeof postEvents>[0] = []
 	const errors: any[] = []
@@ -123,26 +99,23 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 			return
 		}
-	}))
-
-	const splitHTime = day().valueOf() 
-	const splitH = splitHTime - splitGTime
-	
+	}))	
 	const callerName = 'confirmations'
 
 	await postEvents(events, callerName)
-
-	const splitsLogPromise = cloudLog({ callerName, splitA, splitB, splitC, splitD, splitE, splitF, splitG, splitH })
-	const errorLogPromise = cloudLog({ errors })
 
 	const txIds = transactions.map(tx => tx.txid)
 	const expiredRawTxs = rawTxCache.filter(tx => !txIds.includes(tx.txId))
 	const expiredRawTxIds = expiredRawTxs.map(tx => tx.txid)
 
 	const cachePromise = await redis.pipeline()
-		.hdel('rawTxCache', ...expiredRawTxIds)
-		.hset('rawTxCache', ...toCache)
-		.exec()
+	.hdel('rawTxCache', ...expiredRawTxIds)
+	.hset('rawTxCache', ...toCache)
+	.exec()
 
-	await Promise.all<any>([...lowPriorityPromises, splitsLogPromise, errorLogPromise, cachePromise])
+	const logPromise = cloudLog({ transactions })
+	const metricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
+	const errorLogPromise = cloudLog({ errors })
+
+	await Promise.all<any>([...lowPriorityPromises, logPromise, metricPromise, errorLogPromise, cachePromise])
 };

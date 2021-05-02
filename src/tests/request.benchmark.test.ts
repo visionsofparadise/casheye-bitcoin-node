@@ -167,6 +167,6 @@ describe('benchmark tests', () => {
 			expect(confirmationsResponseTimes.length).toBe(N)
 			expect(newBlockResponseTimes.length).toBe(N)
 			done()
-		}, ((7 * N) + 10) * 1000)
+		}, ((7 * N) + 60) * 1000)
 	}, 30 * 60 * 1000)
 })
