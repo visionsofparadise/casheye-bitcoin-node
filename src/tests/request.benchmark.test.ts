@@ -97,8 +97,15 @@ describe('benchmark tests', () => {
 				Detail: JSON.stringify(newBlockWebhook)
 			}]
 		}).promise()
-	
-		for (let i = 0; i < N; i++ ) {
+
+		let i = 0
+
+		const interval = setInterval(() => {
+			if (i > N) {
+				clearInterval(interval)
+				return
+			}
+
 			const anyTxWebhook = {
 				id: kuuid.id(),
 				userId: kuuid.id(),
@@ -109,55 +116,56 @@ describe('benchmark tests', () => {
 				connectionId: redisGetConnectionId.data
 			}
 		
-			await eventbridge.putEvents({
+			eventbridge.putEvents({
 				Entries: [{
 					Source: 'casheye-' + process.env.STAGE!,
 					DetailType: 'setWebhook',
 					Detail: JSON.stringify(anyTxWebhook)
 				}]
-			}).promise()
-		
-			await wait(3 * 1000)
+			}).promise().then(() => {
+				setTimeout(() => {
+					axios.post(process.env.INSTANCE_URL! + 'rpc', {
+						command: 'sendToAddress',
+						args: [anyTxWebhook.address, "0.0001"]
+					}).then((data) => logger.info(data.data))
+				}, 3 * 1000)
 
-			const bitcoinSend = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
-				command: 'sendToAddress',
-				args: [anyTxWebhook.address, "0.0001"]
+				setTimeout(() => {
+					axios.post(process.env.INSTANCE_URL! + 'rpc', {
+						command: 'generate',
+						args: [1]
+					}).then((data) => {
+						logger.info(data.status)
+						i = i + 1
+					})
+				}, 5 * 1000)
 			})
-		
-			logger.info(bitcoinSend.data)
+		}, 7 * 1000)
 
-			const generateResponse = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
-				command: 'generate',
-				args: [1]
-			})
-		
-			logger.info(generateResponse.status)
-		}
+		setTimeout(() => {
+			logger.info({ wsErrors })
 
-		await wait(3 * 1000)
-
-		logger.info({ wsErrors })
-
-		const average = (data: number[]) => Math.floor(data
-			.reduce((prev, cur) => prev + cur, 0) / data.length)
-
-		logger.info('addressTx Response Times')
-		logger.info(addressTxResponseTimes)
-		logger.info('addressTx Average')
-		logger.info(average(addressTxResponseTimes))
-
-		logger.info('confirmation Response Times')
-		logger.info(confirmationsResponseTimes)
-		logger.info('confirmation Average')
-		logger.info(average(confirmationsResponseTimes))
-
-		logger.info('newBlock Response Times')
-		logger.info(newBlockResponseTimes)
-		logger.info('newBlock Average')
-		logger.info(average(newBlockResponseTimes))
-
-		expect(addressTxResponseTimes.length).toBe(N)
-		expect(confirmationsResponseTimes.length).toBe(N)
-		expect(newBlockResponseTimes.length).toBe(N)
+			const average = (data: number[]) => Math.floor(data
+				.reduce((prev, cur) => prev + cur, 0) / data.length)
+	
+			logger.info('addressTx Response Times')
+			logger.info(addressTxResponseTimes)
+			logger.info('addressTx Average')
+			logger.info(average(addressTxResponseTimes))
+	
+			logger.info('confirmation Response Times')
+			logger.info(confirmationsResponseTimes)
+			logger.info('confirmation Average')
+			logger.info(average(confirmationsResponseTimes))
+	
+			logger.info('newBlock Response Times')
+			logger.info(newBlockResponseTimes)
+			logger.info('newBlock Average')
+			logger.info(average(newBlockResponseTimes))
+	
+			expect(addressTxResponseTimes.length).toBe(N)
+			expect(confirmationsResponseTimes.length).toBe(N)
+			expect(newBlockResponseTimes.length).toBe(N)
+		}, ((7 * N) + 10) * 1000)
 	}, 30 * 60 * 1000)
 })
