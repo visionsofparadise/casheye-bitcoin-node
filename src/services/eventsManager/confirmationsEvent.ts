@@ -89,9 +89,9 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 			}
 
 			const payload = {
+				...rawTx,
 				requestStartTime,
-				confirmations: tx.confirmations,
-				...rawTx
+				confirmations: tx.confirmations
 			}
 
 			const data: string[] = webhookData[index][1]
