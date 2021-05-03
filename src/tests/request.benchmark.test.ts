@@ -57,7 +57,6 @@ describe('benchmark tests', () => {
 					requestSendTime: number 
 				}
 			} = JSON.parse(json)
-			logger.info(data)
 
 			const requestEndTime = day().valueOf()
 
@@ -180,18 +179,12 @@ describe('benchmark tests', () => {
 				}
 			}
 	
-			logger.info('addressTx Response Times')
-			logger.info(addressTxSplits)
 			logger.info('addressTx Average')
 			logger.info(average(addressTxSplits))
 	
-			logger.info('confirmation Response Times')
-			logger.info(confirmationsSplits)
 			logger.info('confirmation Average')
 			logger.info(average(confirmationsSplits))
 	
-			logger.info('newBlock Response Times')
-			logger.info(newBlockSplits)
 			logger.info('newBlock Average')
 			logger.info(average(newBlockSplits))
 	
