@@ -4,6 +4,7 @@ import { redis, redisSub } from '../../redis';
 import { decode } from '../webhookManager/webhookEncoder';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { Transaction } from 'bitcore-lib';
+import day from 'dayjs';
 
 export interface GetTransactionResponse {
 	confirmations: number;
@@ -19,6 +20,7 @@ export interface GetTransactionResponse {
 }
 
 export const addressTxEvent = async (txId: string, requestStartTime: string) => {
+	const processingStartTime = day().valueOf()
 	const tx = (await rpc.getTransaction(txId, true)) as GetTransactionResponse;
 
 	if (!tx || tx.confirmations > 1) return 
@@ -44,7 +46,7 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 			const webhooks = data.map(webhook => decode(webhook))
 	
 			webhooks.map(async webhook => {
-				const pushEvent = async () => events.push({ webhook, payload: { ...rawTx, requestStartTime } })
+				const pushEvent = async () => events.push({ webhook, payload: { ...rawTx, casheye: { requestStartTime, processingStartTime } } })
 	
 				if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && address.category === 'receive') await pushEvent()
 				if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && address.category === 'send') await pushEvent()

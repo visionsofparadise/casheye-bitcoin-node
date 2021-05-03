@@ -5,6 +5,7 @@ import { redis, redisSub } from '../../redis';
 import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
+import day from 'dayjs'
 
 type ListSinceBlockResponse = {
 	transactions: Array<{
@@ -21,6 +22,7 @@ type ListSinceBlockResponse = {
 }
 
 export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {
+	const processingStartTime = day().valueOf()
 	const result = await redis.pipeline()
 		.lpush('blockHashCache', blockHash)
 		.lindex('blockHashCache', 19)
@@ -61,9 +63,11 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 	await Promise.all(transactions.map(async (tx, index) => {
 		try {
+			let isCached = true
 			let rawTx = rawTxCache.filter(rawTx => rawTx.txId === tx.txid)[0]
 
 			if (!rawTx) {
+				isCached = false
 				const getTx = await rpc.getTransaction(tx.txid, true) as { hex: string; txid: string }
 				rawTx = {
 					...new Transaction(getTx.hex),
@@ -77,8 +81,12 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 
 			const payload = {
 				...rawTx,
-				requestStartTime,
-				confirmations: tx.confirmations
+				confirmations: tx.confirmations,
+				casheye: {
+					requestStartTime,
+					processingStartTime,
+					isCached
+				}
 			}
 
 			const data: string[] = webhookData[index][1]

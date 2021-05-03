@@ -7,6 +7,12 @@ import WebSocket from 'ws';
 import day from 'dayjs';
 import { translateLinuxTime } from '../translateLinuxTime'
 
+interface Split {
+	publishSplit: number;
+	processingSplit: number;
+	transitSplit: number;
+}
+
 describe('benchmark tests', () => {
 	jest.useRealTimers()
 
@@ -14,9 +20,9 @@ describe('benchmark tests', () => {
 	const testId = kuuid.id()
 	let client: WebSocket | undefined
 
-	let addressTxResponseTimes: any[] = []
-	let confirmationsResponseTimes: any[] = []
-	let newBlockResponseTimes: any[] = []
+	let addressTxSplits: Split[] = []
+	let confirmationsSplits: Split[] = []
+	let newBlockSplits: Split[] = []
 	let wsErrors: any[] = []
 
 	beforeAll(async (done) => {
@@ -41,21 +47,35 @@ describe('benchmark tests', () => {
 
 		client!.on("message", async (json: string) => {
 			const requestEndTime = day().valueOf()
-			const data  = JSON.parse(json)
+			const data: { 
+				inputs?: any;
+				outputs?: any
+				confirmations?: any
+				height?: any
+				casheye: { 
+					requestStartTime: string; 
+					processingStartTime: number; 
+					requestSendTime: number 
+				}
+			} = JSON.parse(json)
 			logger.info(data)
 
-			if (data.requestStartTime) {
-				const iso8601Time = translateLinuxTime(data.requestStartTime)
-				logger.info({ iso8601Time })
+			if (data.casheye.requestStartTime) {
+				const requestStartTimeMs = translateLinuxTime(data.casheye.requestStartTime)
+				logger.info({ requestStartTimeMs })
 
-				const responseTime = requestEndTime - iso8601Time
+				const publishSplit = data.casheye.processingStartTime - requestStartTimeMs
+				const processingSplit = data.casheye.requestSendTime - data.casheye.processingStartTime
+				const transitSplit = requestEndTime - data.casheye.processingStartTime
+
+				const split = { publishSplit, processingSplit, transitSplit }
 
 				if (data.inputs && !data.confirmations) {
-					addressTxResponseTimes.push(responseTime)
+					addressTxSplits.push(split)
 				} else if (data.inputs && data.confirmations) {
-					confirmationsResponseTimes.push(responseTime)
+					confirmationsSplits.push(split)
 				} else if (data.height) {
-					newBlockResponseTimes.push(responseTime)
+					newBlockSplits.push(split)
 				}
 			} else {
 				wsErrors.push(data)
@@ -145,27 +165,38 @@ describe('benchmark tests', () => {
 		setTimeout(() => {
 			logger.info({ wsErrors })
 
-			const average = (data: number[]) => Math.floor(data
-				.reduce((prev, cur) => prev + cur, 0) / data.length)
+			const average = (data: Split[]) => {
+				const splitTotals = data.reduce((prev, cur) => ({
+					publishSplit: prev.publishSplit + cur.publishSplit,
+					processingSplit: prev.processingSplit + cur.processingSplit,
+					transitSplit: prev.transitSplit + cur.transitSplit,
+				}), { publishSplit: 0, processingSplit: 0, transitSplit: 0 })
+
+				return {
+					publishSplitAvg: splitTotals.publishSplit / data.length,
+					processingSplitAvg: splitTotals.processingSplit / data.length,
+					transitSplitAvg: splitTotals.transitSplit / data.length
+				}
+			}
 	
 			logger.info('addressTx Response Times')
-			logger.info(addressTxResponseTimes)
+			logger.info(addressTxSplits)
 			logger.info('addressTx Average')
-			logger.info(average(addressTxResponseTimes))
+			logger.info(average(addressTxSplits))
 	
 			logger.info('confirmation Response Times')
-			logger.info(confirmationsResponseTimes)
+			logger.info(confirmationsSplits)
 			logger.info('confirmation Average')
-			logger.info(average(confirmationsResponseTimes))
+			logger.info(average(confirmationsSplits))
 	
 			logger.info('newBlock Response Times')
-			logger.info(newBlockResponseTimes)
+			logger.info(newBlockSplits)
 			logger.info('newBlock Average')
-			logger.info(average(newBlockResponseTimes))
+			logger.info(average(newBlockSplits))
 	
-			expect(addressTxResponseTimes.length).toBe(N)
-			expect(confirmationsResponseTimes.length).toBe(N)
-			expect(newBlockResponseTimes.length).toBe(N)
+			expect(addressTxSplits.length).toBe(N)
+			expect(confirmationsSplits.length).toBe(N)
+			expect(newBlockSplits.length).toBe(N)
 			done()
 		}, ((7 * N) + 60) * 1000)
 	}, 30 * 60 * 1000)

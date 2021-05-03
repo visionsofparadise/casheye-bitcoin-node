@@ -22,12 +22,12 @@ import { Table } from '@aws-cdk/aws-dynamodb';
 
 const prodEC2Config = {
 	storageSize: 400,
-	instanceSize: InstanceSize.XLARGE
+	instanceSize: InstanceSize.XLARGE,
 }
 
 const testEC2Config = {
 	storageSize: 20,
-	instanceSize: InstanceSize.XLARGE
+	instanceSize: InstanceSize.MEDIUM,
 }
 
 export class CasheyeBitcoinNodeStage extends Stage {	

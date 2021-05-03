@@ -4,8 +4,10 @@ import { postEvents } from "./postEvents"
 import { rpc } from "../bitcoind/bitcoind"
 import { decode } from "../webhookManager/webhookEncoder"
 import { cloudLog } from "../cloudLogger/cloudLog"
+import day from 'dayjs'
 
 export const newBlockEvent = async (blockHash: string, requestStartTime: string) => {
+	const processingStartTime = day().valueOf()
 	const blockPromise = rpc.getBlock(blockHash, 1).catch(() => undefined) as Promise<any>
 
 	const data = await redis.hvals('newBlock') as string[]
@@ -17,8 +19,11 @@ export const newBlockEvent = async (blockHash: string, requestStartTime: string)
 	if (!block) return
 
 	await postEvents(webhooks.map(webhook => ({ webhook, payload: {
-		requestStartTime,
-		...block
+		...block,
+		casheye: {
+			requestStartTime,
+			processingStartTime
+		}
 	} })), 'newBlock')
 
 	return
