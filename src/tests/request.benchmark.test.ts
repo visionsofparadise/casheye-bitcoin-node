@@ -46,7 +46,6 @@ describe('benchmark tests', () => {
 		});
 
 		client!.on("message", async (json: string) => {
-			const requestEndTime = day().valueOf()
 			const data: { 
 				inputs?: any;
 				outputs?: any
@@ -59,6 +58,8 @@ describe('benchmark tests', () => {
 				}
 			} = JSON.parse(json)
 			logger.info(data)
+
+			const requestEndTime = day().valueOf()
 
 			if (data.casheye.requestStartTime) {
 				const publishSplit = data.casheye.processingStartTime - data.casheye.requestStartTime
