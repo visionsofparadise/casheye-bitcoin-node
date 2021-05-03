@@ -53,7 +53,7 @@ describe('benchmark tests', () => {
 				confirmations?: any
 				height?: any
 				casheye: { 
-					requestStartTime: string; 
+					requestStartTime: number; 
 					processingStartTime: number; 
 					requestSendTime: number 
 				}
@@ -61,10 +61,7 @@ describe('benchmark tests', () => {
 			logger.info(data)
 
 			if (data.casheye.requestStartTime) {
-				const requestStartTimeMs = translateLinuxTime(data.casheye.requestStartTime)
-				logger.info({ requestStartTimeMs })
-
-				const publishSplit = data.casheye.processingStartTime - requestStartTimeMs
+				const publishSplit = data.casheye.processingStartTime - data.casheye.requestStartTime
 				const processingSplit = data.casheye.requestSendTime - data.casheye.processingStartTime
 				const transitSplit = requestEndTime - data.casheye.processingStartTime
 

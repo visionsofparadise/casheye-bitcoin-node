@@ -6,9 +6,8 @@ import { apiGatewaySockets } from '../../apiGatewaySockets'
 import { cloudLog } from "../cloudLogger/cloudLog";
 import { cloudMetric } from "../cloudLogger/cloudMetric";
 import day from "dayjs";
-import { translateLinuxTime } from "../../translateLinuxTime";
 
-export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>, callerName: string) => {
+export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>) => {
 	const lowPriorityPromises: Promise<any>[] = []
 	const errors: any[] = []
 
@@ -38,18 +37,6 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 					})
 					.promise();
 			}
-
-			const now = day().valueOf()
-			const requestStartTime = translateLinuxTime(payload.requestStartTime)
-			const processingTime = now - requestStartTime
-
-			const metricPromise = cloudMetric('processingTime', [processingTime], [{
-				name: 'processor',
-				value: callerName
-			}])
-			const logPromise = cloudLog({ callerName, processingTime })
-
-			lowPriorityPromises.concat([metricPromise, logPromise])
 		} catch (error) {
 			lowPriorityPromises.push(cloudLog({ error }))
 	
@@ -59,7 +46,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 				url: webhook.url,
 				connectionId: webhook.connectionId,
 				retries: 0,
-				payload
+				payload: data
 			}
 		
 			const hash = md5(JSON.stringify(retry))

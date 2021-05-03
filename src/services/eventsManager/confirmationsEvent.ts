@@ -6,6 +6,7 @@ import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
 import day from 'dayjs'
+import { translateLinuxTime } from '../../translateLinuxTime';
 
 type ListSinceBlockResponse = {
 	transactions: Array<{
@@ -21,7 +22,7 @@ type ListSinceBlockResponse = {
 	}>;
 }
 
-export const confirmationsEvent = async (blockHash: string, requestStartTime: string) => {
+export const confirmationsEvent = async (blockHash: string, requestStartTime: number) => {
 	const processingStartTime = day().valueOf()
 	const result = await redis.pipeline()
 		.lpush('blockHashCache', blockHash)
@@ -108,9 +109,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: st
 			return
 		}
 	}))	
-	const callerName = 'confirmations'
 
-	await postEvents(events, callerName)
+	await postEvents(events)
 
 	const txIds = transactions.map(tx => tx.txid)
 	const expiredRawTxs = rawTxCache.filter(tx => !txIds.includes(tx.txId))
@@ -137,7 +137,9 @@ export const confirmationsSubscription = async () => {
 		if (channel === subscription) {
 			const [blockHash, timestamp] = message.split('#')
 
-			await confirmationsEvent(blockHash, timestamp).catch(cloudLog)
+			const requestStartTime = translateLinuxTime(timestamp)
+
+			await confirmationsEvent(blockHash, requestStartTime).catch(cloudLog)
 			await cloudLog(`new block: ${blockHash}`)
 		}
 	})

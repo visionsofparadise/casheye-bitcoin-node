@@ -5,6 +5,7 @@ import { decode } from '../webhookManager/webhookEncoder';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { Transaction } from 'bitcore-lib';
 import day from 'dayjs';
+import { translateLinuxTime } from '../../translateLinuxTime';
 
 export interface GetTransactionResponse {
 	confirmations: number;
@@ -19,7 +20,7 @@ export interface GetTransactionResponse {
 	decoded: object
 }
 
-export const addressTxEvent = async (txId: string, requestStartTime: string) => {
+export const addressTxEvent = async (txId: string, requestStartTime: number) => {
 	const processingStartTime = day().valueOf()
 	const tx = (await rpc.getTransaction(txId, true)) as GetTransactionResponse;
 
@@ -60,7 +61,7 @@ export const addressTxEvent = async (txId: string, requestStartTime: string) => 
 		}
 	}))
 
-	await postEvents(events, 'addressTx')
+	await postEvents(events)
 	await redis.hset('rawTxCache', txId, JSON.stringify(rawTx))
 };
 
@@ -82,7 +83,9 @@ export const addressTxSubscription = async () => {
 			const result = data[0][1]
 
 			if (!result) {
-				await addressTxEvent(txId, timestamp).catch(cloudLog)
+				const requestStartTime = translateLinuxTime(timestamp)
+
+				await addressTxEvent(txId, requestStartTime).catch(cloudLog)
 				await cloudLog(`new transaction: ${txId}`)
 			}
 		}

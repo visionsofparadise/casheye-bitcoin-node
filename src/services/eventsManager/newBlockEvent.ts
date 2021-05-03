@@ -5,8 +5,9 @@ import { rpc } from "../bitcoind/bitcoind"
 import { decode } from "../webhookManager/webhookEncoder"
 import { cloudLog } from "../cloudLogger/cloudLog"
 import day from 'dayjs'
+import { translateLinuxTime } from "../../translateLinuxTime"
 
-export const newBlockEvent = async (blockHash: string, requestStartTime: string) => {
+export const newBlockEvent = async (blockHash: string, requestStartTime: number) => {
 	const processingStartTime = day().valueOf()
 	const blockPromise = rpc.getBlock(blockHash, 1).catch(() => undefined) as Promise<any>
 
@@ -24,7 +25,7 @@ export const newBlockEvent = async (blockHash: string, requestStartTime: string)
 			requestStartTime,
 			processingStartTime
 		}
-	} })), 'newBlock')
+	} })))
 
 	return
 }
@@ -38,7 +39,9 @@ export const newBlockSubscription = async () => {
 		if (channel === subscription) {
 			const [blockHash, timestamp] = message.split('#')
 
-			await newBlockEvent(blockHash, timestamp).catch(cloudLog)
+			const requestStartTime = translateLinuxTime(timestamp)
+
+			await newBlockEvent(blockHash, requestStartTime).catch(cloudLog)
 			await cloudLog(`new block: ${blockHash}`)
 		}
 	})
