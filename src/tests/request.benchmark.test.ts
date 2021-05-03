@@ -101,7 +101,7 @@ describe('benchmark tests', () => {
 		let i = 0
 
 		const interval = setInterval(() => {
-			if (i > N) {
+			if (i >= N) {
 				setTimeout(() => clearInterval(interval), 7 * 1000)
 				return
 			}

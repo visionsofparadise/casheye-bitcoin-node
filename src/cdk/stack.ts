@@ -22,12 +22,12 @@ import { Table } from '@aws-cdk/aws-dynamodb';
 
 const prodEC2Config = {
 	storageSize: 400,
-	instanceSize: InstanceSize.LARGE
+	instanceSize: InstanceSize.XLARGE
 }
 
 const testEC2Config = {
 	storageSize: 20,
-	instanceSize: InstanceSize.SMALL
+	instanceSize: InstanceSize.XLARGE
 }
 
 export class CasheyeBitcoinNodeStage extends Stage {	
@@ -180,9 +180,9 @@ pm2 save`
 				vpcSubnets: {
 					subnets: vpc.publicSubnets
 				},
-				instanceType: InstanceType.of(InstanceClass.T2, config.instanceSize),
+				instanceType: InstanceType.of(InstanceClass.A1, config.instanceSize),
 				machineImage: MachineImage.genericLinux({
-					'us-east-1': 'ami-0885b1f6bd170450c'
+					'us-east-1': 'ami-0b75998a97c952252'
 				}),
 				allowAllOutbound: true,
 				blockDevices: [
