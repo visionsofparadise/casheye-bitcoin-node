@@ -10,6 +10,7 @@ interface Split {
 	publishSplit: number;
 	processingSplit: number;
 	transitSplit: number;
+	totalSplit: number;
 }
 
 describe('benchmark tests', () => {
@@ -62,9 +63,10 @@ describe('benchmark tests', () => {
 			if (data.casheye.requestStartTime) {
 				const publishSplit = data.casheye.processingStartTime - data.casheye.requestStartTime
 				const processingSplit = data.casheye.requestSendTime - data.casheye.processingStartTime
-				const transitSplit = requestEndTime - data.casheye.processingStartTime
+				const transitSplit = requestEndTime - data.casheye.requestSendTime
+				const totalSplit = requestEndTime - data.casheye.requestStartTime
 
-				const split = { publishSplit, processingSplit, transitSplit }
+				const split = { publishSplit, processingSplit, transitSplit, totalSplit }
 
 				if (data.inputs && !data.confirmations) {
 					addressTxSplits.push(split)
@@ -166,12 +168,14 @@ describe('benchmark tests', () => {
 					publishSplit: prev.publishSplit + cur.publishSplit,
 					processingSplit: prev.processingSplit + cur.processingSplit,
 					transitSplit: prev.transitSplit + cur.transitSplit,
-				}), { publishSplit: 0, processingSplit: 0, transitSplit: 0 })
+					totalSplit: prev.totalSplit + cur.totalSplit,
+				}), { publishSplit: 0, processingSplit: 0, transitSplit: 0, totalSplit: 0 })
 
 				return {
 					publishSplitAvg: splitTotals.publishSplit / data.length,
 					processingSplitAvg: splitTotals.processingSplit / data.length,
-					transitSplitAvg: splitTotals.transitSplit / data.length
+					transitSplitAvg: splitTotals.transitSplit / data.length,
+					totalSplitAvg: splitTotals.totalSplit / data.length
 				}
 			}
 	
