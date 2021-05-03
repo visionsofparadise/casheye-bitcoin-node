@@ -5,7 +5,6 @@ import { testAddressGenerator } from '../testAddressGenerator'
 import { eventbridge } from '../eventbridge'
 import WebSocket from 'ws';
 import day from 'dayjs';
-import { translateLinuxTime } from '../translateLinuxTime'
 
 interface Split {
 	publishSplit: number;
