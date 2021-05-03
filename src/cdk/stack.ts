@@ -1,6 +1,6 @@
 import { CfnOutput, Construct, Duration, Fn, Stack, StackProps,  Stage, StageProps } from '@aws-cdk/core';
 import { serviceName } from './pipeline';
-import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
+import { BlockDeviceVolume, Instance, InstanceClass, InstanceSize, InstanceType, InterfaceVpcEndpointAwsService, MachineImage, Port, UserData, Vpc } from '@aws-cdk/aws-ec2';
 import { masterOutput } from 'xkore-lambda-helpers/dist/cdk/createOutput'
 import { EventResource } from 'xkore-lambda-helpers/dist/cdk/EventResource'
 import { masterLambda } from 'xkore-lambda-helpers/dist/cdk/masterLambda'
@@ -88,6 +88,11 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			maxAzs: 2
 		});
 
+		const interfaceEndpoint = vpc.addInterfaceEndpoint('ApiGatewayEndpoint', {
+			service: InterfaceVpcEndpointAwsService.APIGATEWAY,
+			privateDnsEnabled: true
+		});
+
 		let websocketTestUrl: string | undefined
 
 		if (props.STAGE !== 'prod') {
@@ -157,7 +162,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			});
 
 			const nodeName = deploymentName + `-node-${i}`
-			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} LOG_GROUP_NAME=${logGroup.logGroupName} DYNAMODB_TABLE=${db.tableName} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_INTERFACE_URL=${Fn.select(0, interfaceEndpoint.vpcEndpointDnsEntries)} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} LOG_GROUP_NAME=${logGroup.logGroupName} DYNAMODB_TABLE=${db.tableName} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 			const shebang = `#!/bin/bash
 sudo add-apt-repository ppa:chris-lea/redis-server
@@ -200,6 +205,13 @@ pm2 save`
 			})
 
 			instance.addToRolePolicy(new PolicyStatement({
+				actions: ['execute-api:*'],
+				resources: [`arn:aws:execute-api:*:*:**/@connections/*`],
+				effect: Effect.ALLOW
+			}))
+
+			interfaceEndpoint.addToPolicy(new PolicyStatement({
+				principals: [instance.grantPrincipal],
 				actions: ['execute-api:*'],
 				resources: [`arn:aws:execute-api:*:*:**/@connections/*`],
 				effect: Effect.ALLOW
