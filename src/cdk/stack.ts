@@ -266,7 +266,7 @@ pm2 save`
 			RuleLambdaHandler: onNodeLogHandler,
 			eventPattern: {
 				detail: {
-					network: props.NETWORK
+					network: [props.NETWORK]
 				}
 			},
 			environment: {
