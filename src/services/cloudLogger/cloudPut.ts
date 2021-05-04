@@ -1,79 +1,68 @@
-import chunk from 'lodash/chunk'
-import { Event } from 'xkore-lambda-helpers/dist/Event';
-import { jsonObjectSchemaGenerator } from 'xkore-lambda-helpers/dist/jsonObjectSchemaGenerator';
+import { cloudwatch, cloudwatchLogs } from '../../cloudwatch'
 import { logger, wait } from '../../helpers'
 import { redis } from '../../redis'
 import { metrics } from './cloudMetric'
-import { eventbridge } from '../../eventbridge'
-
-export interface NodeLogDetail {
-	network: string;
-	node: number;
-	metric?: string;
-	logEntries: string[][];
-}
-
-export const nodeLogEvent = new Event<NodeLogDetail>({
-	source: 'casheye-' + process.env.STAGE!,
-	eventbridge,
-	detailType: 'nodeLog',
-	detailJSONSchema: jsonObjectSchemaGenerator<NodeLogDetail>({
-		description: 'Triggered when a webhook has been set in a node and is actively tracking events',
-		properties: {
-			network: { type: 'string' },
-			node: { type: 'number' },
-			metric: { type: 'string', nullable: true },
-			logEntries: { type: 'array', items: { type: 'array', items: { type: 'string' }} },
-		}
-	})
-});
 
 export const cloudPut = async (): Promise<any> => {
 	logger.info('cloud logger started')
 
-	const network = process.env.NETWORK!
-	const node = parseInt(process.env.NODE_INDEX!)
+	const namespace = `casheye/node/${process.env.STAGE!}/${process.env.NETWORK!}/${process.env.NODE_INDEX!}`
 	
 	while (true) {
-		const events: NodeLogDetail[] = []
-		
+		const now = new Date().getTime()
 		const logDataResult = await redis.multi()
-			.zrange('logs', 0, -1, 'WITHSCORES')
+			.lrange('logs', 0, -1)
 			.del('logs')
 			.exec()
 		const logData = logDataResult[0][1] as string[]
 		
 		if (logData.length > 0) {
-			const logEntries = chunk(logData, 2)
+			const logEvents = logData
+				.map(logData => JSON.parse(logData))
+				.sort((logA, logB) => logA.timestamp - logB.timestamp)
 
-			events.push({
-				node,
-				network,
-				logEntries
-			})
+			const logStreamName = namespace + `/${now}`
+
+			await cloudwatchLogs.createLogStream({
+				logGroupName: process.env.LOG_GROUP_NAME!,
+				logStreamName
+			}).promise()
+			
+			await cloudwatchLogs.putLogEvents({
+				logGroupName: process.env.LOG_GROUP_NAME!,
+				logStreamName,
+				logEvents
+			}).promise()
 		}
 
 		for (const metric of metrics) {
 			const meticKey = `metric-${metric}`
 			const metricDataResult = await redis.multi()
-				.zrange(meticKey, 0, -1, 'WITHSCORES')	
+				.lrange(meticKey, 0, -1)	
 				.del(meticKey)
 				.exec()
 			const metricData = metricDataResult[0][1] as string[]
 
 			if (metricData.length > 0) {
-				const metricEntries = chunk(metricData, 2)
+				const metrics = metricData
+					.map(metricData => JSON.parse(metricData))
+					.sort((metricA, metricB) => metricA.timestamp - metricB.timestamp)
 
-				events.push({
-					node,
-					network,
-					metric,
-					logEntries: metricEntries
-				})
+				await cloudwatch.putMetricData({
+					Namespace: namespace,
+					MetricData: metrics.map(({ values, dimensions, timestamp }) => ({
+							MetricName: metric,
+							Values: values,
+							Timestamp: timestamp,
+							Dimensions: dimensions.map((d: { name: string; value: string }) => ({
+								Name: d.name,
+								Value: d.value
+							}))
+					})),
+
+				}).promise()
 			}
 		}
-
-		await nodeLogEvent.send(events)
 
 		await wait(60 * 1000)
 	}

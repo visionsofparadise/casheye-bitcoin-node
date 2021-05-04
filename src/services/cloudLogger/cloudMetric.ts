@@ -13,7 +13,8 @@ export const metrics = [
 export type Metric = typeof metrics[number]
 
 export const cloudMetric = async (metric: Metric, values: number[], dimensions?: Array<{ name: string; value: string; }>) => 
-	redis.zadd(`metric-${metric}`, new Date().getTime(), JSON.stringify({
+	redis.lpush(`metric-${metric}`, JSON.stringify({
+		timestamp: new Date().getTime(),
 		values,
 		dimensions
 	}))

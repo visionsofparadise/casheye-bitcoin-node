@@ -1,3 +1,4 @@
+import omit from "lodash/omit";
 import { redis } from "../../redis";
 import { cloudMetric, metrics } from "./cloudMetric"
 
@@ -16,9 +17,10 @@ it('saves metric data', async () => {
 
 	await cloudMetric(metrics[0], metricEntry.values, metricEntry.dimensions)
 
-	const metricData = await redis.zrange(`metric-${metrics[0]}`, 0, -1, 'WITHSCORES')
+	const metricData = await redis.lrange(`metric-${metrics[0]}`, 0, -1)
+	const metric = metricData.map(metric => JSON.parse(metric))
 
-	expect(metricData[0]).toStrictEqual(JSON.stringify(metricEntry))
-	expect(parseInt(metricData[1])).toBeGreaterThan(0)
-	expect(metricData.length).toBe(2)
+	expect(omit(metric[0], ['timestamp'])).toStrictEqual(metricEntry)
+	expect(metric[0].timestamp).toBeGreaterThan(0)
+	expect(metricData.length).toBe(1)
 })

@@ -27,19 +27,27 @@ jest.mock('../../cloudwatch', () => ({
 beforeEach(async () => redis.flushall())
 
 it('gets log data and sends to cloudwatch', async () => {
-	expect.assertions(2)
+	expect.assertions(3)
 
 	cloudPut()
 
 	await wait(1000)
 
-	await redis.zadd('logs', 'NX', new Date().getTime(), 'test')
-	await redis.zadd('logs', 'NX', new Date().getTime(), 'test')
-	await redis.zadd('logs', 'NX', new Date().getTime(), 'test')
-	await redis.zadd('logs', 'NX', new Date().getTime(), 'test')
-	await redis.zadd('logs', 'NX', new Date().getTime(), 'test')
+	const timestamp = new Date().getTime()
+
+	const log = JSON.stringify({
+		timestamp,
+		message: 'test'
+	})
+
+	await redis.lpush('logs', log)
+	await redis.lpush('logs', log)
+	await redis.lpush('logs', log)
+	await redis.lpush('logs', log)
+	await redis.lpush('logs', log)
 
 	const metric = JSON.stringify({
+		timestamp,
 		values: ['1'],
 		dimensions: [{
 			name: 'test',
@@ -47,12 +55,13 @@ it('gets log data and sends to cloudwatch', async () => {
 		}]
 	})
 
-	await redis.zadd(`metric-${metrics[0]}`, 'NX', new Date().getTime(), metric)
-	await redis.zadd(`metric-${metrics[0]}`, 'NX', new Date().getTime(), metric)
-	await redis.zadd(`metric-${metrics[0]}`, 'NX', new Date().getTime(), metric)
+	await redis.lpush(`metric-${metrics[0]}`, metric)
+	await redis.lpush(`metric-${metrics[0]}`, metric)
+	await redis.lpush(`metric-${metrics[0]}`, metric)
 
 	await wait(70 * 1000)
 
+	expect(cloudwatchLogs.createLogStream).toBeCalledTimes(1)
 	expect(cloudwatchLogs.putLogEvents).toBeCalledTimes(1)
 	expect(cloudwatch.putMetricData).toBeCalledTimes(1)
 }, 2 * 60 * 1000)
