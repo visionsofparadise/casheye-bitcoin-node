@@ -9,6 +9,7 @@ import { Runtime, Code } from '@aws-cdk/aws-lambda';
 import { Queue } from '@aws-cdk/aws-sqs';
 import { webhookSetEvent, webhookUnsetEvent } from '../services/webhookManager/events';
 import { onSetWebhookHandler } from '../handlers/onSetWebhook';
+import { onNodeLogHandler } from '../handlers/onNodeLog';
 import { onUnsetWebhookHandler } from '../handlers/onUnsetWebhook';
 import { DocumentationItems, Documented } from 'xkore-lambda-helpers/dist/cdk/DocumentationItems';
 import path from 'path'
@@ -136,6 +137,7 @@ export class CasheyeBitcoinNodeStack extends Stack {
 		const errorQueue = Queue.fromQueueArn(this, 'ErrorQueue', Fn.importValue(`casheye-webhook-${props.STAGE}-errorQueueArn`))
 
 		const unsetQueues: Queue[] = []
+		const logGroups: LogGroup[] = []
 
 		const db = Table.fromTableArn(this, 'DynamoDB', Fn.importValue(`casheye-dynamodb-test-arn`));
 
@@ -156,8 +158,10 @@ export class CasheyeBitcoinNodeStack extends Stack {
 				retention: RetentionDays.ONE_WEEK
 			});
 
+			logGroups.push(logGroup)
+
 			const nodeName = deploymentName + `-node-${i}`
-			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} LOG_GROUP_NAME=${logGroup.logGroupName} DYNAMODB_TABLE=${db.tableName} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
+			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} DYNAMODB_TABLE=${db.tableName} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`
 
 			const shebang = `#!/bin/bash
 sudo add-apt-repository ppa:chris-lea/redis-server
@@ -236,7 +240,7 @@ pm2 save`
 		setQueue.grantSendMessages(onSetWebhook)
 		documented.push(onSetWebhook)
 
-		const unsetQueueUrls = unsetQueues.map(queue => queue.queueUrl).join(',')
+		const unsetQueueUrls = unsetQueues.map(queue => queue.queueUrl).join()
 
 		const onUnsetWebhook = createRuleLambda(this, 'onUnsetWebhook', {
 			RuleLambdaHandler: onUnsetWebhookHandler,
@@ -255,6 +259,26 @@ pm2 save`
 			queue.grantSendMessages(onUnsetWebhook)
 		}
 		documented.push(onUnsetWebhook)
+
+		const logGroupNames = logGroups.map(lg => lg.logGroupName).join()
+
+		const onNodeLog = createRuleLambda(this, 'onNodeLog', {
+			RuleLambdaHandler: onNodeLogHandler,
+			eventPattern: {
+				detail: {
+					network: props.NETWORK
+				}
+			},
+			environment: {
+				STAGE: props.STAGE,
+				LOG_GROUP_NAMES: logGroupNames
+			}
+		})
+
+		for (const logGroup of logGroups) {
+			logGroup.grantWrite(onNodeLog)
+		}
+		documented.push(onNodeLog)
 
 		if (props.STAGE !== 'prod') {
 			const instanceUrl = 'http://' + instances[0].instancePublicDnsName + ':4000/'
