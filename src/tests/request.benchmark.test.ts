@@ -4,7 +4,6 @@ import { wait, logger } from '../helpers'
 import { testAddressGenerator } from '../testAddressGenerator'
 import { eventbridge } from '../eventbridge'
 import WebSocket from 'ws';
-import day from 'dayjs';
 
 interface Split {
 	publishSplit: number;
@@ -58,7 +57,7 @@ describe('benchmark tests', () => {
 				}
 			} = JSON.parse(json)
 
-			const requestEndTime = day().valueOf()
+			const requestEndTime = new Date().getTime()
 
 			if (data.casheye.requestStartTime) {
 				const publishSplit = data.casheye.processingStartTime - data.casheye.requestStartTime

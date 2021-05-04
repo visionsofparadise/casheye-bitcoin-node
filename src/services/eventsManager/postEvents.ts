@@ -5,7 +5,6 @@ import { IWebhook } from "../../types/IWebhook";
 import { apiGatewaySockets } from '../../apiGatewaySockets'
 import { cloudLog } from "../cloudLogger/cloudLog";
 import { cloudMetric } from "../cloudLogger/cloudMetric";
-import day from "dayjs";
 
 export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>) => {
 	const lowPriorityPromises: Promise<any>[] = []
@@ -18,7 +17,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 			...payload,
 			casheye: {
 				...payload.casheye,
-				requestSendTime: day().valueOf()
+				requestSendTime: new Date().getTime()
 			}
 		}
 

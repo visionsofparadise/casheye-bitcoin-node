@@ -1,6 +1,5 @@
 import { redis } from "../../redis";
 import { cloudPut } from "./cloudPut";
-import day from 'dayjs'
 import { wait } from "../../helpers";
 import { cloudwatchLogs, cloudwatch } from '../../cloudwatch'
 import { metrics } from "./cloudMetric";
@@ -34,11 +33,11 @@ it('gets log data and sends to cloudwatch', async () => {
 
 	await wait(1000)
 
-	await redis.zadd('logs', 'NX', day().valueOf(), 'test')
-	await redis.zadd('logs', 'NX', day().valueOf(), 'test')
-	await redis.zadd('logs', 'NX', day().valueOf(), 'test')
-	await redis.zadd('logs', 'NX', day().valueOf(), 'test')
-	await redis.zadd('logs', 'NX', day().valueOf(), 'test')
+	await redis.zadd('logs', 'NX', new Date().getTime(), 'test')
+	await redis.zadd('logs', 'NX', new Date().getTime(), 'test')
+	await redis.zadd('logs', 'NX', new Date().getTime(), 'test')
+	await redis.zadd('logs', 'NX', new Date().getTime(), 'test')
+	await redis.zadd('logs', 'NX', new Date().getTime(), 'test')
 
 	const metric = JSON.stringify({
 		values: ['1'],
@@ -48,9 +47,9 @@ it('gets log data and sends to cloudwatch', async () => {
 		}]
 	})
 
-	await redis.zadd(`metric-${metrics[0]}`, 'NX', day().valueOf(), metric)
-	await redis.zadd(`metric-${metrics[0]}`, 'NX', day().valueOf(), metric)
-	await redis.zadd(`metric-${metrics[0]}`, 'NX', day().valueOf(), metric)
+	await redis.zadd(`metric-${metrics[0]}`, 'NX', new Date().getTime(), metric)
+	await redis.zadd(`metric-${metrics[0]}`, 'NX', new Date().getTime(), metric)
+	await redis.zadd(`metric-${metrics[0]}`, 'NX', new Date().getTime(), metric)
 
 	await wait(70 * 1000)
 

@@ -1,5 +1,4 @@
 import axios from "axios"
-import day from "dayjs"
 import { apiGatewaySockets } from "../../apiGatewaySockets"
 import { sqs } from "../../sqs"
 import { IWebhook } from "../../types/IWebhook"
@@ -35,7 +34,7 @@ jest.mock('../../sqs', () => ({
 jest.mock('../cloudLogger/cloudLog')
 jest.mock('../cloudLogger/cloudMetric')
 
-const linuxTime = () => day().toISOString().split('.')[0] + ',100000000+00:00'
+const linuxTime = () => new Date(new Date().getTime()).toISOString().split('.')[0] + ',100000000+00:00'
 
 it('posts a payload to a url', async () => {
 	jest.clearAllMocks()
@@ -51,7 +50,7 @@ it('posts a payload to a url', async () => {
 		}
 	]
 
-	await postEvents(events, 'test')
+	await postEvents(events)
 
 	expect(axios.post).toBeCalledTimes(1)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(0)
@@ -72,7 +71,7 @@ it('posts a payload to a connectionId', async () => {
 		}
 	]
 
-	await postEvents(events, 'test')
+	await postEvents(events)
 
 	expect(axios.post).toBeCalledTimes(0)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(1)
@@ -95,7 +94,7 @@ it('adds error axios post to error queue', async () => {
 		}
 	]
 
-	await postEvents(events, 'test')
+	await postEvents(events)
 
 	expect(axios.post).toBeCalledTimes(1)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(0)
@@ -118,7 +117,7 @@ it('adds error apiGatewaySocket post to error queue', async () => {
 		}
 	]
 
-	await postEvents(events, 'test')
+	await postEvents(events)
 
 	expect(axios.post).toBeCalledTimes(0)
 	expect(apiGatewaySockets.postToConnection).toBeCalledTimes(1)

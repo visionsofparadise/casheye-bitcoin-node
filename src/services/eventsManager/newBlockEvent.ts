@@ -4,11 +4,10 @@ import { postEvents } from "./postEvents"
 import { rpc } from "../bitcoind/bitcoind"
 import { decode } from "../webhookManager/webhookEncoder"
 import { cloudLog } from "../cloudLogger/cloudLog"
-import day from 'dayjs'
 import { translateLinuxTime } from "../../translateLinuxTime"
 
 export const newBlockEvent = async (blockHash: string, requestStartTime: number) => {
-	const processingStartTime = day().valueOf()
+	const processingStartTime = new Date().getTime()
 	const blockPromise = rpc.getBlock(blockHash, 1).catch(() => undefined) as Promise<any>
 
 	const data = await redis.hvals('newBlock') as string[]

@@ -4,7 +4,6 @@ import { cloudwatch, cloudwatchLogs } from '../../cloudwatch'
 import { logger, wait } from '../../helpers'
 import { redis } from '../../redis'
 import { metrics } from './cloudMetric'
-import day from 'dayjs'
 
 export const cloudPut = async (): Promise<any> => {
 	logger.info('cloud logger started')
@@ -12,7 +11,7 @@ export const cloudPut = async (): Promise<any> => {
 	const namespace = `casheye/node/${process.env.STAGE!}/${process.env.NETWORK!}/${process.env.NODE_INDEX!}`
 	
 	while (true) {
-		const now = day().valueOf()
+		const now = new Date().getTime()
 		const logDataResult = await redis.multi()
 			.zrange('logs', 0, -1, 'WITHSCORES')
 			.del('logs')

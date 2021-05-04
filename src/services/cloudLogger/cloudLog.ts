@@ -1,11 +1,10 @@
 import { logger } from '../../helpers'
 import { redis } from '../../redis'
-import day from 'dayjs'
 
 export const cloudLog = async (message: any) => {
 	const formattedMessage = typeof message === 'string' ? message : JSON.stringify(message);
 
-	await redis.zadd('logs', day().valueOf(), formattedMessage)
+	await redis.zadd('logs', new Date().getTime(), formattedMessage)
 
 	logger.info(formattedMessage)
 }

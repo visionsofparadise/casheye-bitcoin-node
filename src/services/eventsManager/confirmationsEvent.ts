@@ -5,7 +5,6 @@ import { redis, redisSub } from '../../redis';
 import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
-import day from 'dayjs'
 import { translateLinuxTime } from '../../translateLinuxTime';
 
 type ListSinceBlockResponse = {
@@ -23,21 +22,18 @@ type ListSinceBlockResponse = {
 }
 
 export const confirmationsEvent = async (blockHash: string, requestStartTime: number) => {
-	const processingStartTime = day().valueOf()
-	const result = await redis.pipeline()
-		.lpush('blockHashCache', blockHash)
-		.lindex('blockHashCache', 19)
-		.ltrim('blockHashCache', 0, 19)
-		.hvals('rawTxCache')
-		.exec()
+	const processingStartTime = new Date().getTime()
 
-	const lastBlockHash: string = result[1][1]
+	const lookback = 20
+	const lastBlockHash = await redis.lindex('blockHashCache', lookback - 2)
 
 	if (!lastBlockHash) return
 
 	const txsSinceBlockPromise = rpc.listSinceBlock(lastBlockHash, undefined, true, false) as Promise<ListSinceBlockResponse>
 
-	const rawTxCache: any[] = result[3][1].map((data: string) => JSON.parse(data))
+	let rawTxCache = await redis.hgetall('rawTxCache')
+
+	for (const key of Object.keys(rawTxCache)) rawTxCache[key] = JSON.parse(rawTxCache[key])
 
 	const txsSinceBlock = await txsSinceBlockPromise
 
@@ -65,7 +61,7 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: nu
 	await Promise.all(transactions.map(async (tx, index) => {
 		try {
 			let isCached = true
-			let rawTx = rawTxCache.filter(rawTx => rawTx.txId === tx.txid)[0]
+			let rawTx: any = rawTxCache[tx.txid] as unknown as ListSinceBlockResponse['transactions']
 
 			if (!rawTx) {
 				isCached = false
@@ -113,12 +109,14 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: nu
 	await postEvents(events)
 
 	const txIds = transactions.map(tx => tx.txid)
-	const expiredRawTxs = rawTxCache.filter(tx => !txIds.includes(tx.txId))
-	const expiredRawTxIds = expiredRawTxs.map(tx => tx.txid)
+	const cacheTxIds = Object.keys(rawTxCache)
+	const expiredRawTxIds = cacheTxIds.filter(id => !txIds.includes(id))
 
 	const cachePromise = await redis.pipeline()
 	.hdel('rawTxCache', ...expiredRawTxIds)
 	.hset('rawTxCache', ...toCache)
+	.lpush('blockHashCache', blockHash)
+	.ltrim('blockHashCache', 0, lookback - 1)
 	.exec()
 
 	const logPromise = cloudLog({ transactions })

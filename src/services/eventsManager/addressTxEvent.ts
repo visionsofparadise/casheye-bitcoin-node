@@ -4,7 +4,6 @@ import { redis, redisSub } from '../../redis';
 import { decode } from '../webhookManager/webhookEncoder';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { Transaction } from 'bitcore-lib';
-import day from 'dayjs';
 import { translateLinuxTime } from '../../translateLinuxTime';
 
 export interface GetTransactionResponse {
@@ -21,7 +20,7 @@ export interface GetTransactionResponse {
 }
 
 export const addressTxEvent = async (txId: string, requestStartTime: number) => {
-	const processingStartTime = day().valueOf()
+	const processingStartTime = new Date().getTime()
 	const tx = (await rpc.getTransaction(txId, true)) as GetTransactionResponse;
 
 	if (!tx || tx.confirmations > 1) return 
