@@ -76,6 +76,7 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 			commands: [
 				'sleep 300s',
 				...testEnv,
+				'npm rm zeromq',
 				'npm rm bitcoind',
 				'npm ci',
 				'npm run httpIntegration',
