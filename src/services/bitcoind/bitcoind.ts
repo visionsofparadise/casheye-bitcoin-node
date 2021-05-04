@@ -6,11 +6,17 @@ import Client from 'bitcoin-core';
 const rpcuser = process.env.RPC_USER || 'test';
 const rpcpassword = process.env.RPC_PASSWORD || 'test';
 
+export const zeromqUrl = "tcp://127.0.0.1:29000"
+
 let config: any = {
 	testnet: process.env.NETWORK === 'testnet',
 	regtest: process.env.NETWORK === 'regtest',
 	blocknotify: 'redis-cli PUBLISH new-block "%s#$(date -Ins)"',
 	walletnotify: 'redis-cli PUBLISH new-tx "%s#$(date -Ins)"',
+	zmqpubrawblock: zeromqUrl,
+	zmqpubrawtx: zeromqUrl,
+	zmqpubhashtx: zeromqUrl,
+	zmqpubhashblock: zeromqUrl
 };
 
 if (process.env.STAGE !== 'prod') {

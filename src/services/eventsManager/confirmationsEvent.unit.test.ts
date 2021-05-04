@@ -33,7 +33,7 @@ it('posts event on address transaction confirmation', async () => {
 
 	for (const transaction of transactions) {
 		await redis.hset('rawTxCache', transaction.txid, JSON.stringify(transaction))
-		await redis.hset(transaction.address, 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
+		await redis.hset(transaction.address, 'test', JSON.stringify({ event: 'addressTxOut', confirmations: 6 }))
 	}
 
 	await confirmationsEvent(kuuid.id(), new Date().getTime())
@@ -96,11 +96,11 @@ it('posts events on  valid address transaction confirmation and skips invalid', 
 		await redis.hset('rawTxCache', tx.txid, JSON.stringify(tx))
 	}
 
-	await redis.hset(transactions[0].address, 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
-	await redis.hset(transactions[1].address, 'test', JSON.stringify({ event: 'inboundTx', confirmations: 6 }))
-	await redis.hset(transactions[2].address, 'test', JSON.stringify({ event: 'inboundTx', confirmations: 6 }))
-	await redis.hset(transactions[3].address, 'test', JSON.stringify({ event: 'anyTx', confirmations: 6 }))
-	await redis.hset(transactions[4].address, 'test', JSON.stringify({ event: 'outboundTx', confirmations: 6 }))
+	await redis.hset(transactions[0].address, 'test', JSON.stringify({ event: 'addressTxOut', confirmations: 6 }))
+	await redis.hset(transactions[1].address, 'test', JSON.stringify({ event: 'addressTxIn', confirmations: 6 }))
+	await redis.hset(transactions[2].address, 'test', JSON.stringify({ event: 'addressTxIn', confirmations: 6 }))
+	await redis.hset(transactions[3].address, 'test', JSON.stringify({ event: 'addressTxAll', confirmations: 6 }))
+	await redis.hset(transactions[4].address, 'test', JSON.stringify({ event: 'addressTxOut', confirmations: 6 }))
 
 	await confirmationsEvent(kuuid.id(), new Date().getTime())
 

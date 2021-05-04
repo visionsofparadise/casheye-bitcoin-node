@@ -48,8 +48,8 @@ export const addressTxEvent = async (txId: string, requestStartTime: number) => 
 			webhooks.map(async webhook => {
 				const pushEvent = async () => events.push({ webhook, payload: { ...rawTx, casheye: { requestStartTime, processingStartTime } } })
 	
-				if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && address.category === 'receive') await pushEvent()
-				if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && address.category === 'send') await pushEvent()
+				if ((webhook.event === 'addressTxIn' || webhook.event === 'addressTxAll') && address.category === 'receive') await pushEvent()
+				if ((webhook.event === 'addressTxOut' || webhook.event === 'addressTxAll') && address.category === 'send') await pushEvent()
 			})
 
 			return
@@ -67,8 +67,6 @@ export const addressTxEvent = async (txId: string, requestStartTime: number) => 
 export const addressTxSubscription = async () => {
 	const subscription = 'new-tx'
 
-	redisSub.subscribe(subscription);
-
 	redisSub.on("message", async (channel, message) => {
 		if (channel === subscription) {
 			const [txId, timestamp] = message.split('#')
@@ -85,8 +83,9 @@ export const addressTxSubscription = async () => {
 				const requestStartTime = translateLinuxTime(timestamp)
 
 				await addressTxEvent(txId, requestStartTime).catch(cloudLog)
-				await cloudLog(`new transaction: ${txId}`)
 			}
 		}
 	})
+
+	redisSub.subscribe(subscription);
 }

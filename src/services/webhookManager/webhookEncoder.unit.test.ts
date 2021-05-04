@@ -6,7 +6,7 @@ it('encodes then decodes webhook to get original back', () => {
 	const webhook = {
 		id: 'test',
 		address: 'test',
-		event: 'anyTx',
+		event: 'addressTxAll',
 		currency: 'BTC'
 	} as IWebhook
 

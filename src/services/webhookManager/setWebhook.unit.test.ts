@@ -30,7 +30,7 @@ it('adds a newBlock webhook', async () => {
 	expect(rpc.importAddress).toBeCalledTimes(0)
 })
 
-it('adds a new inboundTx webhook', async () => {
+it('adds a new addressTxIn webhook', async () => {
 	jest.clearAllMocks()
 	expect.assertions(2)
 
@@ -41,7 +41,7 @@ it('adds a new inboundTx webhook', async () => {
 			id: 'test',
 			userId: 'test',
 			address: 'test',
-			event: 'inboundTx'
+			event: 'addressTxIn'
 		})
 	})
 
@@ -49,11 +49,11 @@ it('adds a new inboundTx webhook', async () => {
 
 	const webhook = decode(data)
 
-	expect(webhook.event).toBe('inboundTx')
+	expect(webhook.event).toBe('addressTxIn')
 	expect(rpc.importAddress).toBeCalledTimes(1)
 })
 
-it('adds a new outboundTx webhook', async () => {
+it('adds a new addressTxOut webhook', async () => {
 	jest.clearAllMocks()
 	expect.assertions(2)
 
@@ -64,7 +64,7 @@ it('adds a new outboundTx webhook', async () => {
 			id: 'test',
 			userId: 'test',
 			address: 'test',
-			event: 'outboundTx'
+			event: 'addressTxOut'
 		})
 	})
 
@@ -72,11 +72,11 @@ it('adds a new outboundTx webhook', async () => {
 
 	const webhook = decode(data)
 
-	expect(webhook.event).toBe('outboundTx')
+	expect(webhook.event).toBe('addressTxOut')
 	expect(rpc.importAddress).toBeCalledTimes(1)
 })
 
-it('adds a new anyTx webhook', async () => {
+it('adds a new addressTxAll webhook', async () => {
 	jest.clearAllMocks()
 	expect.assertions(2)	
 
@@ -87,7 +87,7 @@ it('adds a new anyTx webhook', async () => {
 			id: 'test',
 			userId: 'test',
 			address: 'test',
-			event: 'anyTx'
+			event: 'addressTxAll'
 		})
 	})
 
@@ -95,6 +95,6 @@ it('adds a new anyTx webhook', async () => {
 
 	const webhook = decode(data)
 
-	expect(webhook.event).toBe('anyTx')
+	expect(webhook.event).toBe('addressTxAll')
 	expect(rpc.importAddress).toBeCalledTimes(1)
 })

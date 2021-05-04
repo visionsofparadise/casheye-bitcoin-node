@@ -123,13 +123,13 @@ describe('benchmark tests', () => {
 				return
 			}
 
-			const anyTxWebhook = {
+			const addressTxAllWebhook = {
 				id: kuuid.id(),
 				userId: kuuid.id(),
 				address: testAddressGenerator(),
 				currency: 'BTC',
 				confirmations: 1,
-				event: 'anyTx',
+				event: 'addressTxAll',
 				connectionId: redisGetConnectionId.data
 			}
 		
@@ -137,13 +137,13 @@ describe('benchmark tests', () => {
 				Entries: [{
 					Source: 'casheye-' + process.env.STAGE!,
 					DetailType: 'setWebhook',
-					Detail: JSON.stringify(anyTxWebhook)
+					Detail: JSON.stringify(addressTxAllWebhook)
 				}]
 			}).promise().then(() => {
 				setTimeout(() => {
 					axios.post(process.env.INSTANCE_URL! + 'rpc', {
 						command: 'sendToAddress',
-						args: [anyTxWebhook.address, "0.0001"]
+						args: [addressTxAllWebhook.address, "0.0001"]
 					}).then((data) => logger.info(data.data))
 				}, 3 * 1000)
 

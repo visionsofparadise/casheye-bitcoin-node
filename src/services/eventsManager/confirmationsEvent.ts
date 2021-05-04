@@ -1,11 +1,11 @@
-import { rpc } from '../bitcoind/bitcoind';
+import { rpc, zeromqUrl } from '../bitcoind/bitcoind';
 import { postEvents } from './postEvents';
 import { decode } from '../webhookManager/webhookEncoder';
-import { redis, redisSub } from '../../redis';
+import { redis } from '../../redis';
 import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
-import { translateLinuxTime } from '../../translateLinuxTime';
+import zmq from 'zeromq'
 
 type ListSinceBlockResponse = {
 	transactions: Array<{
@@ -93,8 +93,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: nu
 				if (webhook.confirmations && tx.confirmations <= webhook.confirmations) {	
 					const pushEvent = () => events.push({ webhook, payload })
 
-					if ((webhook.event === 'inboundTx' || webhook.event === 'anyTx') && tx.category === 'receive') pushEvent()
-					if ((webhook.event === 'outboundTx' || webhook.event === 'anyTx') && tx.category === 'send') pushEvent()
+					if ((webhook.event === 'addressTxIn' || webhook.event === 'addressTxAll') && tx.category === 'receive') pushEvent()
+					if ((webhook.event === 'addressTxOut' || webhook.event === 'addressTxAll') && tx.category === 'send') pushEvent()
 				}
 			})
 
@@ -127,18 +127,16 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: nu
 };
 
 export const confirmationsSubscription = async () => {
-	const subscription = 'new-block'
+	const sub = zmq.socket('sub')
+	sub.connect(zeromqUrl)
 
-	redisSub.subscribe(subscription);
+	const subscription = 'hashblock'
 
-	redisSub.on("message", async (channel, message) => {
-		if (channel === subscription) {
-			const [blockHash, timestamp] = message.split('#')
+	sub.on("message", async (channel, blockHash) => {
+		const requestStartTime = new Date().getTime()
 
-			const requestStartTime = translateLinuxTime(timestamp)
-
-			await confirmationsEvent(blockHash, requestStartTime).catch(cloudLog)
-			await cloudLog(`new block: ${blockHash}`)
-		}
+		if (channel.toString() === subscription) await confirmationsEvent(blockHash.toString(), requestStartTime).catch(cloudLog)
 	})
+
+	sub.subscribe(subscription);
 }

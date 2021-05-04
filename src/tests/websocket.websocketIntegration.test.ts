@@ -57,13 +57,13 @@ describe('integration tests', () => {
 		logger.info(redisGetConnectionId.data)
 		expect(redisGetConnectionId.status).toBe(200)
 
-		const anyTxWebhook = {
+		const addressTxAllWebhook = {
 			id: kuuid.id(),
 			userId: kuuid.id(),
 			address: testAddressGenerator(),
 			currency: 'BTC',
 			confirmations: 6,
-			event: 'anyTx',
+			event: 'addressTxAll',
 			connectionId: redisGetConnectionId.data
 		}
 	
@@ -75,7 +75,7 @@ describe('integration tests', () => {
 			connectionId: redisGetConnectionId.data
 		}
 	
-		const webhooks = [anyTxWebhook, newBlockWebhook]
+		const webhooks = [addressTxAllWebhook, newBlockWebhook]
 	
 		await eventbridge.putEvents({
 			Entries: webhooks.map(webhook => ({
@@ -90,12 +90,12 @@ describe('integration tests', () => {
 		try {
 			const redisGet = await axios.post<IWebhook>(process.env.INSTANCE_URL! + 'redis', {
 				command: 'hget',
-				args: [anyTxWebhook.address, anyTxWebhook.id]
+				args: [addressTxAllWebhook.address, addressTxAllWebhook.id]
 			})
 		
 			logger.info(redisGet.data)
 			expect(redisGet.status).toBe(200)
-			expect(redisGet.data).toStrictEqual(omit(anyTxWebhook, ['currency']))
+			expect(redisGet.data).toStrictEqual(omit(addressTxAllWebhook, ['currency']))
 		
 			const redisGet1 = await axios.post<IWebhook>(process.env.INSTANCE_URL! + 'redis', {
 				command: 'hget',
@@ -108,7 +108,7 @@ describe('integration tests', () => {
 		
 			const bitcoinGet = await axios.post<{ iswatchonly: boolean; labels: Array<{ name: string; purpose: string; }> }>(process.env.INSTANCE_URL! + 'rpc', {
 				command: 'getAddressInfo',
-				args: [anyTxWebhook.address]
+				args: [addressTxAllWebhook.address]
 			})
 		
 			logger.info(bitcoinGet.data)
@@ -118,7 +118,7 @@ describe('integration tests', () => {
 		
 			const bitcoinSend = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 				command: 'sendToAddress',
-				args: [anyTxWebhook.address, "0.01"]
+				args: [addressTxAllWebhook.address, "0.01"]
 			})
 		
 			logger.info(bitcoinSend.data)
@@ -157,7 +157,7 @@ describe('integration tests', () => {
 		
 			const redisGet2 = await axios.post<null>(process.env.INSTANCE_URL! + 'redis', {
 				command: 'hget',
-				args: [anyTxWebhook.address, anyTxWebhook.id]
+				args: [addressTxAllWebhook.address, addressTxAllWebhook.id]
 			})
 		
 			logger.info(redisGet2.data)
@@ -175,7 +175,7 @@ describe('integration tests', () => {
 		
 			const bitcoinGet2 = await axios.post<{ labels: Array<{ name: string; purpose: string; }> }>(process.env.INSTANCE_URL! + 'rpc', {
 				command: 'getAddressInfo',
-				args: [anyTxWebhook.address]
+				args: [addressTxAllWebhook.address]
 			})
 		
 			logger.info(bitcoinGet2.data)

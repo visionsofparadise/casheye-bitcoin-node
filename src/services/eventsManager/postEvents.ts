@@ -58,8 +58,10 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 		}
 	}))
 
-	lowPriorityPromises.concat([cloudLog({ events }), cloudMetric('events', [events.length - errors.length])])
-
+	if (events.length > 0) {
+		lowPriorityPromises.concat([cloudLog({ events }), cloudMetric('events', [events.length - errors.length])])
+	}
+	
 	if (errors.length > 0) {
 		lowPriorityPromises.concat([cloudLog({ errors }), cloudMetric('errors', [errors.length])])
 

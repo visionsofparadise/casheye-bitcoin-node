@@ -10,7 +10,7 @@ jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
 beforeEach(async () => redis.flushall())
 
-it('posts event on recieving address and inboundTx webhook', async () => {
+it('posts event on recieving address and addressTxIn webhook', async () => {
 	jest.clearAllMocks()
 	
 	rpc.getTransaction.mockResolvedValue({
@@ -25,14 +25,14 @@ it('posts event on recieving address and inboundTx webhook', async () => {
 		}]
 	})
 
-	await redis.hset('test', 'test', JSON.stringify({ event: 'inboundTx' }))
+	await redis.hset('test', 'test', JSON.stringify({ event: 'addressTxIn' }))
 
 	await addressTxEvent('test', new Date().getTime())
 
 	expect(postEvents).toBeCalledTimes(1)
 })
 
-it('posts event on send address and outboundTx webhook', async () => {
+it('posts event on send address and addressTxOut webhook', async () => {
 	jest.clearAllMocks()
 
 	rpc.getTransaction.mockResolvedValue({
@@ -47,14 +47,14 @@ it('posts event on send address and outboundTx webhook', async () => {
 		}]
 	})
 
-	await redis.hset('test', 'test', JSON.stringify({ event: 'outboundTx' }))
+	await redis.hset('test', 'test', JSON.stringify({ event: 'addressTxOut' }))
 
 	await addressTxEvent('test', new Date().getTime())
 
 	expect(postEvents).toBeCalledTimes(1)
 })
 
-it('posts both events for anyTx', async () => {
+it('posts both events for addressTxAll', async () => {
 	jest.clearAllMocks()
 
 	rpc.getTransaction.mockResolvedValue({
@@ -74,7 +74,7 @@ it('posts both events for anyTx', async () => {
 		}]
 	})
 
-	await redis.hset('test', 'test', JSON.stringify({ event: 'anyTx' }))
+	await redis.hset('test', 'test', JSON.stringify({ event: 'addressTxAll' }))
 
 	await addressTxEvent('test', new Date().getTime())
 
@@ -106,17 +106,17 @@ it('posts multiple events on valid addresses and webhooks and skips invalid ones
 		}]
 	})
 
-	await redis.hset('test1', 'test', JSON.stringify({ event: 'inboundTx' }))
-	await redis.hset('test1', 'test', JSON.stringify({ event: 'outboundTx' }))
+	await redis.hset('test1', 'test', JSON.stringify({ event: 'addressTxIn' }))
+	await redis.hset('test1', 'test', JSON.stringify({ event: 'addressTxOut' }))
 	await redis.hset('test1', 'test', JSON.stringify({ event: 'invalid' }))
-	await redis.hset('test1', 'test', JSON.stringify({ event: 'inboundTx' }))
+	await redis.hset('test1', 'test', JSON.stringify({ event: 'addressTxIn' }))
 
-	await redis.hset('test2', 'test', JSON.stringify({ event: 'outboundTx' }))
-	await redis.hset('test2', 'test', JSON.stringify({ event: 'outboundTx' }))
+	await redis.hset('test2', 'test', JSON.stringify({ event: 'addressTxOut' }))
+	await redis.hset('test2', 'test', JSON.stringify({ event: 'addressTxOut' }))
 	await redis.hset('test2', 'test', JSON.stringify({ event: 'invalid' }))
-	await redis.hset('test2', 'test', JSON.stringify({ event: 'anyTx' }))
+	await redis.hset('test2', 'test', JSON.stringify({ event: 'addressTxAll' }))
 
-	await redis.hset('test3', 'test', JSON.stringify({ event: 'inboundTx' }))
+	await redis.hset('test3', 'test', JSON.stringify({ event: 'addressTxIn' }))
 
 	await addressTxEvent('test', new Date().getTime())
 
