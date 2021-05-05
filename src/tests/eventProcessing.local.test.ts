@@ -25,13 +25,13 @@ api.post('/', async (req, res) => {
 const testPort = 3001
 const testUrl = `http://localhost:${testPort}/`
 
-const addressTxAllWebhook = {
+const addressTxWebhook = {
 	id: kuuid.id(),
 	userId: kuuid.id(),
 	address: testAddressGenerator(),
 	currency: 'BTC',
 	confirmations: 6,
-	event: 'addressTxAll',
+	event: 'addressTx',
 	url: testUrl
 }
 
@@ -50,9 +50,9 @@ describe('sets up test url api and webhooks', async () => {
 		server = api.listen(testPort, async () => {
 			console.log(`Server listening on port ${testPort}`)
 
-			await redis.hset(addressTxAllWebhook.address, addressTxAllWebhook.id, encode(addressTxAllWebhook as IWebhook))
+			await redis.hset(addressTxWebhook.address, addressTxWebhook.id, encode(addressTxWebhook as IWebhook))
 			await redis.hset('newBlock', newBlockWebhook.id, encode(newBlockWebhook as IWebhook))
-			await rpc.importAddress(addressTxAllWebhook.address, 'set', false)
+			await rpc.importAddress(addressTxWebhook.address, 'set', false)
 
 			done()
 		})
@@ -61,15 +61,15 @@ describe('sets up test url api and webhooks', async () => {
 	afterAll(async () => {
 		if (server) server.close()
 
-		await rpc.setLabel(addressTxAllWebhook.address, 'unset')
-		await redis.hdel(addressTxAllWebhook.address, addressTxAllWebhook.id)
+		await rpc.setLabel(addressTxWebhook.address, 'unset')
+		await redis.hdel(addressTxWebhook.address, addressTxWebhook.id)
 		await redis.hdel('newBlock', newBlockWebhook.id)
 	})
 
 	it('calls addressTx event', async () => {
 		expect.assertions(1)
 
-		await rpc.sendToAddress(addressTxAllWebhook.address, 0.001)
+		await rpc.sendToAddress(addressTxWebhook.address, 0.001)
 
 		await wait(5 * 1000)
 

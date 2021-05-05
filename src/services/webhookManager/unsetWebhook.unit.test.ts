@@ -83,14 +83,14 @@ it('removes a new addressTxOut webhook', async () => {
 	expect(rpc.setLabel).toBeCalledTimes(1)
 })
 
-it('removes a new addressTxAll webhook', async () => {
+it('removes a new addressTx webhook', async () => {
 	jest.clearAllMocks()
 	expect.assertions(2)
 
 	const JSONWebhook = JSON.stringify({
 		address: 'test',
 		id: 'test',
-		event: 'addressTxAll'
+		event: 'addressTx'
 	})
 
 	rpc.setLabel.mockResolvedValue('test')		
@@ -101,7 +101,7 @@ it('removes a new addressTxAll webhook', async () => {
 		Body: JSON.stringify({
 			id: 'test',
 			address: 'test',
-			event: 'addressTxAll'
+			event: 'addressTx'
 		})
 	})
 

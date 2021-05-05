@@ -7,13 +7,13 @@ import { IWebhook } from '../types/IWebhook'
 import { eventbridge } from '../eventbridge'
 import { documentClient } from '../dynamodb'
 
-const addressTxAllWebhook = {
+const addressTxWebhook = {
 	id: kuuid.id(),
 	userId: kuuid.id(),
 	address: testAddressGenerator(),
 	currency: 'BTC',
 	confirmations: 6,
-	event: 'addressTxAll',
+	event: 'addressTx',
 	url: process.env.TEST_URL! + 'test'
 }
 
@@ -25,7 +25,7 @@ const newBlockWebhook = {
 	url: process.env.TEST_URL! + 'test'
 }
 
-const webhooks = [addressTxAllWebhook, newBlockWebhook]
+const webhooks = [addressTxWebhook, newBlockWebhook]
 
 beforeAll(async (done) => {
 	const redisOldTestData = await documentClient.query({
@@ -68,12 +68,12 @@ it('tests webhooks with url', async () => {
 	try {
 		const redisGet1 = await axios.post<IWebhook>(process.env.INSTANCE_URL! + 'redis', {
 			command: 'hget',
-			args: [addressTxAllWebhook.address, addressTxAllWebhook.id]
+			args: [addressTxWebhook.address, addressTxWebhook.id]
 		})
 	
 		logger.info(redisGet1.data)
 		expect(redisGet1.status).toBe(200)
-		expect(redisGet1.data).toStrictEqual(omit(addressTxAllWebhook, ['currency']))
+		expect(redisGet1.data).toStrictEqual(omit(addressTxWebhook, ['currency']))
 	
 		const redisGet2 = await axios.post<IWebhook>(process.env.INSTANCE_URL! + 'redis', {
 			command: 'hget',
@@ -86,7 +86,7 @@ it('tests webhooks with url', async () => {
 	
 		const bitcoinGet1 = await axios.post<{ iswatchonly: boolean; labels: Array<{ name: string; purpose: string; }> }>(process.env.INSTANCE_URL! + 'rpc', {
 			command: 'getAddressInfo',
-			args: [addressTxAllWebhook.address]
+			args: [addressTxWebhook.address]
 		})
 	
 		logger.info(bitcoinGet1.data)
@@ -96,7 +96,7 @@ it('tests webhooks with url', async () => {
 	
 		const bitcoinSend = await axios.post(process.env.INSTANCE_URL! + 'rpc', {
 			command: 'sendToAddress',
-			args: [addressTxAllWebhook.address, "0.01"]
+			args: [addressTxWebhook.address, "0.01"]
 		})
 	
 		logger.info(bitcoinSend.data)
@@ -143,7 +143,7 @@ it('tests webhooks with url', async () => {
 	
 		const redisGet3 = await axios.post<null>(process.env.INSTANCE_URL! + 'redis', {
 			command: 'hget',
-			args: [addressTxAllWebhook.address, addressTxAllWebhook.id]
+			args: [addressTxWebhook.address, addressTxWebhook.id]
 		})
 	
 		logger.info(redisGet3.data)
@@ -161,7 +161,7 @@ it('tests webhooks with url', async () => {
 	
 		const bitcoinGet2 = await axios.post<{ labels: Array<{ name: string; purpose: string; }> }>(process.env.INSTANCE_URL! + 'rpc', {
 			command: 'getAddressInfo',
-			args: [addressTxAllWebhook.address]
+			args: [addressTxWebhook.address]
 		})
 	
 		logger.info(bitcoinGet2.data)

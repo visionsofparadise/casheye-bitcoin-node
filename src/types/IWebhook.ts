@@ -1,4 +1,4 @@
-export const events = ['addressTxIn', 'addressTxOut', 'addressTxAll', 'newBlock']
+export const events = ['addressTxIn', 'addressTxOut', 'addressTx', 'newBlock']
 export type Event = typeof events[number]
 
 export interface IWebhook {

@@ -99,7 +99,7 @@ it('posts events on  valid address transaction confirmation and skips invalid', 
 	await redis.hset(transactions[0].address, 'test', JSON.stringify({ event: 'addressTxOut', confirmations: 6 }))
 	await redis.hset(transactions[1].address, 'test', JSON.stringify({ event: 'addressTxIn', confirmations: 6 }))
 	await redis.hset(transactions[2].address, 'test', JSON.stringify({ event: 'addressTxIn', confirmations: 6 }))
-	await redis.hset(transactions[3].address, 'test', JSON.stringify({ event: 'addressTxAll', confirmations: 6 }))
+	await redis.hset(transactions[3].address, 'test', JSON.stringify({ event: 'addressTx', confirmations: 6 }))
 	await redis.hset(transactions[4].address, 'test', JSON.stringify({ event: 'addressTxOut', confirmations: 6 }))
 
 	await confirmationsEvent(kuuid.id(), new Date().getTime())

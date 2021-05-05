@@ -76,7 +76,7 @@ it('adds a new addressTxOut webhook', async () => {
 	expect(rpc.importAddress).toBeCalledTimes(1)
 })
 
-it('adds a new addressTxAll webhook', async () => {
+it('adds a new addressTx webhook', async () => {
 	jest.clearAllMocks()
 	expect.assertions(2)	
 
@@ -87,7 +87,7 @@ it('adds a new addressTxAll webhook', async () => {
 			id: 'test',
 			userId: 'test',
 			address: 'test',
-			event: 'addressTxAll'
+			event: 'addressTx'
 		})
 	})
 
@@ -95,6 +95,6 @@ it('adds a new addressTxAll webhook', async () => {
 
 	const webhook = decode(data)
 
-	expect(webhook.event).toBe('addressTxAll')
+	expect(webhook.event).toBe('addressTx')
 	expect(rpc.importAddress).toBeCalledTimes(1)
 })

@@ -54,7 +54,7 @@ it('posts event on send address and addressTxOut webhook', async () => {
 	expect(postEvents).toBeCalledTimes(1)
 })
 
-it('posts both events for addressTxAll', async () => {
+it('posts both events for addressTx', async () => {
 	jest.clearAllMocks()
 
 	rpc.getTransaction.mockResolvedValue({
@@ -74,7 +74,7 @@ it('posts both events for addressTxAll', async () => {
 		}]
 	})
 
-	await redis.hset('test', 'test', JSON.stringify({ event: 'addressTxAll' }))
+	await redis.hset('test', 'test', JSON.stringify({ event: 'addressTx' }))
 
 	await addressTxEvent('test', new Date().getTime())
 
@@ -114,7 +114,7 @@ it('posts multiple events on valid addresses and webhooks and skips invalid ones
 	await redis.hset('test2', 'test', JSON.stringify({ event: 'addressTxOut' }))
 	await redis.hset('test2', 'test', JSON.stringify({ event: 'addressTxOut' }))
 	await redis.hset('test2', 'test', JSON.stringify({ event: 'invalid' }))
-	await redis.hset('test2', 'test', JSON.stringify({ event: 'addressTxAll' }))
+	await redis.hset('test2', 'test', JSON.stringify({ event: 'addressTx' }))
 
 	await redis.hset('test3', 'test', JSON.stringify({ event: 'addressTxIn' }))
 
