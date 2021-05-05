@@ -9,8 +9,6 @@ export const setWebhook = async (msg: SQS.Message): Promise<any> => {
 	const webhook = JSON.parse(msg.Body!) as IWebhook
 	const promises = []
 
-	await cloudLog('setting webhook: ' + webhook.id)	
-
 	if (webhook.event === 'newBlock') {
 		const dbPromise = redis.hset('newBlock', webhook.id, encode(webhook))
 		

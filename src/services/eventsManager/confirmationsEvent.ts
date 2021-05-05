@@ -119,14 +119,15 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: nu
 	.ltrim('blockHashCache', 0, lookback - 1)
 	.exec()
 
-	const logPromise = cloudLog({ transactions })
-	const metricPromise = cloudMetric('txsSinceBlock', [txsSinceBlock.transactions.length])
-	const errorLogPromise = cloudLog({ errors })
+	const metricPromise = cloudMetric('blockTransactionsReturned', [txsSinceBlock.transactions.length])
+	if (errors.length > 0) lowPriorityPromises.push(cloudLog({ errors }))
 
-	await Promise.all<any>([...lowPriorityPromises, logPromise, metricPromise, errorLogPromise, cachePromise])
+	await Promise.all<any>([...lowPriorityPromises, metricPromise, cachePromise])
 };
 
 export const confirmationsSubscription = async () => {
+	await cloudLog('confirmationsSubscription listening...')
+
 	const subscription = 'new-block'
 
 	redisSub.on("message", async (channel, message) => {

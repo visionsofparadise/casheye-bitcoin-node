@@ -45,7 +45,7 @@ api.get('/', async (_, res) => res.sendStatus(200));
 })
 
 api.use(async (error: any, _: any, res: Response, __: any) => {
-	await cloudLog(error)
+	await cloudLog({ error })
 	await cloudMetric('errors', [1])
 	
   res.status(500).send('Server error')

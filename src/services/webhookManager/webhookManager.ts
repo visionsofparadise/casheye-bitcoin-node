@@ -8,7 +8,7 @@ import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
 
 export const webhookManager = async (): Promise<any> => {
-	logger.info('webhook manager started')
+	await cloudLog('webhook manager started')
 
 	let isOn = await redis.get('webhookManagerState') || '1'
 	
@@ -41,7 +41,7 @@ export const webhookManager = async (): Promise<any> => {
 					const messages = setQueueResponse.Messages.filter(msg => msg.Body)
 			
 					const results = await Promise.all(messages.map(async msg => setWebhook(msg).catch(async (error) => {
-						await cloudLog(error)
+						await cloudLog({ error })
 
 						throw error
 					})))
@@ -68,7 +68,7 @@ export const webhookManager = async (): Promise<any> => {
 					const messages = unsetQueueResponse.Messages.filter(msg => msg.Body)
 			
 					const results = await Promise.all(messages.map(async msg => unsetWebhook(msg).catch(async (error) => {
-						await cloudLog(error)
+						await cloudLog({ error })
 
 						throw error
 					})))
@@ -93,7 +93,7 @@ export const webhookManager = async (): Promise<any> => {
 	
 				await Promise.all(promises)
 			} catch (error) {
-				await cloudLog(error)
+				await cloudLog({ error })
 				await cloudMetric('errors', [1])
 			}
 		}

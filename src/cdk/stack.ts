@@ -19,6 +19,8 @@ import { WebSocketApi, WebSocketStage } from '@aws-cdk/aws-apigatewayv2';
 import { LambdaWebSocketIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
 import { LogGroup, RetentionDays } from '@aws-cdk/aws-logs';
 import { Table } from '@aws-cdk/aws-dynamodb';
+import { Metric } from '@aws-cdk/aws-cloudwatch'
+import { metrics } from '../services/cloudLogger/cloudMetric';
 
 const prodEC2Config = {
 	storageSize: 400,
@@ -152,6 +154,13 @@ export class CasheyeBitcoinNodeStack extends Stack {
 			const logGroup = new LogGroup(this, `LogGroup${i}`, {
 				retention: RetentionDays.ONE_WEEK
 			});
+
+			for (const metric of metrics) {
+				new Metric({
+					namespace: `casheye/node/${props.STAGE!}/${props.NETWORK!}/${i!}`,
+					metricName: metric
+				});
+			}
 
 			const nodeName = deploymentName + `-node-${i}`
 			const instanceEnv = `NODE_ENV=production NODE_INDEX=${i} STAGE=${props.STAGE} NETWORK=${props.NETWORK} WEBSOCKET_URL=${websocketTestUrl || Fn.importValue(`casheye-webhook-${props.STAGE}-websocketUrl`)} LOG_GROUP_NAME=${logGroup.logGroupName} SET_QUEUE_URL=${setQueue.queueUrl} UNSET_QUEUE_URL=${unsetQueue.queueUrl} ERROR_QUEUE_URL=${errorQueue.queueUrl} RPC_USER=$RPC_USER RPC_PASSWORD=$RPC_PASSWORD`

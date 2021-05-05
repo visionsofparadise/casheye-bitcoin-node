@@ -8,6 +8,7 @@ import { cloudMetric } from "../cloudLogger/cloudMetric";
 
 export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>) => {
 	const lowPriorityPromises: Promise<any>[] = []
+	const processingTimes: number[] = []
 	const errors: any[] = []
 
 	await Promise.all(events.map(async event => {
@@ -36,6 +37,8 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 					})
 					.promise();
 			}
+
+			processingTimes.push(data.casheye.requestSendTime - data.casheye.requestStartTime)
 		} catch (error) {
 			lowPriorityPromises.push(cloudLog({ error }))
 	
@@ -61,7 +64,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 	if (events.length > 0) {
 		lowPriorityPromises.concat([cloudLog({ events }), cloudMetric('events', [events.length - errors.length])])
 	}
-	
+
 	if (errors.length > 0) {
 		lowPriorityPromises.concat([cloudLog({ errors }), cloudMetric('errors', [errors.length])])
 
@@ -76,5 +79,5 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 			.promise();
 	}
 
-	await Promise.all<any>(lowPriorityPromises)
+	await Promise.all<any>([...lowPriorityPromises, cloudMetric('processingTimes', processingTimes)])
 }

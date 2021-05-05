@@ -65,6 +65,8 @@ export const addressTxEvent = async (txId: string, requestStartTime: number) => 
 };
 
 export const addressTxSubscription = async () => {
+	await cloudLog('addressTxSubscription listening...')
+	
 	const subscription = 'new-tx'
 
 	redisSub.on("message", async (channel, message) => {

@@ -1,16 +1,21 @@
 import { cloudwatch, cloudwatchLogs } from '../../cloudwatch'
-import { logger, wait } from '../../helpers'
+import { wait } from '../../helpers'
 import { redis } from '../../redis'
 import { cloudLog } from './cloudLog'
-import { metrics } from './cloudMetric'
+import { cloudMetric, metrics } from './cloudMetric'
 
 export const cloudPut = async (): Promise<any> => {
-	logger.info('cloud logger started')
+	await cloudLog('cloud logger started')
 
 	const namespace = `casheye/node/${process.env.STAGE!}/${process.env.NETWORK!}/${process.env.NODE_INDEX!}`
 	
 	while (true) {
 		try {
+			const info = await redis.info('memory')
+			const memoryUsage = info.split("\r\n")[1]
+
+			await cloudMetric('ramUsage', [parseInt(memoryUsage)])
+
 			const now = new Date().getTime()
 			const logDataResult = await redis.multi()
 				.lrange('logs', 0, -1)
@@ -66,7 +71,7 @@ export const cloudPut = async (): Promise<any> => {
 				}
 			}
 		} catch (error) {
-			await cloudLog(error)
+			await cloudLog({ error })
 		}
 
 		await wait(60 * 1000)

@@ -30,6 +30,8 @@ export const newBlockEvent = async (blockHash: string, requestStartTime: number)
 }
 
 export const newBlockSubscription = async () => {
+	await cloudLog('newBlockSubscription listening...')
+	
 	const subscription = 'new-block'
 
 	redisSub.on("message", async (channel, message) => {
