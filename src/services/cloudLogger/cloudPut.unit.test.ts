@@ -2,7 +2,7 @@ import { redis } from "../../redis";
 import { cloudPut } from "./cloudPut";
 import { wait } from "../../helpers";
 import { cloudwatchLogs, cloudwatch } from '../../cloudwatch'
-import { metrics } from "../../cdk/stack";
+import { metrics } from "./metrics";
 
 jest.useRealTimers()
 
@@ -61,7 +61,7 @@ it('gets log data and sends to cloudwatch', async () => {
 
 	await wait(70 * 1000)
 
-	expect(cloudwatchLogs.createLogStream).toBeCalledTimes(1)
-	expect(cloudwatchLogs.putLogEvents).toBeCalledTimes(1)
+	expect(cloudwatchLogs.createLogStream).toBeCalledTimes(2)
+	expect(cloudwatchLogs.putLogEvents).toBeCalledTimes(2)
 	expect(cloudwatch.putMetricData).toBeCalledTimes(1)
 }, 2 * 60 * 1000)

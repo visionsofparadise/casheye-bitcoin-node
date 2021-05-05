@@ -1,5 +1,5 @@
 import omit from "lodash/omit";
-import { metrics } from "../../cdk/stack";
+import { metrics } from "./metrics";
 import { redis } from "../../redis";
 import { cloudMetric } from "./cloudMetric"
 

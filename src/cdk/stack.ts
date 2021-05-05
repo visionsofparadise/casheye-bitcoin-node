@@ -20,18 +20,7 @@ import { LambdaWebSocketIntegration } from '@aws-cdk/aws-apigatewayv2-integratio
 import { LogGroup, RetentionDays } from '@aws-cdk/aws-logs';
 import { Table } from '@aws-cdk/aws-dynamodb';
 import { Metric } from '@aws-cdk/aws-cloudwatch'
-
-export const metrics = [
-	'processingTime',
-	'blockTransactionsReturned',
-	'ramUsage',
-	'webhooksSet',
-	'webhooksUnset',
-	'events',
-	'errors',
-]
-
-export type MetricType = typeof metrics[number]
+import { metrics } from '../services/cloudLogger/metrics'
 
 const prodEC2Config = {
 	storageSize: 400,

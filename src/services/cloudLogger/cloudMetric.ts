@@ -1,4 +1,4 @@
-import { MetricType } from "../../cdk/stack";
+import { MetricType } from "./metrics";
 import { redis } from "../../redis";
 
 export const cloudMetric = async (metric: MetricType, values: number[], dimensions?: Array<{ name: string; value: string; }>) => 

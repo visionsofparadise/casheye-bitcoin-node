@@ -1,4 +1,4 @@
-import { metrics } from '../../cdk/stack'
+import { metrics } from "./metrics";
 import { cloudwatch, cloudwatchLogs } from '../../cloudwatch'
 import { wait } from '../../helpers'
 import { redis } from '../../redis'
