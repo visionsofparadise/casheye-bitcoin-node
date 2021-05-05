@@ -1,6 +1,7 @@
 import omit from "lodash/omit";
+import { metrics } from "../../cdk/stack";
 import { redis } from "../../redis";
-import { cloudMetric, metrics } from "./cloudMetric"
+import { cloudMetric } from "./cloudMetric"
 
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 

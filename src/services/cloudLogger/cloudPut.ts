@@ -1,11 +1,12 @@
+import { metrics } from '../../cdk/stack'
 import { cloudwatch, cloudwatchLogs } from '../../cloudwatch'
-import { logger, wait } from '../../helpers'
+import { wait } from '../../helpers'
 import { redis } from '../../redis'
 import { cloudLog } from './cloudLog'
-import { cloudMetric, metrics } from './cloudMetric'
+import { cloudMetric } from './cloudMetric'
 
 export const cloudPut = async (): Promise<any> => {
-	logger.info('cloud logger started')
+	await cloudLog('cloud logger started')
 
 	const namespace = `casheye/node/${process.env.STAGE!}/${process.env.NETWORK!}/${process.env.NODE_INDEX!}`
 	

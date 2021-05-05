@@ -8,7 +8,7 @@ import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
 
 export const webhookManager = async (): Promise<any> => {
-	logger.info('webhook manager started')
+	await cloudLog('webhook manager started')
 
 	let isOn = await redis.get('webhookManagerState') || '1'
 	

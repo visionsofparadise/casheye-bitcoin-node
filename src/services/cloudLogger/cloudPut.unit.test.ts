@@ -2,7 +2,7 @@ import { redis } from "../../redis";
 import { cloudPut } from "./cloudPut";
 import { wait } from "../../helpers";
 import { cloudwatchLogs, cloudwatch } from '../../cloudwatch'
-import { metrics } from "./cloudMetric";
+import { metrics } from "../../cdk/stack";
 
 jest.useRealTimers()
 
