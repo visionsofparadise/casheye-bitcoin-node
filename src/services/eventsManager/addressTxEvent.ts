@@ -48,8 +48,8 @@ export const addressTxEvent = async (txId: string, requestStartTime: number) => 
 			webhooks.map(async webhook => {
 				const pushEvent = async () => events.push({ webhook, payload: { ...rawTx, casheye: { requestStartTime, processingStartTime } } })
 	
-				if ((webhook.event === 'addressTxIn' || webhook.event === 'addressTxAll') && address.category === 'receive') await pushEvent()
-				if ((webhook.event === 'addressTxOut' || webhook.event === 'addressTxAll') && address.category === 'send') await pushEvent()
+				if ((webhook.event === 'addressTxIn' || webhook.event === 'addressTx') && address.category === 'receive') await pushEvent()
+				if ((webhook.event === 'addressTxOut' || webhook.event === 'addressTx') && address.category === 'send') await pushEvent()
 			})
 
 			return

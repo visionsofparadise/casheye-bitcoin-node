@@ -1,11 +1,11 @@
-import { rpc, zeromqUrl } from '../bitcoind/bitcoind';
+import { rpc } from '../bitcoind/bitcoind';
 import { postEvents } from './postEvents';
 import { decode } from '../webhookManager/webhookEncoder';
-import { redis } from '../../redis';
+import { redis, redisSub } from '../../redis';
 import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
-import zmq from 'zeromq'
+import { translateLinuxTime } from '../../translateLinuxTime';
 
 type ListSinceBlockResponse = {
 	transactions: Array<{
@@ -93,8 +93,8 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: nu
 				if (webhook.confirmations && tx.confirmations <= webhook.confirmations) {	
 					const pushEvent = () => events.push({ webhook, payload })
 
-					if ((webhook.event === 'addressTxIn' || webhook.event === 'addressTxAll') && tx.category === 'receive') pushEvent()
-					if ((webhook.event === 'addressTxOut' || webhook.event === 'addressTxAll') && tx.category === 'send') pushEvent()
+					if ((webhook.event === 'addressTxIn' || webhook.event === 'addressTx') && tx.category === 'receive') pushEvent()
+					if ((webhook.event === 'addressTxOut' || webhook.event === 'addressTx') && tx.category === 'send') pushEvent()
 				}
 			})
 
@@ -127,16 +127,17 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: nu
 };
 
 export const confirmationsSubscription = async () => {
-	const sub = zmq.socket('sub')
-	sub.connect(zeromqUrl)
+	const subscription = 'new-block'
 
-	const subscription = 'hashblock'
+	redisSub.on("message", async (channel, message) => {
+		const [blockHash, timestamp] = message.split('#')
 
-	sub.on("message", async (channel, blockHash) => {
-		const requestStartTime = new Date().getTime()
-
-		if (channel.toString() === subscription) await confirmationsEvent(blockHash.toString(), requestStartTime).catch(cloudLog)
+		if (channel === subscription) {
+			const requestStartTime = translateLinuxTime(timestamp)
+			
+			await confirmationsEvent(blockHash, requestStartTime).catch(cloudLog)
+		}
 	})
 
-	sub.subscribe(subscription);
+	redisSub.subscribe(subscription);
 }

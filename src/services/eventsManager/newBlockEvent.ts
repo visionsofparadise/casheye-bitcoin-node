@@ -1,22 +1,22 @@
 
-import { redis } from "../../redis"
+import { redis, redisSub } from "../../redis"
 import { postEvents } from "./postEvents"
-import { zeromqUrl } from "../bitcoind/bitcoind"
+import { rpc } from "../bitcoind/bitcoind"
 import { decode } from "../webhookManager/webhookEncoder"
 import { cloudLog } from "../cloudLogger/cloudLog"
-import zmq from 'zeromq'
-import { Block } from 'bitcore-lib'
+import { translateLinuxTime } from "../../translateLinuxTime"
 
-export const newBlockEvent = async (rawBlockHex: Buffer, requestStartTime: number) => {
+export const newBlockEvent = async (blockHash: string, requestStartTime: number) => {
 	const processingStartTime = new Date().getTime()
-
-	const block = new Block(rawBlockHex)
-
-	if (!block) return
+	const blockPromise = rpc.getBlock(blockHash, 1).catch(() => undefined) as Promise<any>
 
 	const data = await redis.hvals('newBlock') as string[]
 
 	const webhooks = data.map(webhook => decode(webhook))
+
+	const block = await blockPromise
+
+	if (!block) return
 
 	await postEvents(webhooks.map(webhook => ({ webhook, payload: {
 		...block,
@@ -30,16 +30,17 @@ export const newBlockEvent = async (rawBlockHex: Buffer, requestStartTime: numbe
 }
 
 export const newBlockSubscription = async () => {
-	const sub = zmq.socket('sub')
-	sub.connect(zeromqUrl)
+	const subscription = 'new-block'
 
-	const subscription = 'rawblock'
+	redisSub.on("message", async (channel, message) => {
+		const [blockHash, timestamp] = message.split('#')
 
-	sub.on("message", async (channel, rawBlockHex) => {
-		const requestStartTime = new Date().getTime()
-
-		if (channel.toString() === subscription) await newBlockEvent(rawBlockHex, requestStartTime).catch(cloudLog)
+		if (channel === subscription) {
+			const requestStartTime = translateLinuxTime(timestamp)
+			
+			await newBlockEvent(blockHash, requestStartTime).catch(cloudLog)
+		}
 	})
 
-	sub.subscribe(subscription);
+	redisSub.subscribe(subscription);
 }
