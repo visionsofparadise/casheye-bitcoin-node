@@ -13,3 +13,11 @@ export const cloudLog = async (message: any) => {
 
 	logger.info(formattedMessage)
 }
+
+export const cloudError = async (message: any) => {
+	let error = message
+
+	if (!error.stack) error = { error, stack: new Error().stack }
+
+	await cloudLog(error)
+}

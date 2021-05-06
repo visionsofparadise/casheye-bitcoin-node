@@ -3,7 +3,7 @@ import md5 from "md5";
 import { sqs } from "../../sqs";
 import { IWebhook } from "../../types/IWebhook";
 import { apiGatewaySockets } from '../../apiGatewaySockets'
-import { cloudLog } from "../cloudLogger/cloudLog";
+import { cloudError, cloudLog } from "../cloudLogger/cloudLog";
 import { cloudMetric } from "../cloudLogger/cloudMetric";
 
 export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'currency'>; payload: any }>) => {
@@ -40,7 +40,7 @@ export const postEvents = async (events: Array<{ webhook: Omit<IWebhook, 'curren
 
 			processingTimes.push(data.casheye.requestSendTime - data.casheye.requestStartTime)
 		} catch (error) {
-			lowPriorityPromises.push(cloudLog({ error }))
+			lowPriorityPromises.push(cloudError(error))
 	
 			const retry = {
 				id: webhook.id,

@@ -4,7 +4,7 @@ import { unsetWebhook } from './unsetWebhook';
 import { redis } from '../../redis';
 import { sqs } from '../../sqs'
 import { webhookSetEvent, webhookUnsetEvent } from './events'
-import { cloudLog } from '../cloudLogger/cloudLog';
+import { cloudError, cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
 
 export const webhookManager = async (): Promise<any> => {
@@ -43,7 +43,7 @@ export const webhookManager = async (): Promise<any> => {
 					const results = await Promise.all(messages.map(async msg => setWebhook(msg).catch(async (error) => {
 						await cloudLog({ error })
 
-						throw error
+						return
 					})))
 			
 					const successes = results.filter(result => result !== undefined)
@@ -70,7 +70,7 @@ export const webhookManager = async (): Promise<any> => {
 					const results = await Promise.all(messages.map(async msg => unsetWebhook(msg).catch(async (error) => {
 						await cloudLog({ error })
 
-						throw error
+						return
 					})))
 			
 					const successes = results.filter(result => result !== undefined)
@@ -93,7 +93,7 @@ export const webhookManager = async (): Promise<any> => {
 	
 				await Promise.all(promises)
 			} catch (error) {
-				await cloudLog({ error })
+				await cloudError(error)
 				await cloudMetric('errors', [1])
 			}
 		}

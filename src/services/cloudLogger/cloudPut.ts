@@ -2,7 +2,7 @@ import { metrics } from "./metrics";
 import { cloudwatch, cloudwatchLogs } from '../../cloudwatch'
 import { wait } from '../../helpers'
 import { redis } from '../../redis'
-import { cloudLog } from './cloudLog'
+import { cloudError, cloudLog } from './cloudLog'
 import { cloudMetric } from './cloudMetric'
 
 export const cloudPut = async (): Promise<any> => {
@@ -72,7 +72,7 @@ export const cloudPut = async (): Promise<any> => {
 				}
 			}
 		} catch (error) {
-			await cloudLog({ error })
+			await cloudError(error)
 		}
 
 		await wait(60 * 1000)

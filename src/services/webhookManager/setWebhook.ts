@@ -7,22 +7,15 @@ import { cloudLog } from '../cloudLogger/cloudLog';
 
 export const setWebhook = async (msg: SQS.Message): Promise<any> => {
 	const webhook = JSON.parse(msg.Body!) as IWebhook
-	const promises = []
 
 	if (webhook.event === 'newBlock') {
-		const dbPromise = redis.hset('newBlock', webhook.id, encode(webhook))
-		
-		promises.push(dbPromise)
+		await redis.hset('newBlock', webhook.id, encode(webhook))
 	} else {
-		const rpcPromise = rpc.importAddress(webhook.address, 'set', false)
-		promises.push(rpcPromise)
-
-		const dbPromise = redis.hset(webhook.address!, webhook.id, encode(webhook))
-			
-		promises.push(dbPromise)
+		await rpc.importAddress(webhook.address!, 'set', false)
+		await redis
+			.hset(webhook.address!, webhook.id, encode(webhook))
+			.catch(() => rpc.setLabel(webhook.address!, 'unset'))
 	}
-
-	await Promise.all(promises)
 
 	await cloudLog('webhook set ' + webhook.id)
 
