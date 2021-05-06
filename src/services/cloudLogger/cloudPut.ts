@@ -61,7 +61,7 @@ export const cloudPut = async (): Promise<any> => {
 						MetricData: metrics.map(({ values, dimensions, timestamp }) => ({
 								MetricName: metric,
 								Values: values,
-								Timestamp: timestamp,
+								Timestamp: new Date(timestamp).toISOString() as any,
 								Dimensions: dimensions && dimensions.map((d: { name: string; value: string }) => ({
 									Name: d.name,
 									Value: d.value
