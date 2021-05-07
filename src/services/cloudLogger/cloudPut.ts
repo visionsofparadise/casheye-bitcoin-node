@@ -68,7 +68,7 @@ export const cloudPut = async (): Promise<any> => {
 								}))
 						})),
 	
-					}).promise()
+					}).promise().catch(cloudError)
 				}
 			}
 		} catch (error) {
