@@ -206,6 +206,12 @@ pm2 save`
 			})
 
 			instance.addToRolePolicy(new PolicyStatement({
+				actions: ['cloudwatch:PutMetricData'],
+				resources: ['*'],
+				effect: Effect.ALLOW
+			}))
+
+			instance.addToRolePolicy(new PolicyStatement({
 				actions: ['execute-api:*'],
 				resources: [`arn:aws:execute-api:*:*:**/@connections/*`],
 				effect: Effect.ALLOW
