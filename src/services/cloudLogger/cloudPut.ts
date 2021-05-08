@@ -3,7 +3,7 @@ import { cloudwatch, cloudwatchLogs } from '../../cloudwatch'
 import { wait } from '../../helpers'
 import { redis } from '../../redis'
 import { cloudError, cloudLog } from './cloudLog'
-import { cloudMetric } from './cloudMetric'
+import { chunk } from "lodash";
 
 export const cloudPut = async (): Promise<any> => {
 	await cloudLog('cloud logger started')
@@ -12,11 +12,6 @@ export const cloudPut = async (): Promise<any> => {
 	
 	while (true) {
 		try {
-			const info = await redis.info('memory')
-			const memoryUsage = info.split("\r\n")[1]
-
-			await cloudMetric('ramUsage', [parseInt(memoryUsage)])
-
 			const now = new Date().getTime()
 			const logDataResult = await redis.multi()
 				.lrange('logs', 0, -1)
@@ -55,20 +50,24 @@ export const cloudPut = async (): Promise<any> => {
 					const metrics = metricData
 						.map(metricData => JSON.parse(metricData))
 						.sort((metricA, metricB) => metricA.timestamp - metricB.timestamp)
+
+					const metricBatch = chunk(metrics, 20)
 	
-					await cloudwatch.putMetricData({
-						Namespace: namespace,
-						MetricData: metrics.map(({ values, dimensions, timestamp }) => ({
-								MetricName: metric,
-								Values: values,
-								Timestamp: new Date(timestamp),
-								Dimensions: (dimensions && dimensions.length > 0) && dimensions.map((d: { name: string; value: string }) => ({
-									Name: d.name,
-									Value: d.value
-								}))
-						})),
-	
-					}).promise().catch(error => cloudError({ error, metrics }))
+					for (const batch of metricBatch) {
+						await cloudwatch.putMetricData({
+							Namespace: namespace,
+							MetricData: batch.map(({ values, dimensions, timestamp }) => ({
+									MetricName: metric,
+									Values: values,
+									Timestamp: new Date(timestamp),
+									Dimensions: (dimensions && dimensions.length > 0) && dimensions.map((d: { name: string; value: string }) => ({
+										Name: d.name,
+										Value: d.value
+									}))
+							})),
+		
+						}).promise().catch(error => cloudError({ error, metrics }))
+					}
 				}
 			}
 		} catch (error) {
