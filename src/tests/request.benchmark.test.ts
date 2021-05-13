@@ -46,8 +46,8 @@ describe('benchmark tests', () => {
 
 		client!.on("message", async (json: string) => {
 			const data: { 
-				inputs?: any;
-				outputs?: any
+				vin?: any;
+				vout?: any
 				confirmations?: any
 				height?: any
 				casheye: { 
@@ -67,9 +67,9 @@ describe('benchmark tests', () => {
 
 				const split = { publishSplit, processingSplit, transitSplit, totalSplit }
 
-				if (data.inputs && !data.confirmations) {
+				if (data.vin && !data.confirmations) {
 					addressTxSplits.push(split)
-				} else if (data.inputs && data.confirmations) {
+				} else if (data.vin && data.confirmations) {
 					confirmationsSplits.push(split)
 				} else if (data.height) {
 					newBlockSplits.push(split)

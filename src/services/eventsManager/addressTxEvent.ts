@@ -3,7 +3,6 @@ import { postEvents } from './postEvents';
 import { redis, redisSub } from '../../redis';
 import { decode } from '../webhookManager/webhookEncoder';
 import { cloudLog } from '../cloudLogger/cloudLog';
-import { Transaction } from 'bitcore-lib';
 import { translateLinuxTime } from '../../translateLinuxTime';
 
 export interface GetTransactionResponse {
@@ -22,6 +21,7 @@ export interface GetTransactionResponse {
 export const addressTxEvent = async (txId: string, requestStartTime: number) => {
 	const processingStartTime = new Date().getTime()
 	const tx = (await rpc.getTransaction(txId, true)) as GetTransactionResponse;
+	const decodedTx = rpc.decodeRawTransaction(tx.hex)
 
 	if (!tx || tx.confirmations > 1) return 
 
@@ -32,7 +32,7 @@ export const addressTxEvent = async (txId: string, requestStartTime: number) => 
 	)
 
 	const rawTx = {
-		...new Transaction(tx.hex),
+		...await decodedTx,
 		fee: Math.round(-tx.fee * (10 ** 8)),
 		txId
 	}

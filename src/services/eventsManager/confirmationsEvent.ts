@@ -2,7 +2,6 @@ import { rpc } from '../bitcoind/bitcoind';
 import { postEvents } from './postEvents';
 import { decode } from '../webhookManager/webhookEncoder';
 import { redis, redisSub } from '../../redis';
-import { Transaction } from 'bitcore-lib';
 import { cloudLog } from '../cloudLogger/cloudLog';
 import { cloudMetric } from '../cloudLogger/cloudMetric';
 import { translateLinuxTime } from '../../translateLinuxTime';
@@ -65,10 +64,10 @@ export const confirmationsEvent = async (blockHash: string, requestStartTime: nu
 
 			if (!rawTx) {
 				isCached = false
-				const getTx = await rpc.getTransaction(tx.txid, true) as { hex: string; txid: string }
+				const getTx = await rpc.getRawTransaction(tx.txid, true, tx.blockhash)
 				rawTx = {
-					...new Transaction(getTx.hex),
-					fee: tx.fee,
+					...getTx,
+					fee: Math.round(-tx.fee * (10 ** 8)),
 					txId: tx.txid
 				}
 
