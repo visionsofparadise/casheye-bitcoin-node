@@ -25,7 +25,7 @@ import { metrics } from '../services/cloudLogger/metrics'
 const prodEC2Config = {
 	storageSize: 20,
 	instanceType: InstanceType.of(InstanceClass.T2, InstanceSize.SMALL),
-	instanceAmi: "ami-0b75998a97c952252",
+	instanceAmi: "ami-09e67e426f25ce0d7",
 }
 
 const testEC2Config = {
@@ -57,11 +57,6 @@ export class CasheyeBitcoinNodeStage extends Stage {
 	}
 }
 
-const { createLambda, initializeRuleLambda } = masterLambda({
-	runtime: Runtime.NODEJS_12_X,
-	code: Code.fromAsset(path.join(__dirname, '../../build')),
-})
-
 export class CasheyeBitcoinNodeStack extends Stack {
 	public readonly instanceUrl?: CfnOutput;
 	public readonly testUrl?: CfnOutput;
@@ -73,6 +68,11 @@ export class CasheyeBitcoinNodeStack extends Stack {
 	
 	constructor(scope: Construct, id: string, props: StackProps & { STAGE: string; NETWORK: Network }) {
 		super(scope, id, props);
+
+		const { createLambda, initializeRuleLambda } = masterLambda({
+			runtime: Runtime.NODEJS_12_X,
+			code: Code.fromAsset(path.join(__dirname, '../../build')),
+		})
 		
 		const deploymentName = `${serviceName}-${props.NETWORK}-${props.STAGE}`;
 		const isProd = (props.STAGE === 'prod')
