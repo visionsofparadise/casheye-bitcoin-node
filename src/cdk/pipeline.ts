@@ -58,7 +58,9 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 		const testEnv = [
 			'STAGE=test',
 			`CDK_DEFAULT_ACCOUNT=${SecretValue.secretsManager('ACCOUNT_NUMBER')}`,
-			`TEST_XPUBKEY=${SecretValue.secretsManager('TEST_XPUBKEY_BTC')}`,
+			`TEST_XPUBKEY=${SecretValue.secretsManager('CASHEYE', {
+				jsonField: 'TEST_XPUBKEY_BTC'
+			})}`,
 			`DYNAMODB_TABLE=${db.tableName}`,
 			'N=100'
 		]
