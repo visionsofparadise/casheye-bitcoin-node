@@ -103,12 +103,12 @@ export class CasheyeBitcoinNodePipelineStack extends Stack {
 
 		// pipeline.addApplicationStage(testnetApp);
 
-		// const mainnetApp = new CasheyeBitcoinNodeStage(this, serviceName + '-mainnet-prod', {
-		// 	STAGE: 'prod',
-		// 	NETWORK: 'mainnet'
-		// });
+		const mainnetApp = new CasheyeBitcoinNodeStage(this, serviceName + '-mainnet-prod', {
+			STAGE: 'prod',
+			NETWORK: 'mainnet'
+		});
 
-		// pipeline.addApplicationStage(mainnetApp);
+		pipeline.addApplicationStage(mainnetApp);
 	}
 }
 

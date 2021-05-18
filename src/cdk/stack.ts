@@ -23,14 +23,14 @@ import { Metric } from '@aws-cdk/aws-cloudwatch'
 import { metrics } from '../services/cloudLogger/metrics'
 
 const prodEC2Config = {
-	storageSize: 400,
-	instanceType: InstanceType.of(InstanceClass.A1, InstanceSize.MEDIUM),
+	storageSize: 20,
+	instanceType: InstanceType.of(InstanceClass.T2, InstanceSize.SMALL),
 	instanceAmi: "ami-0b75998a97c952252",
 }
 
 const testEC2Config = {
 	storageSize: 20,
-	instanceType: InstanceType.of(InstanceClass.A1, InstanceSize.MEDIUM),
+	instanceType: InstanceType.of(InstanceClass.T2, InstanceSize.SMALL),
 	instanceAmi: "ami-09e67e426f25ce0d7",
 }
 

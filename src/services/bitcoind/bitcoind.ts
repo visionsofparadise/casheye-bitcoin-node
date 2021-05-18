@@ -7,6 +7,7 @@ const rpcuser = process.env.RPC_USER || 'test';
 const rpcpassword = process.env.RPC_PASSWORD || 'test';
 
 let config: any = {
+	prune: true,
 	testnet: process.env.NETWORK === 'testnet',
 	regtest: process.env.NETWORK === 'regtest',
 	blocknotify: 'redis-cli PUBLISH new-block "%s#$(date -Ins)"',
