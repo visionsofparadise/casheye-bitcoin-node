@@ -23,8 +23,9 @@ export const detailJSONSchema = jsonObjectSchemaGenerator<OnSetWebhookDetail>({
 export const onSetWebhookHandler = new EventLambdaHandler<'setWebhook', OnSetWebhookDetail>({
 	detailType: ['setWebhook'],
 	detailJSONSchema,
-}, async ({ detail }) => {
-	const JSONDetail = JSON.stringify(detail)
+}, async event => {
+	console.log(event)
+	const JSONDetail = JSON.stringify(event.detail)
 
 	const response = await sqs
 		.sendMessage({
@@ -32,6 +33,8 @@ export const onSetWebhookHandler = new EventLambdaHandler<'setWebhook', OnSetWeb
 			MessageBody: JSONDetail
 		})
 		.promise();
+	
+	console.log(response)
 
 	logger.info({ response });
 })
