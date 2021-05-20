@@ -28,12 +28,12 @@ export const webhookManager = async (): Promise<any> => {
 					QueueUrl: UnsetQueueUrl,
 					MaxNumberOfMessages: 10
 				}).promise()
-	
-				await cloudLog({ isOn, setQueueResponse, unsetQueueResponse })
 			
 				const promises: Array<Promise<any>> = []
 			
 				if (setQueueResponse.Messages) {
+					await cloudLog({ setQueueResponse })
+
 					const messages = setQueueResponse.Messages.filter(msg => msg.Body)
 			
 					const results = await Promise.all(messages.map(async msg => setWebhook(msg).catch(async (error) => {
@@ -41,6 +41,8 @@ export const webhookManager = async (): Promise<any> => {
 
 						return
 					})))
+
+					await cloudLog(results)
 			
 					const successes = results.filter(result => result !== undefined)
 
@@ -61,6 +63,8 @@ export const webhookManager = async (): Promise<any> => {
 				}
 			
 				if (unsetQueueResponse.Messages) {
+					await cloudLog({ unsetQueueResponse })
+
 					const messages = unsetQueueResponse.Messages.filter(msg => msg.Body)
 			
 					const results = await Promise.all(messages.map(async msg => unsetWebhook(msg).catch(async (error) => {
@@ -68,6 +72,8 @@ export const webhookManager = async (): Promise<any> => {
 
 						return
 					})))
+
+					await cloudLog(results)
 			
 					const successes = results.filter(result => result !== undefined)
 

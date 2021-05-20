@@ -3,7 +3,7 @@ import { SQS } from 'aws-sdk';
 import { rpc } from '../bitcoind/bitcoind';
 import { redis } from '../../redis'
 import { encode } from './webhookEncoder'
-import { cloudLog } from '../cloudLogger/cloudLog';
+import { cloudError, cloudLog } from '../cloudLogger/cloudLog';
 
 export const setWebhook = async (msg: SQS.Message): Promise<any> => {
 	const webhook = JSON.parse(msg.Body!) as IWebhook
@@ -16,9 +16,15 @@ export const setWebhook = async (msg: SQS.Message): Promise<any> => {
 		await rpc.importAddress(webhook.address!, 'set', false)
 			.then(() => redis
 				.hset(webhook.address!, webhook.id, encode(webhook))
-				.catch(() => rpc.setLabel(webhook.address!, 'unset'))
+				.catch((error) => {
+					cloudError(error)
+
+					rpc.setLabel(webhook.address!, 'unset')
+				})
 			)
-			.catch(() => {
+			.catch((error: any) => {
+				cloudError(error)
+
 				data = {
 					queueEntry: {
 						Id: msg.MessageId,
