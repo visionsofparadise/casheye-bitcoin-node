@@ -1,4 +1,4 @@
-import { logger, wait } from '../../helpers'
+import { wait } from '../../helpers'
 import { setWebhook } from './setWebhook';
 import { unsetWebhook } from './unsetWebhook';
 import { redis } from '../../redis';
@@ -15,16 +15,12 @@ export const webhookManager = async (): Promise<any> => {
 	while (true) {
 		if (isOn === '1') {
 			try {
-				logger.info(isOn)
-
 				const SetQueueUrl = process.env.SET_QUEUE_URL! || 'set'
 	
 				const setQueueResponse = await sqs.receiveMessage({
 					QueueUrl: SetQueueUrl,
 					MaxNumberOfMessages: 10
 				}).promise()
-	
-				logger.info(setQueueResponse)
 			
 				const UnsetQueueUrl = process.env.UNSET_QUEUE_URL! || 'unset'
 			
@@ -33,7 +29,7 @@ export const webhookManager = async (): Promise<any> => {
 					MaxNumberOfMessages: 10
 				}).promise()
 	
-				logger.info(unsetQueueResponse)
+				await cloudLog({ isOn, setQueueResponse, unsetQueueResponse })
 			
 				const promises: Array<Promise<any>> = []
 			

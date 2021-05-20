@@ -5,7 +5,7 @@ export const Source = 'casheye-' + process.env.STAGE
 
 export const logger = spawnLogger({
 	envKey: 'STAGE',
-	offValue: 'prod'
+	offValue: 'x'
 });
 
 export type Network = 'mainnet' | 'testnet' | 'regtest'

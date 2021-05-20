@@ -1,7 +1,7 @@
 import bitcoind from 'bitcoind'
 import { ChildProcess } from 'child_process';
-import { logger } from '../../helpers';
 import Client from 'bitcoin-core';
+import { cloudError, cloudLog } from '../cloudLogger/cloudLog';
  
 const rpcuser = process.env.RPC_USER || 'test';
 const rpcpassword = process.env.RPC_PASSWORD || 'test';
@@ -27,15 +27,15 @@ export const rpc = new Client({
 	password: rpcpassword
  } as any);
 
-export const startBitcoind = () => {
+export const startBitcoind = async () => {
 	try {
-		logger.info({ config })
+		await cloudLog({ config })
 
 		bitcoind(config) as ChildProcess & { rpc: any };
 
-		logger.info('BTC node online')
+		await cloudLog('BTC node online')
 	} catch (error) {
-		logger.error(error)
+		await cloudError(error)
 
 		throw error
 	}

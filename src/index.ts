@@ -11,6 +11,7 @@ import pick from 'lodash/pick';
 import { addressTxSubscription } from './services/eventsManager/addressTxEvent';
 import { confirmationsSubscription } from './services/eventsManager/confirmationsEvent';
 import { newBlockSubscription } from './services/eventsManager/newBlockEvent';
+import { cloudLog } from './services/cloudLogger/cloudLog';
 
 const jobs = ['bitcoind', 'cloudLogger', 'webhookManager', 'api', 'addressTxSubscription', 'confirmationsSubscription', 'newBlockSubscription']
 
@@ -78,7 +79,7 @@ if (cluster.isWorker) {
 
 				await redis.lpush('blockHashCache', ...reverse(response))
 
-				logger.info(response)
+				await cloudLog(response)
 			}
 
 			generator()
@@ -91,14 +92,11 @@ if (cluster.isWorker) {
 	
 	if (job === 'api') {
 		const port = 4000
-		api.listen(port, async () => logger.info(`Server listening on port ${port}`))
+		api.listen(port, async () => cloudLog(`Server listening on port ${port}`))
 	}
 
 	const delay = (fn: any, s: number) => 
-		setTimeout(() => {
-			logger.info(job + ' listening...')
-			fn()
-		}, s * 1000)
+		setTimeout(fn, s * 1000)
 
 	if (job === 'addressTxSubscription') delay(addressTxSubscription, 10)
 	if (job === 'confirmationsSubscription') delay(confirmationsSubscription, 10)
