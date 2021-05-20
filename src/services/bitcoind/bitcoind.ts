@@ -9,9 +9,10 @@ const rpcpassword = process.env.RPC_PASSWORD || 'test';
 let config: any = {
 	rpcuser,
 	rpcpassword,
+	server: true,
 	rpcbind: "127.0.0.1",
 	rpcallowip: "127.0.0.1",
-	prune: true,
+	prune: 10 * 1000,
 	testnet: process.env.NETWORK === 'testnet',
 	regtest: process.env.NETWORK === 'regtest',
 	blocknotify: 'redis-cli PUBLISH new-block "%s#$(date -Ins)"',
